@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Data dari Google Sheet</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f7f9fc;
+      padding: 30px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .refresh-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+    }
+    .refresh-btn:hover {
+      background: #2980b9;
+    }
+    .status {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .status span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .status.connected span { background: #2ecc71; } /* hijau */
+    .status.error span { background: #e74c3c; }     /* merah */
+    .status.loading span { background: #f1c40f; }   /* kuning */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .search-box input, .filter-box select {
+      padding: 10px 15px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .search-box input:focus, .filter-box select:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 6px rgba(52,152,219,0.3);
+    }
+    .export-box button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      background: #2ecc71;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .export-box button:hover {
+      background: #27ae60;
+    }
+    .print-btn {
+      background: #e67e22;
+    }
+    .print-btn:hover {
+      background: #d35400;
+    }
+    .table-container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 20px;
+      overflow-x: auto;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 14px;
+      cursor: default;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    th {
+      background: #3498db;
+      color: white;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    th.sorted-asc::after {
+      content: " ⬆";
+    }
+    th.sorted-desc::after {
+      content: " ⬇";
+    }
+    tr:hover {
+      background: #f1f7ff;
+      transition: background 0.3s ease;
+    }
+    @media (max-width: 600px) {
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>
+    📊 Data dari Google Sheet
+    <button class="refresh-btn" id="refreshBtn" title="Refresh Data">⟳</button>
+    <div class="status" id="status"><span></span> Checking...</div>
+  </h1>
+  
+  <!-- Search, Filter, Export Controls -->
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cari data...">
+    </div>
+    <div class="filter-box">
+      <select id="filterE">
+        <option value="">🔽 Semua Kolom E</option>
+      </select>
+    </div>
+    <div class="export-box">
+      <button onclick="exportCSV()">⬇ Export CSV</button>
+      <button onclick="exportExcel()">⬇ Export Excel</button>
+      <button class="print-btn" onclick="window.print()">🖨 Print</button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table id="sheetTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv";
+    let allRows = [];
+    let currentSort = { index: null, asc: true };
+
+    async function loadSheet() {
+      setStatus("loading", "Loading data...");
+      try {
+        const response = await fetch(sheetUrl + "&cacheBust=" + Date.now());
+        if (!response.ok) throw new Error("Gagal fetch data");
+        const data = await response.text();
+        const rows = data.split("\n").map(r => r.split(","));
+        allRows = rows;
+        renderTable(rows);
+        fillFilter(rows);
+        setStatus("connected", "Connected");
+      } catch (err) {
+        console.error(err);
+        setStatus("error", "Disconnected");
+      }
+    }
+
+    function renderTable(rows) {
+      let thead = document.querySelector("#sheetTable thead");
+      let tbody = document.querySelector("#sheetTable tbody");
+      thead.innerHTML = "";
+      tbody.innerHTML = "";
+      let headerRow = document.createElement("tr");
+      rows[0].forEach((h, i) => {
+        let th = document.createElement("th");
+        th.textContent = h;
+        th.addEventListener("click", () => sortTable(i));
+        if (currentSort.index === i) {
+          th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
+        }
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      rows.slice(1).forEach(r => {
+        let tr = document.createElement("tr");
+        r.forEach(c => {
+          let td = document.createElement("td");
+          td.textContent = c;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function fillFilter(rows) {
+      let valuesE = [...new Set(rows.slice(1).map(r => r[4]))].filter(v => v && v.trim() !== "");
+      let filterSelect = document.getElementById("filterE");
+      filterSelect.innerHTML = `<option value="">🔽 Semua Kolom E</option>`;
+      valuesE.forEach(val => {
+        let opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        filterSelect.appendChild(opt);
+      });
+    }
+
+    function sortTable(index) {
+      currentSort.asc = currentSort.index === index ? !currentSort.asc : true;
+      currentSort.index = index;
+      let filtered = getFilteredData();
+      filtered.sort((a, b) => {
+        let valA = a[index] || "";
+        let valB = b[index] || "";
+        let numA = parseFloat(valA);
+        let numB = parseFloat(valB);
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return currentSort.asc ? numA - numB : numB - numA;
+        }
+        return currentSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      });
+      renderTable([allRows[0], ...filtered]);
+    }
+
+    function getFilteredData() {
+      let search = document.getElementById("searchInput").value.toLowerCase();
+      let filterVal = document.getElementById("filterE").value;
+      return allRows.slice(1).filter(r => {
+        let matchSearch = r.join(" ").toLowerCase().includes(search);
+        let matchFilter = filterVal === "" || r[4] === filterVal;
+        return matchSearch && matchFilter;
+      });
+    }
+
+    function applyFilters() {
+      let filtered = getFilteredData();
+      renderTable([allRows[0], ...filtered]);
+    }
+
+    function setStatus(type, text) {
+      let statusEl = document.getElementById("status");
+      statusEl.className = "status " + type;
+      statusEl.innerHTML = `<span></span> ${text}`;
+    }
+
+    // Export ke CSV
+    function exportCSV() {
+      let rows = [allRows[0], ...getFilteredData()];
+      let csvContent = rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+      let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "data-sheet.csv";
+      link.click();
+    }
+
+    // Export ke Excel (XLSX simple)
+    function exportExcel() {
+      let rows = [allRows[0], ...getFilteredData()];
+      let tableHTML = "<table border='1'>";
+      rows.forEach(r => {
+        tableHTML += "<tr>" + r.map(c => `<td>${c}</td>`).join("") + "</tr>";
+      });
+      tableHTML += "</table>";
+      let blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "data-sheet.xls";
+      link.click();
+    }
+
+    // Event Listeners
+    document.getElementById("searchInput").addEventListener("keyup", applyFilters);
+    document.getElementById("filterE").addEventListener("change", applyFilters);
+    document.getElementById("refreshBtn").addEventListener("click", loadSheet);
+
+    loadSheet();
+  </script>
+</body>
+</html>
