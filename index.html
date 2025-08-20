@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Data dari Google Sheet</title>
+  <!-- PapaParse untuk parsing CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body {
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -34,9 +36,7 @@
       justify-content: center;
       transition: background 0.3s ease;
     }
-    .refresh-btn:hover {
-      background: #2980b9;
-    }
+    .refresh-btn:hover { background: #2980b9; }
     .status {
       font-size: 14px;
       display: flex;
@@ -81,15 +81,9 @@
       cursor: pointer;
       transition: all 0.3s ease;
     }
-    .export-box button:hover {
-      background: #27ae60;
-    }
-    .print-btn {
-      background: #e67e22;
-    }
-    .print-btn:hover {
-      background: #d35400;
-    }
+    .export-box button:hover { background: #27ae60; }
+    .print-btn { background: #e67e22; }
+    .print-btn:hover { background: #d35400; }
     .table-container {
       background: #fff;
       border-radius: 12px;
@@ -117,29 +111,18 @@
       cursor: pointer;
       user-select: none;
     }
-    th.sorted-asc::after {
-      content: " ⬆";
-    }
-    th.sorted-desc::after {
-      content: " ⬇";
-    }
-    tr:hover {
-      background: #f1f7ff;
-      transition: background 0.3s ease;
-    }
+    th.sorted-asc::after { content: " ⬆"; }
+    th.sorted-desc::after { content: " ⬇"; }
+    tr:hover { background: #f1f7ff; transition: background 0.3s ease; }
     @media (max-width: 600px) {
-      table {
-        font-size: 12px;
-      }
-      th, td {
-        padding: 8px;
-      }
+      table { font-size: 12px; }
+      th, td { padding: 8px; }
     }
   </style>
 </head>
 <body>
   <h1>
-    📊 Data dari Google Sheet
+    📊 Update Stock Raw Material & Packaging
     <button class="refresh-btn" id="refreshBtn" title="Refresh Data">⟳</button>
     <div class="status" id="status"><span></span> Checking...</div>
   </h1>
@@ -151,7 +134,7 @@
     </div>
     <div class="filter-box">
       <select id="filterE">
-        <option value="">🔽 Semua Kolom E</option>
+        <option value="">🔽 Filter Kategori</option>
       </select>
     </div>
     <div class="export-box">
@@ -178,8 +161,12 @@
       try {
         const response = await fetch(sheetUrl + "&cacheBust=" + Date.now());
         if (!response.ok) throw new Error("Gagal fetch data");
-        const data = await response.text();
-        const rows = data.split("\n").map(r => r.split(","));
+        const csvText = await response.text();
+
+        // ✅ Parsing CSV dengan PapaParse
+        const parsed = Papa.parse(csvText, { skipEmptyLines: true });
+        const rows = parsed.data;
+
         allRows = rows;
         renderTable(rows);
         fillFilter(rows);
@@ -195,6 +182,8 @@
       let tbody = document.querySelector("#sheetTable tbody");
       thead.innerHTML = "";
       tbody.innerHTML = "";
+
+      // Header
       let headerRow = document.createElement("tr");
       rows[0].forEach((h, i) => {
         let th = document.createElement("th");
@@ -206,6 +195,8 @@
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
+
+      // Body
       rows.slice(1).forEach(r => {
         let tr = document.createElement("tr");
         r.forEach(c => {
