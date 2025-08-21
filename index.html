@@ -5,184 +5,245 @@
   <title>Dashboard GSheet</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin:0; background:#eef2f7; }
-    header {
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;   /* tombol lebih ke kiri */
-      background:#ffffff;           /* header putih */
-      padding:12px 20px;
-      color:#2c3e50;                /* teks gelap */
-      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    body { font-family:'Segoe UI',Tahoma,sans-serif; margin:0; background:#eef2f7; display:flex; transition:0.3s; }
+    
+    /* Sidebar */
+    .sidebar {
+      width:220px; background:#2c3e50; color:white; min-height:100vh;
+      display:flex; flex-direction:column; padding:20px 10px;
+      box-shadow:2px 0 6px rgba(0,0,0,0.2);
+      position:relative; transition:transform 0.3s ease-in-out;
+      z-index:1000;
     }
-    .logo { display:flex; align-items:center; margin-right:40px; }
-    .logo img { width:90px; height:50px; margin-right:10px; border-radius:8px; }
+    .sidebar.collapsed { transform:translateX(-220px); }
+    .sidebar h2 { font-size:16px; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:8px; }
+    .sidebar button {
+      background:none; border:none; color:white; text-align:left; padding:10px 15px; border-radius:6px; cursor:pointer;
+      font-size:14px; margin-bottom:6px; transition:0.3s;
+    }
+    .sidebar button:hover, .sidebar button.active { background:#34495e; }
+
+    /* Main */
+    .main { flex:1; display:flex; flex-direction:column; transition:margin-left 0.3s ease-in-out; }
+    .main.shifted { margin-left:-220px; }
+
+    header {
+      display:flex; align-items:center; justify-content:flex-start;
+      background:#ffffff; padding:12px 20px; color:#2c3e50; box-shadow:0 2px 5px rgba(0,0,0,0.1);
+      /* ❌ dihapus sticky supaya tidak freeze */
+    }
+    .menu-toggle {
+      font-size:22px; cursor:pointer; margin-right:15px; border:none; background:none;
+    }
+    .logo { display:flex; align-items:center; margin-right:20px; flex-shrink:0; }
+    .logo img { width:70px; height:40px; margin-right:10px; border-radius:8px; }
     .logo-text { display:flex; flex-direction:column; line-height:1.2; }
-    .logo-text strong { font-size:16px; }
-    .logo-text span { font-size:12px; opacity:0.7; }
-    .controls { display:flex; gap:8px; align-items:center; }
-    button { padding:6px 12px; border:none; border-radius:6px; cursor:pointer; font-size:13px; }
-    button.export { background:#27ae60; color:white; }
-    button.print { background:#2980b9; color:white; }
-    button.refresh { background:#f39c12; color:white; }
-    button:hover { opacity:0.85; }
-    .status { display:flex; align-items:center; font-size:13px; margin-left:10px; }
-    .status span { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:5px; }
+    .logo-text strong { font-size:14px; }
+    .logo-text span { font-size:11px; opacity:0.7; }
+    .controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+    button.ctrl { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; font-size:12px; color:white; }
+    .export{background:#27ae60;} .print{background:#2980b9;} .refresh{background:#f39c12;}
+    .status { display:flex; align-items:center; font-size:11px; margin-left:6px; }
+    .status span { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
     .connected{background:#2ecc71;} .disconnected{background:#e74c3c;} .loading{background:#f1c40f;}
-    .filters{margin:20px;display:flex;gap:10px;flex-wrap:wrap;}
-    input[type=text]{padding:6px 10px;border:1px solid #ccc;border-radius:6px;flex:1;}
-    select{padding:6px;border-radius:6px;}
-    .table-container{margin:20px;background:white;padding:15px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);overflow-x:auto;}
-    table{width:100%;border-collapse:collapse;}
-    th,td{border:1px solid #ddd;padding:8px;text-align:left;}
-    th{background:#2c3e50;color:white;cursor:pointer;}
+    
+    .filters{margin:15px;display:flex;gap:8px;flex-wrap:wrap;}
+    input[type=text]{padding:6px 8px;border:1px solid #ccc;border-radius:6px;flex:1; background:#f8f8f8;}
+    select{padding:6px;border-radius:6px;background:#f8f8f8;}
+    
+    .table-container{margin:15px;background:white;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;font-size:13px;}
+    th,td{border:1px solid #ddd;padding:6px;text-align:left;}
+    th{background:#34495e;color:white;cursor:pointer;}
     th.sorted-asc::after{content:" ▲";} th.sorted-desc::after{content:" ▼";}
     tr:nth-child(even){background:#f9f9f9;}
-    .totals{margin-top:12px;font-weight:bold;font-size:15px;text-align:right;color:#2c3e50;}
+    tr:hover { background:#dfe9f3; } /* ✅ Efek hover */
+    th:first-child { background:#34495e; color:white; }
+    .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
+
+    /* Responsive */
+    @media(max-width:768px){
+      .sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-220px); }
+      .sidebar.show { transform:translateX(0); }
+      .main { margin-left:0 !important; }
+      header { justify-content:space-between; }
+      .controls { gap:4px; }
+      .logo img { width:50px; height:30px; }
+      .logo-text strong { font-size:12px; }
+      .logo-text span { font-size:10px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
-      <div class="logo-text">
-        <strong>Warehouse Yogya</strong>
-        <span>Update Stock Raw Material & Packaging</span>
-      </div>
-    </div>
-    <div class="controls">
-      <button class="export" onclick="exportTable()">⬇ Export</button>
-      <button class="print" onclick="printTable()">🖨 Print</button>
-      <button class="refresh" onclick="loadSheet()">🔄 Refresh Data</button>
-      <div class="status" id="status">
-        <span class="disconnected"></span><span id="statusText">Disconnected</span>
-      </div>
-    </div>
-  </header>
-
-  <div class="filters">
-    <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
-    <select id="filterC" onchange="applyFilters()">
-      <option value="">-- Filter Item ID --</option>
-    </select>
-    <select id="filterE" onchange="applyFilters()">
-      <option value="">-- Filter Kategory--</option>
-    </select>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <h2>📑 Menu</h2>
+    <button onclick="switchSheet(0)" class="active">Raw Material & Packaging</button>
+    <button onclick="switchSheet(1)">Finish Goods</button>
   </div>
 
-  <div class="table-container">
-    <table id="sheetTable">
-      <thead></thead>
-      <tbody></tbody>
-    </table>
-    <div class="totals" id="totalQtyH">Total Pcs: 0</div>
-<div class="totals" id="totalQtyI">Total Stock kgs/Roll/Meter/Ltr: 0</div>
+  <!-- Main Content -->
+  <div class="main" id="main">
+    <header>
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+      <div class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
+        <div class="logo-text">
+          <strong>Raw Material & Packaging</strong>
+          <span>Update Stock Raw Material & Packaging</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
+        <button class="ctrl print" onclick="printTable()">🖨 Print</button>
+        <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
+        <div class="status" id="status">
+          <span class="disconnected"></span><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="filters">
+      <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
+      <select id="filterC" onchange="applyFilters()"><option value="">-- Filter --</option></select>
+    </div>
+
+    <div class="table-container">
+      <table id="sheetTable"><thead></thead><tbody></tbody></table>
+      <div class="totals" id="total1"></div>
+      <div class="totals" id="total2"></div>
+      <div class="totals" id="total3"></div>
+      <div class="totals" id="total4"></div>
+    </div>
+  </div>
 
 
 <script>
-const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv";
+const sheetUrls = [
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1311215156&single=true&output=csv"
+];
+const sheetTitles = [
+  { title: "Raw Material & Packaging", subtitle: "Update Stock Raw Material & Packaging" },
+  { title: "Finish Goods", subtitle: "Update Stock Barang Jadi" }
+];
+
+let activeSheet = 0;
 let allRows = [];
 let currentSort = { index: -1, asc: true };
 
-async function loadSheet() {
-  setStatus("loading","Loading...");
-  try {
-    const response = await fetch(sheetUrl + "&cacheBust=" + Date.now());
-    if(!response.ok) throw new Error("Fetch gagal");
-    const csvText = await response.text();
-    const parsed = Papa.parse(csvText,{skipEmptyLines:true});
-    allRows = parsed.data;
-    renderTable(allRows);
-    fillFilter(allRows);
-    setStatus("connected","Connected");
-  } catch(err) {
-    console.error(err);
-    setStatus("disconnected","Disconnected");
+function toggleSidebar(){
+  const sidebar=document.getElementById("sidebar");
+  if(window.innerWidth<=768){
+    sidebar.classList.toggle("show");
+  }else{
+    sidebar.classList.toggle("collapsed");
+    document.getElementById("main").classList.toggle("shifted");
   }
 }
-
+function switchSheet(index){
+  activeSheet=index;
+  document.querySelectorAll(".sidebar button").forEach((btn,i)=>btn.classList.toggle("active",i===index));
+  document.querySelector(".logo-text strong").textContent = sheetTitles[index].title;
+  document.querySelector(".logo-text span").textContent = sheetTitles[index].subtitle;
+  loadSheet();
+}
+async function loadSheet(){
+  setStatus("loading","Loading...");
+  try{
+    const res=await fetch(sheetUrls[activeSheet]+"&cacheBust="+Date.now());
+    if(!res.ok) throw new Error("Fetch error");
+    const csv=await res.text();
+    const parsed=Papa.parse(csv,{skipEmptyLines:true});
+    allRows=parsed.data;
+    renderTable(allRows); fillFilter(allRows);
+    setStatus("connected","Connected");
+  }catch(e){ console.error(e); setStatus("disconnected","Disconnected"); }
+}
 function renderTable(rows){
   let thead=document.querySelector("#sheetTable thead");
   let tbody=document.querySelector("#sheetTable tbody");
   thead.innerHTML=""; tbody.innerHTML="";
-
-  let headerRow=document.createElement("tr");
+  let header=document.createElement("tr");
   rows[0].forEach((h,i)=>{
-    let th=document.createElement("th");
-    th.textContent=h;
+    if(activeSheet===1 && (i===2||i===3)) return; 
+    let th=document.createElement("th"); th.textContent=h;
     th.onclick=()=>sortTable(i);
     if(currentSort.index===i) th.classList.add(currentSort.asc?"sorted-asc":"sorted-desc");
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-
-  let totalH=0, totalI=0;
+    header.appendChild(th);
+  }); thead.appendChild(header);
+  
+  let totalH=0,totalI=0,totalM=0,totalN=0,totalP=0,totalQ=0;
   rows.slice(1).forEach(r=>{
     let tr=document.createElement("tr");
-    r.forEach(c=>{
-      let td=document.createElement("td"); td.textContent=c; tr.appendChild(td);
+    r.forEach((c,i)=>{ 
+      if(activeSheet===1 && (i===2||i===3)) return; 
+      let td=document.createElement("td");td.textContent=c;tr.appendChild(td);
     });
     tbody.appendChild(tr);
-
-    let valH=parseFloat(r[7]); if(!isNaN(valH)) totalH+=valH;
-    let valI=parseFloat(r[8]); if(!isNaN(valI)) totalI+=valI;
+    if(activeSheet===0){
+      let valH=parseFloat(r[7]); if(!isNaN(valH)) totalH+=valH;
+      let valI=parseFloat(r[8]); if(!isNaN(valI)) totalI+=valI;
+    }else{
+      let vM=parseFloat(r[12]); if(!isNaN(vM)) totalM+=vM;
+      let vN=parseFloat(r[13]); if(!isNaN(vN)) totalN+=vN;
+      let vP=parseFloat(r[15]); if(!isNaN(vP)) totalP+=vP;
+      let vQ=parseFloat(r[16]); if(!isNaN(vQ)) totalQ+=vQ;
+    }
   });
-  document.getElementById("totalQtyH").textContent = "Total Pcs: " + totalH.toLocaleString();
-document.getElementById("totalQtyI").textContent = "Total Stock kgs/Roll/Meter/Ltr: " + totalI.toLocaleString();
+  
+  if(activeSheet===0){
+    document.getElementById("total1").textContent="Total Pcs: "+totalH.toLocaleString("id-ID");
+    document.getElementById("total2").textContent="Total Stock kgs/Roll/Meter/Ltr: "+totalI.toLocaleString("id-ID");
+    document.getElementById("total3").textContent="";
+    document.getElementById("total4").textContent="";
+  } else {
+    document.getElementById("total1").textContent="Total keluar Crtn: "+totalM.toLocaleString("id-ID");
+    document.getElementById("total2").textContent="Total Saldo Akhir Crtn: "+totalN.toLocaleString("id-ID");
+    document.getElementById("total3").textContent="Total Saldo Akhir Kgs: "+totalP.toLocaleString("id-ID");
+    document.getElementById("total4").textContent="Total keluar Kgs: "+totalQ.toLocaleString("id-ID");
+  }
 }
-
-function sortTable(index){
-  let rows=[...allRows];
-  if(index===currentSort.index) currentSort.asc=!currentSort.asc;
-  else currentSort={index,asc:true};
+function sortTable(i){
+  let rows=[...allRows]; if(i===currentSort.index) currentSort.asc=!currentSort.asc; else currentSort={index:i,asc:true};
   let header=rows.shift();
   rows.sort((a,b)=>{
-    let va=a[index], vb=b[index];
-    let na=parseFloat(va), nb=parseFloat(vb);
+    let va=a[i],vb=b[i]; let na=parseFloat(va), nb=parseFloat(vb);
     if(!isNaN(na)&&!isNaN(nb)) return currentSort.asc?na-nb:nb-na;
     return currentSort.asc?va.localeCompare(vb):vb.localeCompare(va);
   });
   renderTable([header,...rows]);
 }
-
 function applyFilters(){
   let search=document.getElementById("searchBox").value.toLowerCase();
-  let filterC=document.getElementById("filterC").value;
-  let filterE=document.getElementById("filterE").value;
-  let filtered=allRows.filter((r,idx)=>{
-    if(idx===0) return true;
-    let matchSearch=r.some(c=>c.toLowerCase().includes(search));
-    let matchC=!filterC||r[2]===filterC;
-    let matchE=!filterE||r[4]===filterE;
-    return matchSearch && matchC && matchE;
+  let fC=document.getElementById("filterC").value;
+  let filtered=allRows.filter((r,i)=>{
+    if(i===0)return true;
+    let s=r.some(c=>c.toLowerCase().includes(search));
+    if(activeSheet===0){
+      let mC=!fC||r[2]===fC;
+      return s && mC;
+    }else{
+      let mC=!fC||r[1]===fC; 
+      return s && mC;
+    }
   });
   renderTable(filtered);
 }
-
 function fillFilter(rows){
-  let selectC=document.getElementById("filterC");
-  let selectE=document.getElementById("filterE");
-  let valuesC=[...new Set(rows.slice(1).map(r=>r[2]))];
-  let valuesE=[...new Set(rows.slice(1).map(r=>r[4]))];
-  selectC.innerHTML="<option value=''>-- Filter Item ID --</option>";
-  valuesC.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;selectC.appendChild(o);}});
-  selectE.innerHTML="<option value=''>-- Filter Kategory --</option>";
-  valuesE.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;selectE.appendChild(o);}});
+  let sc=document.getElementById("filterC");
+  sc.innerHTML="<option value=''>-- Filter --</option>";
+  let vals=[];
+  if(activeSheet===0){
+    vals=[...new Set(rows.slice(1).map(r=>r[2]))]; 
+  }else{
+    vals=[...new Set(rows.slice(1).map(r=>r[1]))]; 
+  }
+  vals.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;sc.appendChild(o);}});
 }
-
-function exportTable(){
-  let csv=Papa.unparse(allRows);
-  let blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  let url=URL.createObjectURL(blob);
-  let a=document.createElement("a"); a.href=url; a.download="data.csv"; a.click();
-}
+function exportTable(){ let csv=Papa.unparse(allRows); let blob=new Blob([csv],{type:"text/csv"}); let url=URL.createObjectURL(blob); let a=document.createElement("a"); a.href=url; a.download="data.csv"; a.click(); }
 function printTable(){ window.print(); }
-function setStatus(state,text){
-  let span=document.querySelector("#status span");
-  span.className="";
-  span.classList.add(state==="connected"?"connected":state==="loading"?"loading":"disconnected");
-  document.getElementById("statusText").textContent=text;
-}
+function setStatus(st,t){ let span=document.querySelector("#status span"); span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; document.getElementById("statusText").textContent=t; }
 loadSheet();
 </script>
 </body>
