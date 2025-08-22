@@ -61,6 +61,13 @@
     th:first-child { background:#34495e; color:white; }
     .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
 
+    /* ✅ Conditional Formatting untuk nilai minus */
+    .negative-value {
+      color: #e74c3c !important;
+      font-weight: bold;
+      background-color: rgba(231, 76, 60, 0.1);
+    }
+
     /* Responsive */
     @media(max-width:768px){
       .sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-220px); }
@@ -132,6 +139,22 @@ let activeSheet = 0;
 let allRows = [];
 let currentSort = { index: -1, asc: true };
 
+// ✅ Fungsi untuk mengecek apakah nilai adalah minus
+function isNegativeValue(value) {
+  // Cek apakah string dimulai dengan minus atau tanda negatif
+  if (typeof value === 'string') {
+    value = value.trim();
+    return value.startsWith('-') || value.includes('(') && value.includes(')');
+  }
+  // Cek apakah number negatif
+  if (typeof value === 'number') {
+    return value < 0;
+  }
+  // Coba parse sebagai number
+  const num = parseFloat(value);
+  return !isNaN(num) && num < 0;
+}
+
 function toggleSidebar(){
   const sidebar=document.getElementById("sidebar");
   if(window.innerWidth<=768){
@@ -178,7 +201,15 @@ function renderTable(rows){
     let tr=document.createElement("tr");
     r.forEach((c,i)=>{ 
       if(activeSheet===1 && (i===2||i===3)) return; 
-      let td=document.createElement("td");td.textContent=c;tr.appendChild(td);
+      let td=document.createElement("td");
+      td.textContent=c;
+      
+      // ✅ Terapkan conditional formatting untuk sheet 2 (Finish Goods)
+      if(activeSheet === 1 && isNegativeValue(c)) {
+        td.classList.add('negative-value');
+      }
+      
+      tr.appendChild(td);
     });
     tbody.appendChild(tr);
     if(activeSheet===0){
