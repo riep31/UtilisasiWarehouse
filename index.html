@@ -2,11 +2,12 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard GSheet</title>
+  <title>Utilisasi Warehouse</title>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family:'Segoe UI',Tahoma,sans-serif; margin:0; background:#eef2f7; display:flex; transition:0.3s; }
-    
+
     /* Sidebar */
     .sidebar {
       width:220px; background:#2c3e50; color:white; min-height:100vh;
@@ -30,7 +31,6 @@
     header {
       display:flex; align-items:center; justify-content:flex-start;
       background:#ffffff; padding:12px 20px; color:#2c3e50; box-shadow:0 2px 5px rgba(0,0,0,0.1);
-      /* ❌ dihapus sticky supaya tidak freeze */
     }
     .menu-toggle {
       font-size:22px; cursor:pointer; margin-right:15px; border:none; background:none;
@@ -46,39 +46,28 @@
     .status { display:flex; align-items:center; font-size:11px; margin-left:6px; }
     .status span { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px; }
     .connected{background:#2ecc71;} .disconnected{background:#e74c3c;} .loading{background:#f1c40f;}
-    
+
     .filters{margin:15px;display:flex;gap:8px;flex-wrap:wrap;}
     input[type=text]{padding:6px 8px;border:1px solid #ccc;border-radius:6px;flex:1; background:#f8f8f8;}
     select{padding:6px;border-radius:6px;background:#f8f8f8;}
-    
+
+    /* Tabel */
     .table-container{margin:15px;background:white;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);overflow-x:auto;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
     th,td{border:1px solid #ddd;padding:6px;text-align:left;}
     th{background:#34495e;color:white;cursor:pointer;}
     th.sorted-asc::after{content:" ▲";} th.sorted-desc::after{content:" ▼";}
     tr:nth-child(even){background:#f9f9f9;}
-    tr:hover { background:#dfe9f3; } /* ✅ Efek hover */
+    tr:hover { background:#dfe9f3; cursor:pointer; }
     th:first-child { background:#34495e; color:white; }
     .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
 
-    /* ✅ Conditional Formatting untuk nilai minus */
-    .negative-value {
-      color: #e74c3c !important;
-      font-weight: bold;
-      background-color: rgba(231, 76, 60, 0.1);
-    }
-
-    /* Responsive */
-    @media(max-width:768px){
-      .sidebar { position:fixed; left:0; top:0; height:100%; transform:translateX(-220px); }
-      .sidebar.show { transform:translateX(0); }
-      .main { margin-left:0 !important; }
-      header { justify-content:space-between; }
-      .controls { gap:4px; }
-      .logo img { width:50px; height:30px; }
-      .logo-text strong { font-size:12px; }
-      .logo-text span { font-size:10px; }
-    }
+    /* ✅ Chart section */
+    .charts { display:flex; flex-wrap:wrap; gap:20px; margin:15px; }
+    .chart-card { background:white; border-radius:12px; padding:15px; flex:1; min-width:250px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
+    .chart-card h4 { margin-bottom:10px; font-size:14px; color:#2c3e50; }
+    canvas { max-height:180px !important; }
   </style>
 </head>
 <body>
@@ -110,26 +99,41 @@
       </div>
     </header>
 
+    <!-- ✅ Mini Charts -->
+    <div class="charts">
+      <div class="chart-card">
+        <h4>Kapasitas Gudang (%)</h4>
+        <canvas id="capacityChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h4>Racking Status</h4>
+        <canvas id="rackingChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ✅ Tabel kecil (Sheet 3) -->
+    <div class="table-container">
+      <h4>📊 Data Kapasitas Gudang</h4>
+      <table id="miniTable"><thead></thead><tbody></tbody></table>
+    </div>
+
+    <!-- Tabel utama -->
     <div class="filters">
       <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
       <select id="filterC" onchange="applyFilters()"><option value="">-- Filter --</option></select>
     </div>
-
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
-      <div class="totals" id="total1"></div>
-      <div class="totals" id="total2"></div>
-      <div class="totals" id="total3"></div>
-      <div class="totals" id="total4"></div>
     </div>
   </div>
 
-
 <script>
 const sheetUrls = [
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1311215156&single=true&output=csv"
+   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv",
+   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1311215156&single=true&output=csv",
+   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1101669529&single=true&output=csv"
 ];
+
 const sheetTitles = [
   { title: "Raw Material & Packaging", subtitle: "Update Stock Raw Material & Packaging" },
   { title: "Finish Goods", subtitle: "Update Stock Barang Jadi" }
@@ -137,23 +141,9 @@ const sheetTitles = [
 
 let activeSheet = 0;
 let allRows = [];
+let miniRows = [];
 let currentSort = { index: -1, asc: true };
-
-// ✅ Fungsi untuk mengecek apakah nilai adalah minus
-function isNegativeValue(value) {
-  // Cek apakah string dimulai dengan minus atau tanda negatif
-  if (typeof value === 'string') {
-    value = value.trim();
-    return value.startsWith('-') || value.includes('(') && value.includes(')');
-  }
-  // Cek apakah number negatif
-  if (typeof value === 'number') {
-    return value < 0;
-  }
-  // Coba parse sebagai number
-  const num = parseFloat(value);
-  return !isNaN(num) && num < 0;
-}
+let capacityChart, rackingChart;
 
 function toggleSidebar(){
   const sidebar=document.getElementById("sidebar");
@@ -174,12 +164,22 @@ function switchSheet(index){
 async function loadSheet(){
   setStatus("loading","Loading...");
   try{
+    // load sheet utama
     const res=await fetch(sheetUrls[activeSheet]+"&cacheBust="+Date.now());
-    if(!res.ok) throw new Error("Fetch error");
     const csv=await res.text();
     const parsed=Papa.parse(csv,{skipEmptyLines:true});
     allRows=parsed.data;
-    renderTable(allRows); fillFilter(allRows);
+    renderTable(allRows);
+    fillFilter(allRows);
+    updateCharts(allRows);
+
+    // load sheet kecil (selalu sheet ke-3)
+    const res2=await fetch(sheetUrls[2]+"&cacheBust="+Date.now());
+    const csv2=await res2.text();
+    const parsed2=Papa.parse(csv2,{skipEmptyLines:true});
+    miniRows=parsed2.data;
+    renderMiniTable(miniRows);
+
     setStatus("connected","Connected");
   }catch(e){ console.error(e); setStatus("disconnected","Disconnected"); }
 }
@@ -189,51 +189,68 @@ function renderTable(rows){
   thead.innerHTML=""; tbody.innerHTML="";
   let header=document.createElement("tr");
   rows[0].forEach((h,i)=>{
-    if(activeSheet===1 && (i===2||i===3)) return; 
     let th=document.createElement("th"); th.textContent=h;
     th.onclick=()=>sortTable(i);
     if(currentSort.index===i) th.classList.add(currentSort.asc?"sorted-asc":"sorted-desc");
     header.appendChild(th);
   }); thead.appendChild(header);
-  
-  let totalH=0,totalI=0,totalM=0,totalN=0,totalP=0,totalQ=0;
+
   rows.slice(1).forEach(r=>{
     let tr=document.createElement("tr");
-    r.forEach((c,i)=>{ 
-      if(activeSheet===1 && (i===2||i===3)) return; 
-      let td=document.createElement("td");
-      td.textContent=c;
-      
-      // ✅ Terapkan conditional formatting untuk sheet 2 (Finish Goods)
-      if(activeSheet === 1 && isNegativeValue(c)) {
-        td.classList.add('negative-value');
-      }
-      
-      tr.appendChild(td);
-    });
+    r.forEach(c=>{ let td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
     tbody.appendChild(tr);
-    if(activeSheet===0){
-      let valH=parseFloat(r[7]); if(!isNaN(valH)) totalH+=valH;
-      let valI=parseFloat(r[8]); if(!isNaN(valI)) totalI+=valI;
-    }else{
-      let vM=parseFloat(r[12]); if(!isNaN(vM)) totalM+=vM;
-      let vN=parseFloat(r[13]); if(!isNaN(vN)) totalN+=vN;
-      let vP=parseFloat(r[15]); if(!isNaN(vP)) totalP+=vP;
-      let vQ=parseFloat(r[16]); if(!isNaN(vQ)) totalQ+=vQ;
-    }
   });
-  
-  if(activeSheet===0){
-    document.getElementById("total1").textContent="Total Pcs: "+totalH.toLocaleString("id-ID");
-    document.getElementById("total2").textContent="Total Stock kgs/Roll/Meter/Ltr: "+totalI.toLocaleString("id-ID");
-    document.getElementById("total3").textContent="";
-    document.getElementById("total4").textContent="";
-  } else {
-    document.getElementById("total1").textContent="Total keluar Crtn: "+totalM.toLocaleString("id-ID");
-    document.getElementById("total2").textContent="Total Saldo Akhir Crtn: "+totalN.toLocaleString("id-ID");
-    document.getElementById("total3").textContent="Total Saldo Akhir Kgs: "+totalP.toLocaleString("id-ID");
-    document.getElementById("total4").textContent="Total keluar Kgs: "+totalQ.toLocaleString("id-ID");
-  }
+}
+function renderMiniTable(rows){
+  let thead=document.querySelector("#miniTable thead");
+  let tbody=document.querySelector("#miniTable tbody");
+  thead.innerHTML=""; tbody.innerHTML="";
+  let header=document.createElement("tr");
+  rows[0].forEach(h=>{ let th=document.createElement("th"); th.textContent=h; header.appendChild(th); });
+  thead.appendChild(header);
+
+  rows.slice(1).forEach((r,i)=>{
+    let tr=document.createElement("tr");
+    r.forEach(c=>{ let td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
+    tr.onclick=()=>updateCharts([rows[0],r]); // klik baris → update chart 1 row
+    tbody.appendChild(tr);
+  });
+}
+function updateCharts(rows){
+  if(rows.length < 2) return;
+  let headers = rows[0];
+  let locIdx = headers.indexOf("Warehouse Location");
+  let stockedIdx = headers.indexOf("Stocked Racking Percent");
+  let emptyIdx = headers.indexOf("Empty Racking Percent");
+  if(locIdx<0||stockedIdx<0||emptyIdx<0) return;
+
+  let labels = [];
+  let stocked = [];
+  let empty = [];
+  rows.slice(1).forEach(r=>{
+    labels.push(r[locIdx]);
+    stocked.push(parseFloat(r[stockedIdx]||0));
+    empty.push(parseFloat(r[emptyIdx]||0));
+  });
+
+  if(capacityChart) capacityChart.destroy();
+  capacityChart = new Chart(document.getElementById("capacityChart"), {
+    type:"bar",
+    data:{ labels, datasets:[
+      { label:"Stocked %", data:stocked, backgroundColor:"#3498db" },
+      { label:"Empty %", data:empty, backgroundColor:"#95a5a6" }
+    ]},
+    options:{ responsive:true, plugins:{legend:{position:"bottom"}}, scales:{x:{stacked:true},y:{stacked:true,max:100}} }
+  });
+
+  let totalStocked = stocked.reduce((a,b)=>a+b,0)/stocked.length;
+  let totalEmpty = empty.reduce((a,b)=>a+b,0)/empty.length;
+  if(rackingChart) rackingChart.destroy();
+  rackingChart = new Chart(document.getElementById("rackingChart"), {
+    type:"doughnut",
+    data:{ labels:["Stocked","Empty"], datasets:[{ data:[totalStocked,totalEmpty], backgroundColor:["#27ae60","#e74c3c"] }] },
+    options:{ responsive:true, plugins:{legend:{position:"bottom"}} }
+  });
 }
 function sortTable(i){
   let rows=[...allRows]; if(i===currentSort.index) currentSort.asc=!currentSort.asc; else currentSort={index:i,asc:true};
@@ -251,30 +268,22 @@ function applyFilters(){
   let filtered=allRows.filter((r,i)=>{
     if(i===0)return true;
     let s=r.some(c=>c.toLowerCase().includes(search));
-    if(activeSheet===0){
-      let mC=!fC||r[2]===fC;
-      return s && mC;
-    }else{
-      let mC=!fC||r[1]===fC; 
-      return s && mC;
-    }
+    let mC=!fC||r[1]===fC;
+    return s && mC;
   });
   renderTable(filtered);
+  updateCharts(filtered);
 }
 function fillFilter(rows){
   let sc=document.getElementById("filterC");
   sc.innerHTML="<option value=''>-- Filter --</option>";
-  let vals=[];
-  if(activeSheet===0){
-    vals=[...new Set(rows.slice(1).map(r=>r[2]))]; 
-  }else{
-    vals=[...new Set(rows.slice(1).map(r=>r[1]))]; 
-  }
+  let vals=[...new Set(rows.slice(1).map(r=>r[1]))];
   vals.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;sc.appendChild(o);}});
 }
 function exportTable(){ let csv=Papa.unparse(allRows); let blob=new Blob([csv],{type:"text/csv"}); let url=URL.createObjectURL(blob); let a=document.createElement("a"); a.href=url; a.download="data.csv"; a.click(); }
 function printTable(){ window.print(); }
 function setStatus(st,t){ let span=document.querySelector("#status span"); span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; document.getElementById("statusText").textContent=t; }
+
 loadSheet();
 </script>
 </body>
