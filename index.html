@@ -63,6 +63,39 @@
     th:first-child { background:#34495e; color:white; }
     .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
 
+    /* ✅ Subtotal Styles */
+    .subtotals {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    }
+    .subtotals h4 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 14px;
+    }
+    .subtotal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e9ecef;
+      font-weight: bold;
+      color: #495057;
+    }
+    .subtotal-row:last-child {
+      border-bottom: none;
+    }
+    .subtotal-label {
+      font-weight: 600;
+    }
+    .subtotal-value {
+      color: #2c3e50;
+      font-family: 'Courier New', monospace;
+    }
+
     /* ✅ Conditional Formatting Styles */
     .negative-value {
       background-color: #ffebee !important;
@@ -132,6 +165,36 @@
     </div>
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
+      <!-- ✅ Subtotals Section -->
+      <div class="subtotals" id="subtotals" style="display: none;">
+        <h4>📊 Sub Totals</h4>
+        <!-- Sheet 1 Subtotals -->
+        <div class="subtotal-row" id="subtotalRowH">
+          <span class="subtotal-label">Sub Total Pcs:</span>
+          <span class="subtotal-value" id="subtotalH">0</span>
+        </div>
+        <div class="subtotal-row" id="subtotalRowI">
+          <span class="subtotal-label">Sub Total Kgs/Roll/Meter/Ltr:</span>
+          <span class="subtotal-value" id="subtotalI">0</span>
+        </div>
+        <!-- Sheet 2 Subtotals -->
+        <div class="subtotal-row" id="subtotalRowL">
+          <span class="subtotal-label">Sub Total Saldo Akhir:</span>
+          <span class="subtotal-value" id="subtotalL">0</span>
+        </div>
+        <div class="subtotal-row" id="subtotalRowP">
+          <span class="subtotal-label">Sub Total Saldo Akhir Kgs:</span>
+          <span class="subtotal-value" id="subtotalP">0</span>
+        </div>
+        <div class="subtotal-row" id="subtotalRowM">
+          <span class="subtotal-label">Sub Total Keluar:</span>
+          <span class="subtotal-value" id="subtotalM">0</span>
+        </div>
+        <div class="subtotal-row" id="subtotalRowQ">
+          <span class="subtotal-label">Sub Total Keluar Kgs:</span>
+          <span class="subtotal-value" id="subtotalQ">0</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -152,6 +215,121 @@ let allRows = [];
 let miniRows = [];
 let currentSort = { index: -1, asc: true };
 let capacityChart, rackingChart;
+
+// ✅ Function to calculate subtotals for both sheets
+function calculateSubtotals(rows) {
+  if (rows.length <= 1) return { 
+    subtotalH: 0, subtotalI: 0, subtotalL: 0, subtotalP: 0, subtotalM: 0, subtotalQ: 0 
+  };
+  
+  let subtotalH = 0, subtotalI = 0, subtotalL = 0, subtotalP = 0, subtotalM = 0, subtotalQ = 0;
+  
+  // Skip header row and calculate totals
+  rows.slice(1).forEach(row => {
+    // Sheet 1 columns: H (index 7) and I (index 8)
+    if (activeSheet === 0) {
+      const valueH = parseFloat(row[7]) || 0;
+      if (!isNaN(valueH)) subtotalH += valueH;
+      
+      const valueI = parseFloat(row[8]) || 0;
+      if (!isNaN(valueI)) subtotalI += valueI;
+    }
+    
+    // Sheet 2 columns:N  (index 13), P (index 15), M (index 12), Q (index 16)
+    if (activeSheet === 1) {
+      const valueL = parseFloat(row[13]) || 0;
+      if (!isNaN(valueL)) subtotalL += valueL;
+      
+      const valueP = parseFloat(row[15]) || 0;
+      if (!isNaN(valueP)) subtotalP += valueP;
+      
+      const valueM = parseFloat(row[12]) || 0;
+      if (!isNaN(valueM)) subtotalM += valueM;
+      
+      const valueQ = parseFloat(row[16]) || 0;
+      if (!isNaN(valueQ)) subtotalQ += valueQ;
+    }
+  });
+  
+  return { subtotalH, subtotalI, subtotalL, subtotalP, subtotalM, subtotalQ };
+}
+
+// ✅ Function to update subtotals display
+function updateSubtotals(rows) {
+  const subtotals = calculateSubtotals(rows);
+  const subtotalSection = document.getElementById('subtotals');
+  
+  // Get all subtotal elements
+  const subtotalH = document.getElementById('subtotalH');
+  const subtotalI = document.getElementById('subtotalI');
+  const subtotalL = document.getElementById('subtotalL');
+  const subtotalP = document.getElementById('subtotalP');
+  const subtotalM = document.getElementById('subtotalM');
+  const subtotalQ = document.getElementById('subtotalQ');
+  
+  // Get subtotal row elements for show/hide
+  const subtotalRowH = document.getElementById('subtotalRowH');
+  const subtotalRowI = document.getElementById('subtotalRowI');
+  const subtotalRowL = document.getElementById('subtotalRowL');
+  const subtotalRowP = document.getElementById('subtotalRowP');
+  const subtotalRowM = document.getElementById('subtotalRowM');
+  const subtotalRowQ = document.getElementById('subtotalRowQ');
+  
+  if (rows.length > 1) {
+    // Sheet 1 (Raw Material & Packaging) - Show H and I subtotals
+    if (activeSheet === 0) {
+      subtotalH.textContent = subtotals.subtotalH.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      subtotalI.textContent = subtotals.subtotalI.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      
+      // Show Sheet 1 subtotals, hide Sheet 2 subtotals
+      subtotalRowH.style.display = 'flex';
+      subtotalRowI.style.display = 'flex';
+      subtotalRowL.style.display = 'none';
+      subtotalRowP.style.display = 'none';
+      subtotalRowM.style.display = 'none';
+      subtotalRowQ.style.display = 'none';
+      
+      subtotalSection.style.display = 'block';
+    }
+    // Sheet 2 (Finish Goods) - Show L, P, M, Q subtotals
+    else if (activeSheet === 1) {
+      subtotalL.textContent = subtotals.subtotalL.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      subtotalP.textContent = subtotals.subtotalP.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      subtotalM.textContent = subtotals.subtotalM.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      subtotalQ.textContent = subtotals.subtotalQ.toLocaleString('id-ID', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      
+      // Show Sheet 2 subtotals, hide Sheet 1 subtotals
+      subtotalRowH.style.display = 'none';
+      subtotalRowI.style.display = 'none';
+      subtotalRowL.style.display = 'flex';
+      subtotalRowP.style.display = 'flex';
+      subtotalRowM.style.display = 'flex';
+      subtotalRowQ.style.display = 'flex';
+      
+      subtotalSection.style.display = 'block';
+    }
+  } else {
+    subtotalSection.style.display = 'none';
+  }
+}
 
 // ✅ Function to check if value should be formatted
 function shouldApplyConditionalFormatting(value, columnIndex, headers) {
@@ -213,6 +391,7 @@ async function loadSheet(){
     renderTable(allRows);
     fillFilter(allRows);
     updateCharts(allRows);
+    updateSubtotals(allRows); // ✅ Add subtotals calculation
 
     // load sheet kecil (selalu sheet ke-3)
     const res2=await fetch(sheetUrls[2]+"&cacheBust="+Date.now());
@@ -269,6 +448,9 @@ function renderTable(rows){
     });
     tbody.appendChild(tr);
   });
+  
+  // ✅ Update subtotals after rendering table
+  updateSubtotals(rows);
 }
 
 function renderMiniTable(rows){
@@ -392,7 +574,9 @@ function sortTable(i){
     if(!isNaN(na)&&!isNaN(nb)) return currentSort.asc?na-nb:nb-na;
     return currentSort.asc?va.localeCompare(vb):vb.localeCompare(va);
   });
-  renderTable([header,...rows]);
+  let sortedRows = [header,...rows];
+  renderTable(sortedRows);
+  updateSubtotals(sortedRows); // ✅ Update subtotals after sorting
 }
 function applyFilters(){
   let search=document.getElementById("searchBox").value.toLowerCase();
@@ -405,6 +589,7 @@ function applyFilters(){
   });
   renderTable(filtered);
   updateCharts(filtered);
+  updateSubtotals(filtered); // ✅ Update subtotals after filtering
 }
 function fillFilter(rows){
   let sc=document.getElementById("filterC");
