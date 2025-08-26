@@ -51,6 +51,8 @@
     input[type=text]{padding:6px 8px;border:1px solid #ccc;border-radius:6px;flex:1; background:#f8f8f8;}
     select{padding:6px;border-radius:6px;background:#f8f8f8;}
 
+    /* Removed API Configuration styles - no longer needed */
+
     /* Tabel */
     .table-container{margin:15px;background:white;padding:10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);overflow-x:auto;}
     table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -63,7 +65,7 @@
     th:first-child { background:#34495e; color:white; }
     .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
 
-    /* ✅ Subtotal Styles */
+    /* Subtotal Styles */
     .subtotals {
       margin-top: 15px;
       padding: 10px;
@@ -96,14 +98,14 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* ✅ Conditional Formatting Styles */
+    /* Conditional Formatting Styles */
     .negative-value {
       background-color: #ffebee !important;
       color: #c62828 !important;
       font-weight: bold;
     }
 
-    /* ✅ Chart section */
+    /* Chart section */
     .charts { display:flex; flex-wrap:wrap; gap:20px; margin:15px; }
     .chart-card { background:white; border-radius:12px; padding:15px; flex:1; min-width:250px;
       box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
@@ -140,7 +142,9 @@
       </div>
     </header>
 
-    <!-- ✅ Mini Charts -->
+
+
+    <!-- Mini Charts -->
     <div class="charts">
       <div class="chart-card">
         <h4>Kapasitas Gudang (%)</h4>
@@ -152,7 +156,7 @@
       </div>
     </div>
 
-    <!-- ✅ Tabel kecil (Sheet 3) -->
+    <!-- Tabel kecil (Sheet 3) -->
     <div class="table-container">
       <h4>📊 Data Kapasitas Gudang</h4>
       <table id="miniTable"><thead></thead><tbody></tbody></table>
@@ -165,7 +169,7 @@
     </div>
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
-      <!-- ✅ Subtotals Section -->
+      <!-- Subtotals Section -->
       <div class="subtotals" id="subtotals" style="display: none;">
         <h4>📊 Sub Totals</h4>
         <!-- Sheet 1 Subtotals -->
@@ -199,10 +203,12 @@
   </div>
 
 <script>
-const sheetUrls = [
-   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSxhDEkbXTioPrWkbvxRrOp27fQk_OkCKpmiZ5x-qyOxxtVHXKNfNyXkpmMY1MWNJANbd_gbPpz8D3/pub?gid=1599234092&single=true&output=csv",
-   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1311215156&single=true&output=csv",
-   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTOViOi6H-pEujdwYvV9XHIpqMNbtrjEayK5Ri6uPNN31XJ6UVnhAlKb9vxyw2z4iebB3KbqyMNLV0Z/pub?gid=1101669529&single=true&output=csv"
+// Google Sheets API Configuration - EDIT VALUES BELOW
+let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis'; // 👈 Masukkan API Key Google Sheets di sini
+let spreadsheetConfigs = [
+  { id: '1AwPzVONLkr-GXigtHBGPPXE8XwZdwPXw69g7XSp5FdY', sheetName: 'LINKTOWEB3' }, // Raw Material & Packaging
+  { id: '1AwPzVONLkr-GXigtHBGPPXE8XwZdwPXw69g7XSp5FdY', sheetName: 'LINKTOWEB' }, // Finish Goods  
+  { id: '1AwPzVONLkr-GXigtHBGPPXE8XwZdwPXw69g7XSp5FdY', sheetName: 'LINKTOWEB2' }  // Capacity Data
 ];
 
 const sheetTitles = [
@@ -216,7 +222,46 @@ let miniRows = [];
 let currentSort = { index: -1, asc: true };
 let capacityChart, rackingChart;
 
-// ✅ Function to calculate subtotals for both sheets
+// Load saved configuration from localStorage alternative (using variables)
+let savedConfig = {
+  apiKey: '',
+  spreadsheetId1: '',
+  sheetName1: 'Sheet1',
+  spreadsheetId2: '',
+  sheetName2: 'Sheet1',
+  spreadsheetId3: '',
+  sheetName3: 'Sheet1'
+};
+
+// Initialize configuration
+function initializeConfig() {
+  // Configuration is now hardcoded in the variables above
+  // No need for UI configuration anymore
+}
+
+
+
+// Google Sheets API function to fetch data
+async function fetchSheetData(spreadsheetId, sheetName) {
+  if (!apiKey || !spreadsheetId) {
+    throw new Error('API key or spreadsheet ID not configured');
+  }
+  
+  const range = `${sheetName}!A:Z`; // Adjust range as needed
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+  
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Google Sheets API Error: ${errorData.error?.message || response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.values || [];
+}
+
+// Function to calculate subtotals for both sheets
 function calculateSubtotals(rows) {
   if (rows.length <= 1) return { 
     subtotalH: 0, subtotalI: 0, subtotalL: 0, subtotalP: 0, subtotalM: 0, subtotalQ: 0 
@@ -235,9 +280,9 @@ function calculateSubtotals(rows) {
       if (!isNaN(valueI)) subtotalI += valueI;
     }
     
-    // Sheet 2 columns:N  (index 13), P (index 15), M (index 12), Q (index 16)
+    // Sheet 2 columns: L (index 11), P (index 15), M (index 12), Q (index 16)
     if (activeSheet === 1) {
-      const valueL = parseFloat(row[13]) || 0;
+      const valueL = parseFloat(row[11]) || 0;
       if (!isNaN(valueL)) subtotalL += valueL;
       
       const valueP = parseFloat(row[15]) || 0;
@@ -254,7 +299,7 @@ function calculateSubtotals(rows) {
   return { subtotalH, subtotalI, subtotalL, subtotalP, subtotalM, subtotalQ };
 }
 
-// ✅ Function to update subtotals display
+// Function to update subtotals display
 function updateSubtotals(rows) {
   const subtotals = calculateSubtotals(rows);
   const subtotalSection = document.getElementById('subtotals');
@@ -331,7 +376,7 @@ function updateSubtotals(rows) {
   }
 }
 
-// ✅ Function to check if value should be formatted
+// Function to check if value should be formatted
 function shouldApplyConditionalFormatting(value, columnIndex, headers) {
   // Only apply to Sheet 2 (Finish Goods) - activeSheet === 1
   if (activeSheet !== 1) return null;
@@ -359,7 +404,7 @@ function shouldApplyConditionalFormatting(value, columnIndex, headers) {
   const numValue = parseFloat(value);
   if (isNaN(numValue)) return null;
   
-  // ✅ Only apply formatting for negative values (remove zero formatting)
+  // Only apply formatting for negative values
   if (numValue < 0) return 'negative-value';
   return null;
 }
@@ -373,6 +418,7 @@ function toggleSidebar(){
     document.getElementById("main").classList.toggle("shifted");
   }
 }
+
 function switchSheet(index){
   activeSheet=index;
   document.querySelectorAll(".sidebar button").forEach((btn,i)=>btn.classList.toggle("active",i===index));
@@ -380,37 +426,49 @@ function switchSheet(index){
   document.querySelector(".logo-text span").textContent = sheetTitles[index].subtitle;
   loadSheet();
 }
+
 async function loadSheet(){
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+    setStatus("disconnected", "API Key belum dikonfigurasi");
+    console.error('Please configure API key in the code');
+    return;
+  }
+  
   setStatus("loading","Loading...");
   try{
-    // load sheet utama
-    const res=await fetch(sheetUrls[activeSheet]+"&cacheBust="+Date.now());
-    const csv=await res.text();
-    const parsed=Papa.parse(csv,{skipEmptyLines:true});
-    allRows=parsed.data;
+    // Load main sheet
+    const mainSheetData = await fetchSheetData(
+      spreadsheetConfigs[activeSheet].id, 
+      spreadsheetConfigs[activeSheet].sheetName
+    );
+    allRows = mainSheetData;
     renderTable(allRows);
     fillFilter(allRows);
     updateCharts(allRows);
-    updateSubtotals(allRows); // ✅ Add subtotals calculation
+    updateSubtotals(allRows);
 
-    // load sheet kecil (selalu sheet ke-3)
-    const res2=await fetch(sheetUrls[2]+"&cacheBust="+Date.now());
-    const csv2=await res2.text();
-    const parsed2=Papa.parse(csv2,{skipEmptyLines:true});
-    miniRows=parsed2.data;
+    // Load capacity sheet (always sheet 3)
+    const capacitySheetData = await fetchSheetData(
+      spreadsheetConfigs[2].id, 
+      spreadsheetConfigs[2].sheetName
+    );
+    miniRows = capacitySheetData;
     renderMiniTable(miniRows);
 
     setStatus("connected","Connected");
-  }catch(e){ console.error(e); setStatus("disconnected","Disconnected"); }
+  } catch(error) {
+    console.error('Error loading sheet:', error);
+    setStatus("disconnected","Error: " + error.message);
+  }
 }
 
-// ✅ Function to check if column should be hidden
+// Function to check if column should be hidden
 function shouldHideColumn(columnIndex) {
   // Hide columns C (index 2) and D (index 3) only on Sheet 2 (Finish Goods)
   return activeSheet === 1 && (columnIndex === 2 || columnIndex === 3);
 }
 
-// ✅ Updated renderTable function with conditional formatting and column hiding
+// Updated renderTable function with conditional formatting and column hiding
 function renderTable(rows){
   let thead=document.querySelector("#sheetTable thead");
   let tbody=document.querySelector("#sheetTable tbody");
@@ -420,7 +478,7 @@ function renderTable(rows){
   
   let header=document.createElement("tr");
   rows[0].forEach((h,i)=>{
-    // ✅ Skip hidden columns
+    // Skip hidden columns
     if(shouldHideColumn(i)) return;
     
     let th=document.createElement("th"); th.textContent=h;
@@ -432,13 +490,13 @@ function renderTable(rows){
   rows.slice(1).forEach(r=>{
     let tr=document.createElement("tr");
     r.forEach((c,i)=>{
-      // ✅ Skip hidden columns
+      // Skip hidden columns
       if(shouldHideColumn(i)) return;
       
       let td=document.createElement("td"); 
       td.textContent=c;
       
-      // ✅ Apply conditional formatting
+      // Apply conditional formatting
       const formatClass = shouldApplyConditionalFormatting(c, i, rows[0]);
       if(formatClass) {
         td.classList.add(formatClass);
@@ -449,7 +507,7 @@ function renderTable(rows){
     tbody.appendChild(tr);
   });
   
-  // ✅ Update subtotals after rendering table
+  // Update subtotals after rendering table
   updateSubtotals(rows);
 }
 
@@ -457,6 +515,8 @@ function renderMiniTable(rows){
   let thead=document.querySelector("#miniTable thead");
   let tbody=document.querySelector("#miniTable tbody");
   thead.innerHTML=""; tbody.innerHTML="";
+  if(rows.length === 0) return;
+  
   let header=document.createElement("tr");
   rows[0].forEach(h=>{ let th=document.createElement("th"); th.textContent=h; header.appendChild(th); });
   thead.appendChild(header);
@@ -465,19 +525,20 @@ function renderMiniTable(rows){
     let tr=document.createElement("tr");
     r.forEach(c=>{ let td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
     tr.onclick=()=>{
-      // ✅ Remove active class from all rows
+      // Remove active class from all rows
       document.querySelectorAll("#miniTable tbody tr").forEach(row => row.classList.remove("selected"));
-      // ✅ Add active class to clicked row
+      // Add active class to clicked row
       tr.classList.add("selected");
       
       // Update capacity chart with single row data
       updateCharts([rows[0],r]); 
-      // ✅ Update racking chart with selected row data
+      // Update racking chart with selected row data
       updateRackingChart(r);
     };
     tbody.appendChild(tr);
   });
 }
+
 function updateCharts(rows){
   if(rows.length < 2) return;
   let headers = rows[0];
@@ -505,11 +566,11 @@ function updateCharts(rows){
     options:{ responsive:true, plugins:{legend:{position:"bottom"}}, scales:{x:{stacked:true},y:{stacked:true,max:100}} }
   });
 
-  // ✅ Update Racking Chart to use data from Sheet 3 (miniRows) columns C and D
+  // Update Racking Chart to use data from Sheet 3 (miniRows) columns C and D
   updateRackingChart();
 }
 
-// ✅ New function to update Racking Chart using Sheet 3 data
+// New function to update Racking Chart using Sheet 3 data
 function updateRackingChart(selectedRow = null){
   if(miniRows.length < 2) return;
   
@@ -517,13 +578,13 @@ function updateRackingChart(selectedRow = null){
   let emptyData = [];
   
   if(selectedRow) {
-    // ✅ Use data from selected row only
+    // Use data from selected row only
     let stockedVal = parseFloat(selectedRow[2]||0); // Column C - Stocked values
     let emptyVal = parseFloat(selectedRow[3]||0);   // Column D - Empty values
     stockedData.push(stockedVal);
     emptyData.push(emptyVal);
   } else {
-    // ✅ Use data from all rows (default behavior)
+    // Use data from all rows (default behavior)
     miniRows.slice(1).forEach(r=>{
       let stockedVal = parseFloat(r[2]||0); // Column C - Stocked values
       let emptyVal = parseFloat(r[3]||0);   // Column D - Empty values
@@ -563,8 +624,9 @@ function updateRackingChart(selectedRow = null){
     }
   });
 }
+
 function sortTable(i){
-  // ✅ Skip sorting if column is hidden
+  // Skip sorting if column is hidden
   if(shouldHideColumn(i)) return;
   
   let rows=[...allRows]; if(i===currentSort.index) currentSort.asc=!currentSort.asc; else currentSort={index:i,asc:true};
@@ -576,8 +638,9 @@ function sortTable(i){
   });
   let sortedRows = [header,...rows];
   renderTable(sortedRows);
-  updateSubtotals(sortedRows); // ✅ Update subtotals after sorting
+  updateSubtotals(sortedRows); // Update subtotals after sorting
 }
+
 function applyFilters(){
   let search=document.getElementById("searchBox").value.toLowerCase();
   let fC=document.getElementById("filterC").value;
@@ -589,16 +652,18 @@ function applyFilters(){
   });
   renderTable(filtered);
   updateCharts(filtered);
-  updateSubtotals(filtered); // ✅ Update subtotals after filtering
+  updateSubtotals(filtered); // Update subtotals after filtering
 }
+
 function fillFilter(rows){
   let sc=document.getElementById("filterC");
   sc.innerHTML="<option value=''>-- Filter --</option>";
   let vals=[...new Set(rows.slice(1).map(r=>r[1]))];
   vals.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;sc.appendChild(o);}});
 }
+
 function exportTable(){ 
-  // ✅ Create filtered data without hidden columns for export
+  // Create filtered data without hidden columns for export
   let exportData = allRows.map(row => {
     return row.filter((_, index) => !shouldHideColumn(index));
   });
@@ -608,12 +673,25 @@ function exportTable(){
   let url=URL.createObjectURL(blob); 
   let a=document.createElement("a"); 
   a.href=url; 
-  a.download="data.csv"; 
+  a.download="warehouse_data.csv"; 
   a.click(); 
+  URL.revokeObjectURL(url);
 }
-function printTable(){ window.print(); }
-function setStatus(st,t){ let span=document.querySelector("#status span"); span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; document.getElementById("statusText").textContent=t; }
 
+function printTable(){ 
+  window.print(); 
+}
+
+function setStatus(st,t){ 
+  let span=document.querySelector("#status span"); 
+  span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; 
+  document.getElementById("statusText").textContent=t; 
+}
+
+// Initialize the application
+initializeConfig();
+
+// Auto-load data when page loads
 loadSheet();
 </script>
 </body>
