@@ -2,9 +2,10 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Utilisasi Warehouse Yogya</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
     body { font-family:'Segoe UI',Tahoma,sans-serif; margin:0; background:#eef2f7; display:flex; transition:0.3s; }
 
@@ -63,7 +64,7 @@
     th:first-child { background:#34495e; color:white; }
     .totals{margin-top:8px;font-weight:bold;font-size:13px;text-align:right;color:#2c3e50;}
 
-    /* ✅ Subtotal Styles */
+    /* Subtotal Styles */
     .subtotals {
       margin-top: 15px;
       padding: 10px;
@@ -96,19 +97,28 @@
       font-family: 'Courier New', monospace;
     }
 
-    /* ✅ Conditional Formatting Styles */
+    /* Conditional Formatting Styles */
     .negative-value {
       background-color: #ffebee !important;
       color: #c62828 !important;
       font-weight: bold;
     }
 
-    /* ✅ Chart section */
+    /* Chart section */
     .charts { display:flex; flex-wrap:wrap; gap:20px; margin:15px; }
     .chart-card { background:white; border-radius:12px; padding:15px; flex:1; min-width:250px;
       box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; }
     .chart-card h4 { margin-bottom:10px; font-size:14px; color:#2c3e50; }
     canvas { max-height:180px !important; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-220px); }
+      .sidebar.show { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .controls { flex-wrap: wrap; }
+      .logo-text { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -124,7 +134,7 @@
     <header>
       <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
       <div class="logo">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
         <div class="logo-text">
           <strong>Raw Material & Packaging</strong>
           <span>Update Stock Raw Material & Packaging</span>
@@ -134,13 +144,14 @@
         <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
         <button class="ctrl print" onclick="printTable()">🖨 Print</button>
         <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
+        <button class="ctrl" id="autoRefreshBtn" onclick="toggleAutoRefresh()" style="background:#9b59b6;">🔄 Auto: OFF</button>
         <div class="status" id="status">
           <span class="disconnected"></span><span id="statusText">Disconnected</span>
         </div>
       </div>
     </header>
 
-    <!-- ✅ Mini Charts -->
+    <!-- Mini Charts -->
     <div class="charts">
       <div class="chart-card">
         <h4>Kapasitas Gudang (%)</h4>
@@ -152,7 +163,7 @@
       </div>
     </div>
 
-    <!-- ✅ Tabel kecil (Sheet 3) -->
+    <!-- Tabel kecil (Sheet 3) -->
     <div class="table-container">
       <h4>📊 Data Kapasitas Gudang</h4>
       <table id="miniTable"><thead></thead><tbody></tbody></table>
@@ -165,7 +176,7 @@
     </div>
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
-      <!-- ✅ Subtotals Section -->
+      <!-- Subtotals Section -->
       <div class="subtotals" id="subtotals" style="display: none;">
         <h4>📊 Sub Totals</h4>
         <!-- Sheet 1 Subtotals -->
@@ -216,7 +227,12 @@ let miniRows = [];
 let currentSort = { index: -1, asc: true };
 let capacityChart, rackingChart;
 
-// ✅ Function to calculate subtotals for both sheets
+// Auto-refresh configuration
+let autoRefreshInterval = null;
+let autoRefreshEnabled = false;
+const REFRESH_INTERVAL = 30000; // 30 seconds (30000ms)
+
+// Function to calculate subtotals for both sheets
 function calculateSubtotals(rows) {
   if (rows.length <= 1) return { 
     subtotalH: 0, subtotalI: 0, subtotalL: 0, subtotalP: 0, subtotalM: 0, subtotalQ: 0 
@@ -235,7 +251,7 @@ function calculateSubtotals(rows) {
       if (!isNaN(valueI)) subtotalI += valueI;
     }
     
-    // Sheet 2 columns:N  (index 13), P (index 15), M (index 12), Q (index 16)
+    // Sheet 2 columns: N (index 13), P (index 15), M (index 12), Q (index 16)
     if (activeSheet === 1) {
       const valueL = parseFloat(row[13]) || 0;
       if (!isNaN(valueL)) subtotalL += valueL;
@@ -254,7 +270,7 @@ function calculateSubtotals(rows) {
   return { subtotalH, subtotalI, subtotalL, subtotalP, subtotalM, subtotalQ };
 }
 
-// ✅ Function to update subtotals display
+// Function to update subtotals display
 function updateSubtotals(rows) {
   const subtotals = calculateSubtotals(rows);
   const subtotalSection = document.getElementById('subtotals');
@@ -331,7 +347,7 @@ function updateSubtotals(rows) {
   }
 }
 
-// ✅ Function to check if value should be formatted
+// Function to check if value should be formatted
 function shouldApplyConditionalFormatting(value, columnIndex, headers) {
   // Only apply to Sheet 2 (Finish Goods) - activeSheet === 1
   if (activeSheet !== 1) return null;
@@ -359,7 +375,7 @@ function shouldApplyConditionalFormatting(value, columnIndex, headers) {
   const numValue = parseFloat(value);
   if (isNaN(numValue)) return null;
   
-  // ✅ Only apply formatting for negative values (remove zero formatting)
+  // Only apply formatting for negative values
   if (numValue < 0) return 'negative-value';
   return null;
 }
@@ -373,6 +389,7 @@ function toggleSidebar(){
     document.getElementById("main").classList.toggle("shifted");
   }
 }
+
 function switchSheet(index){
   activeSheet=index;
   document.querySelectorAll(".sidebar button").forEach((btn,i)=>btn.classList.toggle("active",i===index));
@@ -380,6 +397,7 @@ function switchSheet(index){
   document.querySelector(".logo-text span").textContent = sheetTitles[index].subtitle;
   loadSheet();
 }
+
 async function loadSheet(){
   setStatus("loading","Loading...");
   try{
@@ -391,7 +409,7 @@ async function loadSheet(){
     renderTable(allRows);
     fillFilter(allRows);
     updateCharts(allRows);
-    updateSubtotals(allRows); // ✅ Add subtotals calculation
+    updateSubtotals(allRows);
 
     // load sheet kecil (selalu sheet ke-3)
     const res2=await fetch(sheetUrls[2]+"&cacheBust="+Date.now());
@@ -401,16 +419,48 @@ async function loadSheet(){
     renderMiniTable(miniRows);
 
     setStatus("connected","Connected");
-  }catch(e){ console.error(e); setStatus("disconnected","Disconnected"); }
+  }catch(e){ 
+    console.error(e); 
+    setStatus("disconnected","Disconnected"); 
+    
+    // Show demo data if connection fails
+    showDemoData();
+  }
 }
 
-// ✅ Function to check if column should be hidden
+// Show demo data when connection fails
+function showDemoData() {
+  const demoData = [
+    ['Item', 'Category', 'Stock', 'Unit', 'Location', 'Status', 'Last Update', 'Qty Pcs', 'Qty Kg'],
+    ['Material A', 'Raw Material', '150', 'Pcs', 'WH-A1', 'Available', '2024-08-26', '150', '75.5'],
+    ['Material B', 'Packaging', '200', 'Roll', 'WH-B2', 'Low Stock', '2024-08-25', '200', '120.0'],
+    ['Material C', 'Raw Material', '80', 'Kg', 'WH-A3', 'Critical', '2024-08-24', '80', '80.0']
+  ];
+  
+  const demoMiniData = [
+    ['Warehouse Location', 'Total Capacity', 'Stocked Racking Percent', 'Empty Racking Percent'],
+    ['WH-A', '1000', '75', '25'],
+    ['WH-B', '800', '60', '40'],
+    ['WH-C', '600', '80', '20']
+  ];
+  
+  allRows = demoData;
+  miniRows = demoMiniData;
+  
+  renderTable(allRows);
+  renderMiniTable(miniRows);
+  fillFilter(allRows);
+  updateCharts(allRows);
+  updateSubtotals(allRows);
+}
+
+// Function to check if column should be hidden
 function shouldHideColumn(columnIndex) {
   // Hide columns C (index 2) and D (index 3) only on Sheet 2 (Finish Goods)
   return activeSheet === 1 && (columnIndex === 2 || columnIndex === 3);
 }
 
-// ✅ Updated renderTable function with conditional formatting and column hiding
+// Updated renderTable function with conditional formatting and column hiding
 function renderTable(rows){
   let thead=document.querySelector("#sheetTable thead");
   let tbody=document.querySelector("#sheetTable tbody");
@@ -420,7 +470,7 @@ function renderTable(rows){
   
   let header=document.createElement("tr");
   rows[0].forEach((h,i)=>{
-    // ✅ Skip hidden columns
+    // Skip hidden columns
     if(shouldHideColumn(i)) return;
     
     let th=document.createElement("th"); th.textContent=h;
@@ -432,13 +482,13 @@ function renderTable(rows){
   rows.slice(1).forEach(r=>{
     let tr=document.createElement("tr");
     r.forEach((c,i)=>{
-      // ✅ Skip hidden columns
+      // Skip hidden columns
       if(shouldHideColumn(i)) return;
       
       let td=document.createElement("td"); 
       td.textContent=c;
       
-      // ✅ Apply conditional formatting
+      // Apply conditional formatting
       const formatClass = shouldApplyConditionalFormatting(c, i, rows[0]);
       if(formatClass) {
         td.classList.add(formatClass);
@@ -449,7 +499,7 @@ function renderTable(rows){
     tbody.appendChild(tr);
   });
   
-  // ✅ Update subtotals after rendering table
+  // Update subtotals after rendering table
   updateSubtotals(rows);
 }
 
@@ -457,6 +507,9 @@ function renderMiniTable(rows){
   let thead=document.querySelector("#miniTable thead");
   let tbody=document.querySelector("#miniTable tbody");
   thead.innerHTML=""; tbody.innerHTML="";
+  
+  if(rows.length === 0) return;
+  
   let header=document.createElement("tr");
   rows[0].forEach(h=>{ let th=document.createElement("th"); th.textContent=h; header.appendChild(th); });
   thead.appendChild(header);
@@ -465,19 +518,20 @@ function renderMiniTable(rows){
     let tr=document.createElement("tr");
     r.forEach(c=>{ let td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
     tr.onclick=()=>{
-      // ✅ Remove active class from all rows
+      // Remove active class from all rows
       document.querySelectorAll("#miniTable tbody tr").forEach(row => row.classList.remove("selected"));
-      // ✅ Add active class to clicked row
+      // Add active class to clicked row
       tr.classList.add("selected");
       
       // Update capacity chart with single row data
       updateCharts([rows[0],r]); 
-      // ✅ Update racking chart with selected row data
+      // Update racking chart with selected row data
       updateRackingChart(r);
     };
     tbody.appendChild(tr);
   });
 }
+
 function updateCharts(rows){
   if(rows.length < 2) return;
   let headers = rows[0];
@@ -505,11 +559,11 @@ function updateCharts(rows){
     options:{ responsive:true, plugins:{legend:{position:"bottom"}}, scales:{x:{stacked:true},y:{stacked:true,max:100}} }
   });
 
-  // ✅ Update Racking Chart to use data from Sheet 3 (miniRows) columns C and D
+  // Update Racking Chart to use data from Sheet 3 (miniRows) columns C and D
   updateRackingChart();
 }
 
-// ✅ New function to update Racking Chart using Sheet 3 data
+// New function to update Racking Chart using Sheet 3 data
 function updateRackingChart(selectedRow = null){
   if(miniRows.length < 2) return;
   
@@ -517,13 +571,13 @@ function updateRackingChart(selectedRow = null){
   let emptyData = [];
   
   if(selectedRow) {
-    // ✅ Use data from selected row only
+    // Use data from selected row only
     let stockedVal = parseFloat(selectedRow[2]||0); // Column C - Stocked values
     let emptyVal = parseFloat(selectedRow[3]||0);   // Column D - Empty values
     stockedData.push(stockedVal);
     emptyData.push(emptyVal);
   } else {
-    // ✅ Use data from all rows (default behavior)
+    // Use data from all rows (default behavior)
     miniRows.slice(1).forEach(r=>{
       let stockedVal = parseFloat(r[2]||0); // Column C - Stocked values
       let emptyVal = parseFloat(r[3]||0);   // Column D - Empty values
@@ -563,11 +617,15 @@ function updateRackingChart(selectedRow = null){
     }
   });
 }
+
 function sortTable(i){
-  // ✅ Skip sorting if column is hidden
+  // Skip sorting if column is hidden
   if(shouldHideColumn(i)) return;
   
-  let rows=[...allRows]; if(i===currentSort.index) currentSort.asc=!currentSort.asc; else currentSort={index:i,asc:true};
+  let rows=[...allRows]; 
+  if(i===currentSort.index) currentSort.asc=!currentSort.asc; 
+  else currentSort={index:i,asc:true};
+  
   let header=rows.shift();
   rows.sort((a,b)=>{
     let va=a[i],vb=b[i]; let na=parseFloat(va), nb=parseFloat(vb);
@@ -576,8 +634,9 @@ function sortTable(i){
   });
   let sortedRows = [header,...rows];
   renderTable(sortedRows);
-  updateSubtotals(sortedRows); // ✅ Update subtotals after sorting
+  updateSubtotals(sortedRows);
 }
+
 function applyFilters(){
   let search=document.getElementById("searchBox").value.toLowerCase();
   let fC=document.getElementById("filterC").value;
@@ -589,16 +648,18 @@ function applyFilters(){
   });
   renderTable(filtered);
   updateCharts(filtered);
-  updateSubtotals(filtered); // ✅ Update subtotals after filtering
+  updateSubtotals(filtered);
 }
+
 function fillFilter(rows){
   let sc=document.getElementById("filterC");
   sc.innerHTML="<option value=''>-- Filter --</option>";
   let vals=[...new Set(rows.slice(1).map(r=>r[1]))];
   vals.forEach(v=>{if(v){let o=document.createElement("option");o.value=v;o.textContent=v;sc.appendChild(o);}});
 }
+
 function exportTable(){ 
-  // ✅ Create filtered data without hidden columns for export
+  // Create filtered data without hidden columns for export
   let exportData = allRows.map(row => {
     return row.filter((_, index) => !shouldHideColumn(index));
   });
@@ -608,13 +669,69 @@ function exportTable(){
   let url=URL.createObjectURL(blob); 
   let a=document.createElement("a"); 
   a.href=url; 
-  a.download="data.csv"; 
+  a.download="warehouse_data.csv"; 
   a.click(); 
+  URL.revokeObjectURL(url);
 }
-function printTable(){ window.print(); }
-function setStatus(st,t){ let span=document.querySelector("#status span"); span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; document.getElementById("statusText").textContent=t; }
 
+function printTable(){ 
+  window.print(); 
+}
+
+function setStatus(st,t){ 
+  let span=document.querySelector("#status span"); 
+  span.className=st==="connected"?"connected":st==="loading"?"loading":"disconnected"; 
+  document.getElementById("statusText").textContent=t; 
+}
+
+// Auto-refresh functions
+function toggleAutoRefresh() {
+  const btn = document.getElementById('autoRefreshBtn');
+  
+  if (autoRefreshEnabled) {
+    // Turn OFF auto-refresh
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+    autoRefreshEnabled = false;
+    btn.textContent = '🔄 Auto: OFF';
+    btn.style.background = '#9b59b6';
+    console.log('Auto-refresh disabled');
+  } else {
+    // Turn ON auto-refresh
+    autoRefreshInterval = setInterval(() => {
+      console.log('Auto-refreshing data...');
+      loadSheet();
+    }, REFRESH_INTERVAL);
+    autoRefreshEnabled = true;
+    btn.textContent = '🔄 Auto: ON';
+    btn.style.background = '#27ae60';
+    console.log(`Auto-refresh enabled (every ${REFRESH_INTERVAL/1000} seconds)`);
+  }
+}
+
+function startAutoRefresh() {
+  if (!autoRefreshEnabled) {
+    toggleAutoRefresh();
+  }
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshEnabled) {
+    toggleAutoRefresh();
+  }
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+  loadSheet();
+});
+
+// Cleanup when page is about to unload
+window.addEventListener('beforeunload', function() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+  }
+});
+
+// Load initial data
 loadSheet();
-</script>
-</body>
-</html>
