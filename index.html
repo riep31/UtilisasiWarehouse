@@ -282,7 +282,7 @@ function calculateSubtotals(rows) {
     
     // Sheet 2 columns: L (index 11), P (index 15), M (index 12), Q (index 16)
     if (activeSheet === 1) {
-      const valueL = parseFloat(row[11]) || 0;
+      const valueL = parseFloat(row[13]) || 0;
       if (!isNaN(valueL)) subtotalL += valueL;
       
       const valueP = parseFloat(row[15]) || 0;
