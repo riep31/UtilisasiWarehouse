@@ -190,6 +190,14 @@
     th:hover {
       background:#2c3e50;
     }
+    /* Sembunyikan kolom Gramasi (kolom ke-3) dan Pack/Karton (kolom ke-6) */
+#sheetTable th:nth-child(2),
+#sheetTable td:nth-child(2),
+#sheetTable th:nth-child(3),
+#sheetTable td:nth-child(3) {
+  display: none;
+}
+
     
     th.sorted-asc::after{content:" ▲";} 
     th.sorted-desc::after{content:" ▼";}
@@ -457,7 +465,7 @@ function calculateSubtotals(rows) {
   let subtotalL = 0, subtotalP = 0, subtotalM = 0, subtotalQ = 0;
   
   rows.slice(1).forEach(row => {
-    const valueL = parseFloat(row[11]) || 0; // Column L
+    const valueL = parseFloat(row[13]) || 0; // Column N
     if (!isNaN(valueL)) subtotalL += valueL;
     
     const valueP = parseFloat(row[15]) || 0; // Column P
