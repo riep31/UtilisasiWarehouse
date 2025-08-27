@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #334155;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #2c3e50;
+      color: white;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 4px 0 20px rgba(79, 70, 229, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed {
+      width: 70px;
+    }
+
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+    }
+
+    .sidebar.collapsed .sidebar-header {
+      padding: 24px 15px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      backdrop-filter: blur(10px);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .logo-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    /* Toggle button */
+    .sidebar-collapse-btn {
+      position: absolute;
+      top: 50%;
+      right: -15px;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      background: #34495e;
+      border: 2px solid #2c3e50;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 1001;
+    }
+
+    .sidebar-collapse-btn:hover {
+      background: #4a5f7a;
+    }
+
+    .sidebar.collapsed .sidebar-collapse-btn {
+      right: -15px;
+    }
+
+    .sidebar-nav {
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      display: block;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      padding: 12px 24px;
+      margin: 4px 16px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .nav-item {
+      padding: 12px 15px;
+      margin: 4px 12px;
+      justify-content: center;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      transform: translateX(4px);
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar.collapsed .nav-item:hover,
+    .sidebar.collapsed .nav-item.active {
+      transform: translateX(0);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-text {
+      transition: all 0.3s ease;
+    }
+
+    .sidebar.collapsed .nav-text {
+      opacity: 0;
+      width: 0;
+    }
+
+    /* Hidden menu items based on role */
+    .nav-item.hidden {
+      display: none !important;
+    }
+
+    /* Tooltip untuk collapsed state */
+    .nav-item::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 70px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #34495e;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 1002;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 65px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 5px 5px 5px 0;
+      border-color: transparent #34495e transparent transparent;
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1002;
+    }
+
+    .sidebar.collapsed .nav-item:hover::after,
+    .sidebar.collapsed .nav-item:hover::before {
+      opacity: 1;
+    }
+
+    /* Mobile sidebar toggle */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1100;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-content.collapsed {
+      margin-left: 70px;
+    }
+
+    .top-header {
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
+      padding: 20px 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid #f1f5f9;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 100px;
+      height: 50px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-info h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+      line-height: 1.2;
+    }
+
+    .brand-info p {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .greeting-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: white;
+    }
+
+    .greeting-icon {
+      font-size: 16px;
+    }
+
+    .greeting-text {
+      font-weight: 500;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 10px;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .user-profile:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .user-details {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.2;
+    }
+
+    /* Dropdown menu for user profile */
+    .user-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      margin-top: 8px;
+    }
+
+    .user-profile:hover .user-dropdown {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-item:hover {
+      background: #f8fafc;
+      color: #1e293b;
+    }
+
+    .dropdown-item.logout {
+      color: #dc2626;
+    }
+
+    .dropdown-item.logout:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .content {
+      padding: 40px;
+      flex: 1;
+    }
+
+    .welcome {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .welcome h2 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      color: #1e293b;
+      font-weight: 800;
+    }
+
+    .welcome p {
+      font-size: 1.1rem;
+      color: #64748b;
+      margin-bottom: 0;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      padding: 32px 24px;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 1px solid #f1f5f9;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+      border-color: #e2e8f0;
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      display: block;
+      filter: grayscale(0.3);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.1);
+      filter: grayscale(0);
+    }
+
+    .card h3 {
+      margin: 0 0 16px 0;
+      color: #1e293b;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .card p {
+      margin: 0;
+      color: #64748b;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    /* Hidden cards based on role */
+    .card.hidden {
+      display: none !important;
+    }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .role-badge.administrator {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+    }
+
+    .role-badge.manager {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+    }
+
+    .role-badge.supervisor {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+    }
+
+    .role-badge.operator {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: white;
+    }
+
+    .role-badge.viewer {
+      background: linear-gradient(135deg, #64748b, #94a3b8);
+      color: white;
+    }
+
+    /* Access denied message */
+    .access-denied {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+      display: none;
+    }
+
+    .access-denied.show {
+      display: block;
+    }
+
+    .access-denied-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .access-denied h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #dc2626;
+    }
+
+    .access-denied p {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px 20px;
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
+      margin-top: auto;
+      color: #64748b;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .footer-heart {
+      color: #ef4444;
+      animation: heartbeat 2s ease-in-out infinite;
+    }
+
+    @keyframes heartbeat {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 260px;
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .sidebar.collapsed {
+        width: 260px;
+      }
+
+      .sidebar-collapse-btn {
+        display: none;
+      }
+
+      .sidebar-toggle {
+        display: block;
+      }
+
+      .main-content,
+      .main-content.collapsed {
+        margin-left: 0;
+      }
+
+      .content {
+        padding: 32px 24px;
+      }
+
+      .top-header {
+        padding: 16px 20px;
+        padding-left: 70px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .header-brand {
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .brand-info h1 {
+        font-size: 18px;
+      }
+
+      .brand-info p {
+        font-size: 12px;
+      }
+
+      .header-actions {
+        align-self: flex-end;
+      }
+
+      .nav-item::after,
+      .nav-item::before {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 24px 20px;
+      }
+
+      .top-header {
+        padding: 16px 20px;
+        padding-left: 70px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .header-brand {
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .brand-info h1 {
+        font-size: 18px;
+      }
+
+      .brand-info p {
+        font-size: 12px;
+      }
+
+      .header-actions {
+        align-self: flex-end;
+      }
+
+      .welcome h2 {
+        font-size: 1.8rem;
+      }
+
+      .card-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .card {
+        padding: 28px 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .top-header h1 {
+        font-size: 16px;
+      }
+
+      .brand-info h1 {
+        font-size: 16px;
+      }
+
+      .brand-info p {
+        font-size: 11px;
+      }
+
+      .brand-logo {
+        width: 36px;
+        height: 36px;
+      }
+
+      .welcome h2 {
+        font-size: 1.6rem;
+      }
+
+      .content {
+        padding: 20px 16px;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+
+      .user-info {
+        display: none;
+      }
+
+      .greeting-section {
+        font-size: 12px;
+      }
+    }
+
+    /* Overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Login prompt overlay */
+    .login-prompt-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .login-prompt {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-prompt h3 {
+      color: #1e293b;
+      margin-bottom: 16px;
+      font-size: 1.5rem;
+    }
+
+    .login-prompt p {
+      color: #64748b;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .login-redirect-btn {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .login-redirect-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Toggle Button (Mobile) -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- Login Prompt (shown if no user data) -->
+    <div class="login-prompt-overlay" id="loginPrompt" style="display: none;">
+      <div class="login-prompt">
+        <h3>Login Required</h3>
+        <p>Untuk menggunakan dashboard, silakan login terlebih dahulu.</p>
+        <button class="login-redirect-btn" onclick="redirectToLogin()">Login Sekarang</button>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">📑</div>
+          <span class="logo-text">Menu</span>
+        </div>
+        <button class="sidebar-collapse-btn" onclick="toggleCollapse()">
+          <span id="collapse-icon">‹</span>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active" data-tooltip="Dashboard" data-roles="administrator,manager,supervisor,operator,viewer">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="rawmaterial.html" class="nav-item" data-tooltip="Raw Material & Packaging" data-roles="administrator,manager,supervisor,operator">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Raw Material & Packaging</span>
+        </a>
+        <a href="finishgoods.html" class="nav-item" data-tooltip="Finish Goods" data-roles="administrator,manager,supervisor,operator">
+          <span class="nav-icon">👨‍💼</span>
+          <span class="nav-text">Finish Goods</span>
+        </a>
+        <a href="kapasitasgudang.html" class="nav-item" data-tooltip="Status Kapasitas Gudang" data-roles="administrator,manager,supervisor">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Status Kapasitas Gudang</span>
+        </a>
+        <a href="cardstock.html" class="nav-item" data-tooltip="Card Stock" data-roles="administrator,manager,supervisor,operator">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">Card Stock</span>
+        </a>
+        <a href="salah.html" class="nav-item" data-tooltip="Report Salah Muat" data-roles="administrator,manager,supervisor">
+          <span class="nav-icon">⚠️</span>
+          <span class="nav-text">Report Salah Muat</span>
+        </a>
+        <a href="users.html" class="nav-item" data-tooltip="User Management" data-roles="administrator">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">User Management</span>
+        </a>
+        <a href="reports.html" class="nav-item" data-tooltip="Reports & Analytics" data-roles="administrator,manager">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">Reports & Analytics</span>
+        </a>
+        <a href="settings.html" class="nav-item" data-tooltip="System Settings" data-roles="administrator">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">System Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+      <header class="top-header">
+        <div class="header-brand">
+          <div class="brand-logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
+          </div>
+          <div class="brand-info">
+            <h1>PT. Dagsap Endura Eatore</h1>
+            <p>Sistem Manajemen Gudang Terpadu</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="greeting-section">
+            <span class="greeting-icon" id="greetingIcon">🌅</span>
+            <span class="greeting-text" id="greetingText">Selamat Pagi</span>
+          </div>
+          <div class="user-profile" id="userProfile">
+            <div class="user-avatar" id="userAvatar">AD</div>
+            <div class="user-info">
+              <div class="user-name" id="userName">Admin<span class="role-badge administrator" id="roleBadge">Admin</span></div>
+              <div class="user-details">
+                <div id="userLevel">Level: Administrator</div>
+                <div id="userDivision">Divisi: IT</div>
+              </div>
+            </div>
+            <div class="user-dropdown">
+              <a href="#" class="dropdown-item">
+                <span>👤</span> Profil
+              </a>
+              <a href="#" class="dropdown-item">
+                <span>⚙️</span> Pengaturan
+              </a>
+              <a href="#" class="dropdown-item logout" onclick="logout()">
+                <span>🚪</span> Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="welcome">
+          <h2>Dashboard Gudang</h2>
+          <p>Pilih menu untuk melihat data lebih detail.</p>
+        </div>
+
+        <div class="card-container" id="cardContainer">
+          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='rawmaterial.html'">
+            <div class="card-icon">📦</div>
+            <h3>Raw Material & Packaging</h3>
+            <p>Monitoring bahan baku dan kemasan untuk kelancaran produksi dan inventory management.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='finishgoods.html'">
+            <div class="card-icon">✅</div>
+            <h3>Finish Goods</h3>
+            <p>Status produk jadi siap distribusi dengan tracking kelengkapan dan kualitas produk.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='kapasitasgudang.html'">
+            <div class="card-icon">📊</div>
+            <h3>Status Kapasitas Gudang</h3>
+            <p>Real-time monitoring kapasitas gudang untuk optimalisasi ruang penyimpanan dan distribusi.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='cardstock.html'">
+            <div class="card-icon">📋</div>
+            <h3>Card Stock</h3>
+            <p>Manajemen kartu stok untuk pencatatan keluar masuk barang dan kontrol inventory.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='salah.html'">
+            <div class="card-icon">⚠️</div>
+            <h3>Report Salah Muat</h3>
+            <p>Laporan kesalahan muat barang untuk evaluasi dan perbaikan proses operasional gudang.</p>
+          </div>
+
+          <div class="card" data-roles="administrator" onclick="window.location.href='users.html'">
+            <div class="card-icon">👥</div>
+            <h3>User Management</h3>
+            <p>Kelola pengguna sistem, hak akses, dan role management untuk keamanan aplikasi.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager" onclick="window.location.href='reports.html'">
+            <div class="card-icon">📈</div>
+            <h3>Reports & Analytics</h3>
+            <p>Laporan komprehensif dan analitik data untuk insight bisnis dan pengambilan keputusan.</p>
+          </div>
+
+          <div class="card" data-roles="administrator" onclick="window.location.href='settings.html'">
+            <div class="card-icon">⚙️</div>
+            <h3>System Settings</h3>
+            <p>Konfigurasi sistem, backup, dan pengaturan aplikasi untuk optimalisasi performa.</p>
+          </div>
+
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer">
+            <div class="card-icon">🔔</div>
+            <h3>Notifikasi</h3>
+            <p>Alert dan pemberitahuan penting untuk update sistem dan aktivitas terbaru.</p>
+          </div>
+        </div>
+
+        <!-- Access Denied Message -->
+        <div class="access-denied" id="accessDenied">
+          <div class="access-denied-icon">🚫</div>
+          <h3>Akses Terbatas</h3>
+          <p>Maaf, Anda tidak memiliki akses yang cukup untuk melihat semua fitur dashboard.<br>Silakan hubungi administrator untuk informasi lebih lanjut.</p>
+        </div>
+      </div>
+
+      <footer>
+        © 2025 Dashboard Gudang | Dibuat dengan <span class="footer-heart">❤️</span> untuk kebutuhan internal
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Role-based access control configuration
+    const ROLE_CONFIG = {
+      administrator: {
+        level: 5,
+        color: 'administrator',
+        permissions: ['all']
+      },
+      manager: {
+        level: 4,
+        color: 'manager',
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'reports', 'salah']
+      },
+      supervisor: {
+        level: 3,
+        color: 'supervisor',
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'salah']
+      },
+      operator: {
+        level: 2,
+        color: 'operator',
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'cardstock']
+      },
+      viewer: {
+        level: 1,
+        color: 'viewer',
+        permissions: ['dashboard']
+      }
+    };
+
+    // Function to normalize role name
+    function normalizeRole(role) {
+      if (!role) return 'viewer';
+      
+      const normalizedRole = role.toLowerCase().trim();
+      
+      // Map alternative role names
+      const roleMapping = {
+        'admin': 'administrator',
+        'administrator': 'administrator',
+        'manajer': 'manager',
+        'manager': 'manager',
+        'supervisor': 'supervisor',
+        'spv': 'supervisor',
+        'operator': 'operator',
+        'op': 'operator',
+        'viewer': 'viewer',
+        'guest': 'viewer'
+      };
+      
+      return roleMapping[normalizedRole] || 'viewer';
+    }
+
+    // Function to check if user has access to specific feature
+    function hasAccess(userRole, requiredRoles) {
+      if (!userRole || !requiredRoles) return false;
+      
+      const normalizedUserRole = normalizeRole(userRole);
+      
+      // Administrator has access to everything
+      if (normalizedUserRole === 'administrator') return true;
+      
+      // Check if user role is in required roles list
+      const requiredRolesList = requiredRoles.split(',').map(role => role.trim().toLowerCase());
+      return requiredRolesList.includes(normalizedUserRole);
+    }
+
+    // Function to apply role-based access control
+    function applyRoleBasedAccess(userRole) {
+      const normalizedUserRole = normalizeRole(userRole);
+      let visibleItemsCount = 0;
+
+      // Handle navigation menu items
+      const navItems = document.querySelectorAll('.nav-item[data-roles]');
+      navItems.forEach(item => {
+        const requiredRoles = item.getAttribute('data-roles');
+        if (hasAccess(normalizedUserRole, requiredRoles)) {
+          item.classList.remove('hidden');
+          visibleItemsCount++;
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+
+      // Handle dashboard cards
+      const cards = document.querySelectorAll('.card[data-roles]');
+      let visibleCardsCount = 0;
+      cards.forEach(card => {
+        const requiredRoles = card.getAttribute('data-roles');
+        if (hasAccess(normalizedUserRole, requiredRoles)) {
+          card.classList.remove('hidden');
+          visibleCardsCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      // Show access denied message if user has very limited access
+      const accessDenied = document.getElementById('accessDenied');
+      if (normalizedUserRole === 'viewer' && visibleCardsCount <= 2) {
+        accessDenied.classList.add('show');
+      } else {
+        accessDenied.classList.remove('show');
+      }
+
+      console.log(`Role-based access applied for: ${normalizedUserRole}`);
+      console.log(`Visible nav items: ${visibleItemsCount}, Visible cards: ${visibleCardsCount}`);
+    }
+
+    // Function to get role badge class and text
+    function getRoleBadge(role) {
+      const normalizedRole = normalizeRole(role);
+      const config = ROLE_CONFIG[normalizedRole] || ROLE_CONFIG.viewer;
+      
+      const badges = {
+        administrator: 'ADMIN',
+        manager: 'MGR',
+        supervisor: 'SPV',
+        operator: 'OPR',
+        viewer: 'VIEW'
+      };
+      
+      return {
+        class: config.color,
+        text: badges[normalizedRole] || 'USER'
+      };
+    }
+
+    // Function to get greeting based on current time
+    function getGreeting() {
+      const now = new Date();
+      const hour = now.getHours();
+      
+      if (hour >= 5 && hour < 11) {
+        return { text: 'Selamat Pagi', icon: '🌅' };
+      } else if (hour >= 11 && hour < 15) {
+        return { text: 'Selamat Siang', icon: '☀️' };
+      } else if (hour >= 15 && hour < 18) {
+        return { text: 'Selamat Sore', icon: '🌤️' };
+      } else {
+        return { text: 'Selamat Malam', icon: '🌙' };
+      }
+    }
+
+    // Function to update greeting
+    function updateGreeting() {
+      const greeting = getGreeting();
+      document.getElementById('greetingText').textContent = greeting.text;
+      document.getElementById('greetingIcon').textContent = greeting.icon;
+    }
+
+    // Function to get user initials from name
+    function getUserInitials(name) {
+      if (!name) return 'U';
+      return name.split(' ')
+                 .map(word => word.charAt(0).toUpperCase())
+                 .join('')
+                 .substring(0, 2);
+    }
+
+    // Function to load user data from localStorage
+    function loadUserData() {
+      try {
+        // For demo purposes, you can use this sample data if localStorage is empty
+        const sampleUsers = [
+          { nama: 'Super Admin', level: 'Administrator', divisi: 'IT', role: 'administrator' },
+          { nama: 'John Manager', level: 'Manager', divisi: 'Operations', role: 'manager' },
+          { nama: 'Jane Supervisor', level: 'Supervisor', divisi: 'Warehouse', role: 'supervisor' },
+          { nama: 'Bob Operator', level: 'Operator', divisi: 'Production', role: 'operator' },
+          { nama: 'Alice Viewer', level: 'Viewer', divisi: 'Finance', role: 'viewer' }
+        ];
+
+        // Check if user data exists in localStorage
+        let userDataString = '';
+        
+        // Try to get from localStorage first
+        try {
+          userDataString = localStorage.getItem('user');
+        } catch (e) {
+          console.warn('localStorage not available, using session storage');
+          userDataString = sessionStorage.getItem('user');
+        }
+
+        let userData;
+        
+        if (!userDataString) {
+          // For demo purposes, use administrator as default
+          console.log('No user data found, using demo admin user');
+          userData = sampleUsers[0]; // Default to administrator for demo
+        } else {
+          // Parse user data from JSON
+          userData = JSON.parse(userDataString);
+        }
+
+        // Validate required fields
+        if (!userData.nama || !userData.level || !userData.divisi) {
+          document.getElementById('loginPrompt').style.display = 'flex';
+          return;
+        }
+
+        // Ensure role field exists (fallback to level-based role)
+        if (!userData.role) {
+          userData.role = userData.level.toLowerCase();
+        }
+
+        // Update UI with user data
+        document.getElementById('userName').textContent = userData.nama;
+        document.getElementById('userLevel').textContent = `Level: ${userData.level}`;
+        document.getElementById('userDivision').textContent = `Divisi: ${userData.divisi}`;
+        document.getElementById('userAvatar').textContent = getUserInitials(userData.nama);
+
+        // Update role badge
+        const roleBadge = getRoleBadge(userData.role);
+        const roleBadgeElement = document.getElementById('roleBadge');
+        roleBadgeElement.textContent = roleBadge.text;
+        roleBadgeElement.className = `role-badge ${roleBadge.class}`;
+
+        // Apply role-based access control
+        applyRoleBasedAccess(userData.role);
+
+        // Hide login prompt if visible
+        document.getElementById('loginPrompt').style.display = 'none';
+
+        console.log('User loaded:', userData);
+
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        document.getElementById('loginPrompt').style.display = 'flex';
+      }
+    }
+
+    // Function to redirect to login page
+    function redirectToLogin() {
+      window.location.href = 'index.html';
+    }
+
+    // Function to logout
+    function logout() {
+      if (confirm('Apakah Anda yakin ingin logout?')) {
+        try {
+          // Clear user data from both localStorage and sessionStorage
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
+        } catch (e) {
+          console.warn('Error clearing storage:', e);
+        }
+        
+        // Reset UI to default
+        document.getElementById('userName').textContent = 'Guest';
+        document.getElementById('userLevel').textContent = 'Level: -';
+        document.getElementById('userDivision').textContent = 'Divisi: -';
+        document.getElementById('userAvatar').textContent = 'G';
+        
+        const roleBadgeElement = document.getElementById('roleBadge');
+        roleBadgeElement.textContent = 'GUEST';
+        roleBadgeElement.className = 'role-badge viewer';
+        
+        // Show login prompt or redirect to login page
+        document.getElementById('loginPrompt').style.display = 'flex';
+      }
+    }
+
+    // Function to simulate different user roles (for testing)
+    function simulateUserRole(role) {
+      const sampleUsers = {
+        administrator: { nama: 'Super Admin', level: 'Administrator', divisi: 'IT', role: 'administrator' },
+        manager: { nama: 'John Manager', level: 'Manager', divisi: 'Operations', role: 'manager' },
+        supervisor: { nama: 'Jane Supervisor', level: 'Supervisor', divisi: 'Warehouse', role: 'supervisor' },
+        operator: { nama: 'Bob Operator', level: 'Operator', divisi: 'Production', role: 'operator' },
+        viewer: { nama: 'Alice Viewer', level: 'Viewer', divisi: 'Finance', role: 'viewer' }
+      };
+
+      const userData = sampleUsers[role] || sampleUsers.viewer;
+      
+      try {
+        localStorage.setItem('user', JSON.stringify(userData));
+      } catch (e) {
+        sessionStorage.setItem('user', JSON.stringify(userData));
+      }
+      
+      loadUserData();
+    }
+
+    // Add to window for testing purposes
+    window.simulateUserRole = simulateUserRole;
+
+    // Toggle sidebar collapse
+    function toggleCollapse() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const collapseIcon = document.getElementById('collapse-icon');
+      
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('collapsed');
+      
+      // Update collapse icon
+      if (sidebar.classList.contains('collapsed')) {
+        collapseIcon.textContent = '›';
+      } else {
+        collapseIcon.textContent = '‹';
+      }
+      
+      // Save collapse state
+      try {
+        localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+      } catch (e) {
+        console.warn('Could not save sidebar state');
+      }
+    }
+
+    // Toggle sidebar for mobile
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    // Load collapse state on page load
+    window.addEventListener('load', function() {
+      // Load user data first
+      loadUserData();
+      
+      // Update greeting
+      updateGreeting();
+      
+      // Update greeting every minute
+      setInterval(updateGreeting, 60000);
+      
+      // Load sidebar collapse state
+      try {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const collapseIcon = document.getElementById('collapse-icon');
+        
+        if (isCollapsed && window.innerWidth > 1024) {
+          sidebar.classList.add('collapsed');
+          mainContent.classList.add('collapsed');
+          collapseIcon.textContent = '›';
+        }
+      } catch (e) {
+        console.warn('Could not load sidebar state');
+      }
+
+      // Add loading animation for cards
+      const cards = document.querySelectorAll('.card:not(.hidden)');
+      cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+
+      // Log available test functions
+      console.log('🔧 Testing functions available:');
+      console.log('simulateUserRole("administrator") - Test as Administrator');
+      console.log('simulateUserRole("manager") - Test as Manager');
+      console.log('simulateUserRole("supervisor") - Test as Supervisor');
+      console.log('simulateUserRole("operator") - Test as Operator');
+      console.log('simulateUserRole("viewer") - Test as Viewer');
+    });
+
+    // Close sidebar when clicking on nav item (mobile)
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        if (window.innerWidth <= 1024) {
+          toggleSidebar();
+        }
+      });
+    });
+
+    // Add smooth click animation for cards
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mousedown', function() {
+        this.style.transform = 'translateY(-4px) scale(0.98)';
+      });
+      
+      card.addEventListener('mouseup', function() {
+        this.style.transform = 'translateY(-8px) scale(1)';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+      });
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      const mainContent = document.getElementById('mainContent');
+      
+      if (window.innerWidth > 1024) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+        
+        // Restore collapse state on desktop
+        try {
+          const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+          if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+            mainContent.classList.add('collapsed');
+          }
+        } catch (e) {
+          console.warn('Could not restore sidebar state');
+        }
+      } else {
+        // Remove collapse state on mobile
+        sidebar.classList.remove('collapsed');
+        mainContent.classList.remove('collapsed');
+      }
+    });
+
+    // Listen for storage changes (if user logs in from another tab)
+    window.addEventListener('storage', function(e) {
+      if (e.key === 'user') {
+        loadUserData();
+      }
+    });
+  </script>
+</body>
+</html>
