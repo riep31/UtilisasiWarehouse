@@ -190,11 +190,11 @@
     th:hover {
       background:#2c3e50;
     }
-    /* Sembunyikan kolom Gramasi (kolom ke-3) dan Pack/Karton (kolom ke-6) */
-#sheetTable th:nth-child(2),
-#sheetTable td:nth-child(2),
+    /* Sembunyikan kolom C (kolom ke-3) dan D (kolom ke-4) */
 #sheetTable th:nth-child(3),
-#sheetTable td:nth-child(3) {
+#sheetTable td:nth-child(3),
+#sheetTable th:nth-child(4),
+#sheetTable td:nth-child(4) {
   display: none;
 }
 
@@ -375,7 +375,7 @@ function getDashboardUrl() {
   // For GitHub Pages - specific URLs
   const githubPagesUrls = [
     'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
-    '/UtilisasiTes/dashboard.html',
+    '/UtilisasiWarehouse/dashboard.html',
     './dashboard.html',
     '../dashboard.html'
   ];
@@ -546,11 +546,32 @@ function renderTable(rows){
 
   rows.slice(1).forEach((r,index)=>{
     let tr=document.createElement("tr");
+    let hasNegativeNOrP = false;
+    
     r.forEach((c,i)=>{
       let td=document.createElement("td"); 
       td.textContent=c;
+      
+      // Apply conditional formatting
+      let numValue = parseFloat(c);
+      
+      // Check for negative values in column N (index 13) and P (index 15)
+      if((i === 13 || i === 15) && !isNaN(numValue) && numValue < 0) {
+        td.classList.add("negative-value");
+        hasNegativeNOrP = true;
+      }
+      
       tr.appendChild(td);
     });
+    
+    // Apply red bold formatting to column O (index 14) if N or P is negative
+    if(hasNegativeNOrP) {
+      let tdO = tr.children[14]; // Column O
+      if(tdO) {
+        tdO.style.color = "#c62828";
+        tdO.style.fontWeight = "bold";
+      }
+    }
     
     // Add click functionality to highlight selected row
     tr.onclick = () => {
