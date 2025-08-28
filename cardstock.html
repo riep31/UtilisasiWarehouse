@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Card Stock FG</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, sans-serif; 
+      margin: 0; 
+      background: #eef2f7; 
+      color: #374151; 
+      min-height: 100vh;
+    }
+    
+    header {
+      display: flex; 
+      align-items: center; 
+      justify-content: flex-start;
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
+      padding: 15px 20px; 
+      color: #2c3e50; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      gap: 30px;
+    }
+    
+    .logo { 
+      display: flex; 
+      align-items: center; 
+      flex-shrink: 0; 
+    }
+    
+    .logo img { 
+      width: 100px; 
+      height: 50px; 
+      margin-right: 15px; 
+      border-radius: 8px; 
+    }
+    
+    .logo-text { 
+      display: flex; 
+      flex-direction: column; 
+      line-height: 1.3; 
+    }
+    
+    .logo-text strong { 
+      font-size: 18px; 
+      color: #2c3e50;
+    }
+    
+    .logo-text span { 
+      font-size: 14px; 
+      opacity: 0.7; 
+      color: #7f8c8d;
+    }
+    
+    .controls { 
+      display: flex; 
+      gap: 10px; 
+      align-items: center; 
+      flex-wrap: wrap; 
+    }
+    
+    button.ctrl { 
+      padding: 8px 15px; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 13px; 
+      color: white; 
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    button.ctrl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .export{background:#27ae60;} 
+    .print{background:#2980b9;} 
+    .refresh{background:#f39c12;}
+    .back{background:#8e44ad;}
+    
+    .status { 
+      display: flex; 
+      align-items: center; 
+      font-size: 12px; 
+      margin-left: 15px; 
+    }
+    
+    .status span { 
+      width: 10px; 
+      height: 10px; 
+      border-radius: 50%; 
+      display: inline-block; 
+      margin-right: 6px; 
+    }
+    
+    .connected{background:#2ecc71;} 
+    .disconnected{background:#e74c3c;} 
+    .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
+      border-radius: 8px;
+      font-size: 14px;
+      color: #fff;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    main { 
+      padding: 0 20px 32px 20px; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+    }
+    
+    .toolbar {
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 16px; 
+      align-items: center; 
+      margin-bottom: 24px;
+      background: #ffffff; 
+      padding: 20px 24px; 
+      border-radius: 16px; 
+      border: 2px solid #e5e7eb;
+    }
+    
+    label { 
+      font-size: 14px; 
+      font-weight: 600; 
+      color: #374151; 
+    }
+    
+    select, input, button { 
+      padding: 12px 16px; 
+      border: 2px solid #d1d5db; 
+      border-radius: 12px; 
+      font-size: 14px; 
+      font-weight: 500; 
+      transition: all 0.2s ease;
+      background: white;
+    }
+    
+    select:focus, input:focus { 
+      outline: none; 
+      border-color: #6b7280; 
+      background: #f9fafb; 
+    }
+    
+    button { 
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); 
+      color: white; 
+      border: 2px solid #6b7280; 
+      cursor: pointer; 
+      font-weight: 600; 
+      text-transform: uppercase; 
+      letter-spacing: 0.5px;
+    }
+    
+    button:hover { 
+      background: linear-gradient(135deg, #4b5563 0%, #374151 100%); 
+      border-color: #4b5563; 
+      transform: translateY(-2px);
+    }
+    
+    button:active { transform: translateY(0); }
+    
+    table { 
+      border-collapse: collapse; 
+      width: 100%; 
+      margin-top: 24px; 
+      background: #ffffff; 
+      border-radius: 16px; 
+      overflow: hidden; 
+      border: 3px solid #e5e7eb;
+    }
+    
+    th, td { 
+      padding: 16px 20px; 
+      text-align: left; 
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 14px; 
+      line-height: 1.5;
+    }
+    
+    th { 
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); 
+      color: white; 
+      font-weight: 700; 
+      text-transform: uppercase; 
+      font-size: 12px; 
+      letter-spacing: 1px; 
+      position: sticky; 
+      top: 0; 
+      z-index: 10;
+    }
+    
+    td { background: white; }
+    
+    tr:hover td { 
+      background: #f8fafc; 
+      transition: all 0.2s ease;
+    }
+    
+    tr:nth-child(even) td { background: #fafbfc; }
+    tr:nth-child(even):hover td { background: #f1f5f9; }
+    
+    /* Sembunyikan kolom A */
+    th:first-child, td:first-child { display: none; }
+    
+    /* Styling khusus untuk kolom angka */
+    td:nth-child(8), td:nth-child(9), td:last-child { 
+      text-align: right; 
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; 
+      font-weight: 600; 
+      font-size: 13px;
+    }
+    
+    /* Styling untuk saldo positif/negatif */
+    td:last-child { 
+      font-weight: 700; 
+      font-size: 14px;
+    }
+    .saldo-positive { color: #059669; background: #ecfdf5; }
+    .saldo-negative { color: #dc2626; background: #fef2f2; }
+    
+    /* Loading animation */
+    .loading-dots {
+      display: inline-block; 
+      animation: loading 1.4s infinite;
+    }
+    @keyframes loading {
+      0%, 80%, 100% { opacity: 0.3; }
+      40% { opacity: 1; }
+    }
+    
+    #subtitle { 
+      margin: 16px 0; 
+      font-size: 15px; 
+      color: #6b7280; 
+      font-weight: 500;
+      background: white; 
+      padding: 12px 16px; 
+      border-radius: 12px; 
+      border: 2px solid #e5e7eb; 
+      display: inline-block;
+    }
+    
+    #loading { 
+      margin: 24px 0; 
+      font-size: 16px; 
+      color: #6b7280; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      font-weight: 600;
+    }
+    
+    .pagination { 
+      margin-top: 32px; 
+      display: flex; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+      justify-content: center; 
+      align-items: center; 
+      background: white;
+      padding: 20px; 
+      border-radius: 16px; 
+      border: 2px solid #e5e7eb;
+    }
+    
+    .pagination button {
+      padding: 12px 18px; 
+      border: 2px solid #d1d5db; 
+      border-radius: 12px; 
+      background: white; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 14px;
+      transition: all 0.3s ease; 
+      color: #374151;
+    }
+    
+    .pagination button:hover:not(:disabled) { 
+      background: #f3f4f6; 
+      border-color: #9ca3af; 
+      transform: translateY(-2px);
+    }
+    
+    .pagination button.active { 
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); 
+      color: white; 
+      border-color: #6b7280;
+    }
+    
+    .pagination button:disabled { 
+      background: #f9fafb; 
+      color: #d1d5db; 
+      cursor: not-allowed; 
+      border-color: #e5e7eb;
+    }
+    
+    .pagination span { 
+      padding: 12px 16px; 
+      color: #6b7280; 
+      font-weight: 600; 
+      background: #f9fafb; 
+      border-radius: 12px; 
+      border: 2px solid #e5e7eb;
+    }
+    
+    @media print { 
+      .no-print { display: none !important; } 
+      body { margin: 8mm; background: white !important; }
+      table { border: 2px solid #374151 !important; }
+      th { background: #6b7280 !important; }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      main { padding: 16px; }
+      header { padding: 16px 20px; }
+      .logo-text strong { font-size: 14px; }
+      .controls { flex-wrap: wrap; }
+      .toolbar { padding: 16px; gap: 12px; }
+      th, td { padding: 12px 8px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
+      <div class="logo-text">
+        <strong>Card Stock</strong>
+        <span>Manajemen kartu stock untuk kontrol inventory</span>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
+      <button class="ctrl export" onclick="exportExcel()">⬇ Export Excel</button>
+      <button class="ctrl print" onclick="printTable()">🖨 Print</button>
+      <button class="ctrl refresh" onclick="loadDropdown()">🔄 Refresh Data</button>
+      <div class="status" id="status">
+        <span class="connected"></span><span id="statusText">Connected</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Breadcrumb Navigation -->
+  <div class="breadcrumb" id="breadcrumb">
+    <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Card Stock Finish Goods
+  </div>
+
+  <main>
+    <div class="no-print toolbar">
+      <label for="desc">Deskripsi Item:</label>
+      <select id="desc"><option value="">-- Pilih Deskripsi --</option></select>
+
+      <label for="tglAwal">Tanggal Dari:</label>
+      <input type="date" id="tglAwal">
+
+      <label for="tglAkhir">Sampai:</label>
+      <input type="date" id="tglAkhir">
+
+      <button id="btnFilter">Filter</button>
+      <button id="btnPrint">Print</button>
+      <button id="btnPDF">Download PDF</button>
+      <button id="btnExcel">Export Excel</button>
+    </div>
+
+    <h2 style="color: #374151; font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">Card Stock Finish Goods</h2>
+    <p id="subtitle">Silakan pilih filter untuk menampilkan data.</p>
+    <div id="loading"></div>
+    <table id="dataTable"></table>
+    <div id="pagination" class="pagination"></div>
+  </main>
+
+  <!-- html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    const sheetID = "1AwPzVONLkr-GXigtHBGPPXE8XwZdwPXw69g7XSp5FdY";
+    const sheetGID = "2088069833";
+    const sheetURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?gid=${sheetGID}`;
+
+    const descSelect   = document.getElementById("desc");
+    const tglAwalInput = document.getElementById("tglAwal");
+    const tglAkhirInput= document.getElementById("tglAkhir");
+    const dataTable    = document.getElementById("dataTable");
+    const btnFilter    = document.getElementById("btnFilter");
+    const btnPrint     = document.getElementById("btnPrint");
+    const btnPDF       = document.getElementById("btnPDF");
+    const btnExcel     = document.getElementById("btnExcel");
+    const subtitle     = document.getElementById("subtitle");
+    const loadingText  = document.getElementById("loading");
+    const pagination   = document.getElementById("pagination");
+
+    let fullData = []; // semua baris hasil filter
+    let tableColumns = []; // simpan kolom header
+    let pageSize = 50;
+    let currentPage = 1;
+
+    // Navigation functions
+    function getDashboardUrl() {
+      console.log('Current URL:', window.location.href);
+      console.log('Current Path:', window.location.pathname);
+      console.log('Referrer:', document.referrer);
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return');
+      if (returnUrl) {
+        console.log('Using return URL:', returnUrl);
+        return decodeURIComponent(returnUrl);
+      }
+      
+      if (document.referrer && document.referrer !== window.location.href) {
+        console.log('Using referrer URL:', document.referrer);
+        return document.referrer;
+      }
+      
+      const githubPagesUrls = [
+        'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
+        '/UtilisasiWarehouse/dashboard.html',
+        './dashboard.html',
+        '../dashboard.html'
+      ];
+      
+      console.log('Trying dashboard URLs:', githubPagesUrls);
+      return githubPagesUrls[0];
+    }
+
+    function goBackToDashboard() {
+      console.log('Going back to dashboard...');
+      
+      try {
+        if (document.referrer && 
+            document.referrer !== window.location.href && 
+            document.referrer.includes('dashboard.html')) {
+          console.log('Using referrer method');
+          window.location.href = document.referrer;
+          return;
+        }
+        
+        if (window.history.length > 1) {
+          console.log('Using history back method');
+          window.history.back();
+          return;
+        }
+        
+        const dashboardUrl = getDashboardUrl();
+        console.log('Using direct navigation to:', dashboardUrl);
+        if (dashboardUrl) {
+          window.location.href = dashboardUrl;
+        } else {
+          console.log('Using fallback method');
+          if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+            window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+          }
+        }
+      } catch (error) {
+        console.error('Error in goBackToDashboard:', error);
+        if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+          window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+        }
+      }
+    }
+
+    function updateNavigationContext() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return');
+      const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+      
+      if (returnUrl || document.referrer) {
+        const breadcrumb = document.getElementById('breadcrumb');
+        breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Card Stock Finish Goods`;
+      }
+    }
+
+    function updateSubtitle(desc, tglAwal, tglAkhir) {
+      const d = desc || "Semua Deskripsi";
+      const t1 = tglAwal ? new Date(tglAwal).toLocaleDateString("id-ID") : "awal";
+      const t2 = tglAkhir ? new Date(tglAkhir).toLocaleDateString("id-ID") : "akhir";
+      subtitle.textContent = `Filter: ${d} · Periode: ${t1} s/d ${t2} · Dibuat: ${new Date().toLocaleString("id-ID")}`;
+    }
+
+    function loadDropdown() {
+      const query = encodeURIComponent("select B where B is not null");
+      const url = sheetURL + "&tq=" + query;
+
+      fetch(url)
+        .then(res => res.text())
+        .then(rep => {
+          const json = JSON.parse(rep.substr(47).slice(0, -2));
+          const rows = json.table.rows;
+          const values = rows.map(r => r.c[0]?.v).filter(Boolean);
+          const uniqueVals = [...new Set(values)].sort();
+
+          uniqueVals.forEach(val => {
+            const opt = document.createElement("option");
+            opt.value = val;
+            opt.textContent = val;
+            descSelect.appendChild(opt);
+          });
+        });
+    }
+
+    function loadData() {
+      const desc = descSelect.value;
+      const tglAwal = tglAwalInput.value;
+      const tglAkhir = tglAkhirInput.value;
+
+      loadingText.innerHTML = "⏳ Sedang memuat data<span class='loading-dots'>...</span>";
+      dataTable.innerHTML = "";
+      pagination.innerHTML = "";
+
+      let whereClauses = [];
+      if (desc) whereClauses.push(`B='${desc}'`);
+      if (tglAwal) whereClauses.push(`C >= date '${tglAwal}'`);
+      if (tglAkhir) whereClauses.push(`C <= date '${tglAkhir}'`);
+      const whereSQL = whereClauses.length ? " where " + whereClauses.join(" and ") : "";
+
+      const query = encodeURIComponent(`select *${whereSQL} order by C asc`);
+      const url = sheetURL + "&tq=" + query;
+
+      fetch(url)
+        .then(res => res.text())
+        .then(rep => {
+          const json = JSON.parse(rep.substr(47).slice(0, -2));
+          const cols = json.table.cols;
+          const rows = json.table.rows;
+
+          if (!rows.length) {
+            dataTable.innerHTML = "<tr><td colspan='100%' style='text-align: center; color: #9ca3af; padding: 60px 20px; font-style: italic; font-size: 16px; background: #f9fafb;'>📊 Tidak ada data yang ditemukan untuk filter ini</td></tr>";
+            loadingText.textContent = "";
+            return;
+          }
+
+          tableColumns = cols;
+          fullData = rows;
+          calculateSaldo();
+          
+          currentPage = 1;
+          renderTable();
+          renderPagination();
+          updateSubtitle(desc, tglAwal, tglAkhir);
+          loadingText.textContent = "";
+        });
+    }
+
+    function calculateSaldo() {
+      let saldo = 0;
+      fullData.forEach((r, idx) => {
+        const h = parseFloat(r.c[7]?.v || 0);
+        const i = parseFloat(r.c[8]?.v || 0);
+        saldo = (idx === 0) ? (h - i) : (saldo + (h - i));
+        r._saldo = saldo;
+      });
+    }
+
+    function renderTable() {
+      let html = "<tr>";
+      tableColumns.forEach((c, index) => { 
+        if (index !== 0 && c.label) html += `<th>${c.label}</th>`; 
+      });
+      html += `<th>Saldo Akhir</th></tr>`;
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = startIdx + pageSize;
+      const pageRows = fullData.slice(startIdx, endIdx);
+
+      pageRows.forEach(r => {
+        html += "<tr>";
+        r.c.forEach((cell, index) => {
+          if (index !== 0) {
+            const value = cell?.f || cell?.v || "";
+            html += `<td>${value}</td>`;
+          }
+        });
+        const saldoClass = r._saldo >= 0 ? 'saldo-positive' : 'saldo-negative';
+        html += `<td class="${saldoClass}">${Number(r._saldo).toLocaleString("id-ID")}</td>`;
+        html += "</tr>";
+      });
+
+      dataTable.innerHTML = html;
+    }
+
+    function renderPagination() {
+      pagination.innerHTML = "";
+      const totalPages = Math.ceil(fullData.length / pageSize);
+
+      if (totalPages <= 1) return;
+
+      const infoSpan = document.createElement("span");
+      infoSpan.textContent = `Halaman ${currentPage} dari ${totalPages} (${fullData.length} data)`;
+      infoSpan.style.marginRight = "20px";
+      infoSpan.style.color = "#64748b";
+      infoSpan.style.fontSize = "14px";
+      pagination.appendChild(infoSpan);
+
+      const prevBtn = document.createElement("button");
+      prevBtn.textContent = "« Prev";
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { 
+        currentPage--; 
+        renderTable(); 
+        renderPagination(); 
+      };
+      pagination.appendChild(prevBtn);
+
+      for (let i = 1; i <= totalPages; i++) {
+        if (i > 3 && i < totalPages - 2 && (i < currentPage - 1 || i > currentPage + 1)) {
+          if (i === currentPage - 2 || i === currentPage + 2) {
+            const dots = document.createElement("span");
+            dots.textContent = "...";
+            dots.style.padding = "6px 12px";
+            pagination.appendChild(dots);
+          }
+          continue;
+        }
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        if (i === currentPage) btn.classList.add("active");
+        btn.onclick = () => { 
+          currentPage = i; 
+          renderTable(); 
+          renderPagination(); 
+        };
+        pagination.appendChild(btn);
+      }
+
+      const nextBtn = document.createElement("button");
+      nextBtn.textContent = "Next »";
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { 
+        currentPage++; 
+        renderTable(); 
+        renderPagination(); 
+      };
+      pagination.appendChild(nextBtn);
+    }
+
+    function printTable() { 
+      window.print(); 
+    }
+
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.table_to_sheet(document.getElementById("dataTable"));
+      XLSX.utils.book_append_sheet(wb, ws, "Card Stock FG");
+      XLSX.writeFile(wb, `card-stock-fg-${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    // Event listeners
+    btnFilter.addEventListener("click", loadData);
+    btnPrint.addEventListener("click", printTable);
+    btnPDF.addEventListener("click", () => {
+      const opt = {
+        margin: 10,
+        filename: `card-stock-fg-${new Date().toISOString().slice(0,10)}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+      html2pdf().from(document.body).set(opt).save();
+    });
+    btnExcel.addEventListener("click", exportExcel);
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavigationContext();
+      loadDropdown();
+    });
+
+    // Make functions globally accessible
+    window.goBackToDashboard = goBackToDashboard;
+    window.loadDropdown = loadDropdown;
+    window.printTable = printTable;
+    window.exportExcel = exportExcel;
+  </script>
+</body>
+</html>
