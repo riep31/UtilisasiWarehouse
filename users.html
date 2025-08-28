@@ -290,7 +290,7 @@
         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
         <div class="logo-text">
           <strong>User Management</strong>
-          <span>Kelola login App</span>
+          <span>Kelola Data Pegawai</span>
         </div>
       </div>
       <div class="controls">
@@ -308,7 +308,7 @@
 
     <!-- Form Section -->
     <div class="form-container">
-      <h2>📝 Form Input</h2>
+      <h2>📝 Form Input Pegawai</h2>
       <form id="pegawaiForm">
         <input type="hidden" id="rowId">
         
@@ -363,7 +363,7 @@
   </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzbGK9FBBxouD4HVUiVzkE-mgJLnChmtRBiaGGWkwFxMnBBJ-FWdpu0XJPkslzqcwDcow/exec";
+    const scriptURL = "https://script.google.com/macros/s/AKfycbysC-m6HagHd15Cm1UoNpdpKMaX9-TfzYd7qIWNVm1LjmsviUt5-1iEJLy6epL6Dalxaw/exec";
 
     // Function to get dashboard URL from various sources
     function getDashboardUrl() {
@@ -427,14 +427,14 @@
           // Method 4: Fallback options
           console.log('Using fallback method');
           if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
-            window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+            window.location.href = 'https://riep31.github.io/UtilisasiTes/';
           }
         }
       } catch (error) {
         console.error('Error in goBackToDashboard:', error);
         // Final fallback
         if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
-          window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+          window.location.href = 'https://riep31.github.io/UtilisasiTes/';
         }
       }
     }
@@ -466,30 +466,38 @@
       setStatus("loading", "Saving...");
 
       const rowId = document.getElementById("rowId").value;
-      const data = {
-        action: rowId ? "update" : "create",
-        rowId: rowId,
-        username: document.getElementById("username").value,
-        password: document.getElementById("password").value,
-        nama: document.getElementById("nama").value,
-        level: document.getElementById("level").value,
-        divisi: document.getElementById("divisi").value
-      };
+      const formData = new FormData();
+      
+      // Gunakan FormData instead of JSON
+      formData.append('action', rowId ? "update" : "create");
+      if (rowId) formData.append('rowId', rowId);
+      formData.append('username', document.getElementById("username").value);
+      formData.append('password', document.getElementById("password").value);
+      formData.append('nama', document.getElementById("nama").value);
+      formData.append('level', document.getElementById("level").value);
+      formData.append('divisi', document.getElementById("divisi").value);
 
       fetch(scriptURL, {
         method: "POST",
-        body: JSON.stringify(data)
+        body: formData
       })
-      .then(res => res.json())
-      .then(() => {
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(result => {
+        console.log('Success:', result);
         alert("Data berhasil disimpan!");
         document.getElementById("pegawaiForm").reset();
         document.getElementById("rowId").value = "";
         loadData();
         setStatus("connected", "Data saved successfully");
       })
-      .catch(err => {
-        alert("Error: " + err);
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Error: " + error.message);
         setStatus("disconnected", "Error saving data");
       });
     });
@@ -500,18 +508,29 @@
       
       setStatus("loading", "Deleting...");
       
+      const formData = new FormData();
+      formData.append('action', 'delete');
+      formData.append('rowId', id);
+      
       fetch(scriptURL, {
         method: "POST",
-        body: JSON.stringify({ action:"delete", rowId:id })
+        body: formData
       })
-      .then(res => res.json())
-      .then(() => {
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(result => {
+        console.log('Delete success:', result);
         alert("Data berhasil dihapus!");
         loadData();
         setStatus("connected", "Data deleted successfully");
       })
-      .catch(err => {
-        alert("Error: " + err);
+      .catch(error => {
+        console.error('Delete error:', error);
+        alert("Error: " + error.message);
         setStatus("disconnected", "Error deleting data");
       });
     }
@@ -533,30 +552,44 @@
     function loadData() {
       setStatus("loading", "Loading data...");
       
-      fetch(scriptURL)
-        .then(res => res.json())
+      fetch(scriptURL + '?action=read')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          console.log('Loaded data:', data);
           const tbody = document.getElementById("dataBody");
           tbody.innerHTML = "";
-          data.forEach((row, i) => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${row.username}</td>
-                <td>${row.password}</td>
-                <td>${row.nama}</td>
-                <td>${row.level}</td>
-                <td>${row.divisi}</td>
-                <td>
-                  <button class="edit" onclick='editData(${i+1}, ${JSON.stringify(row)})'>✏️ Edit</button>
-                  <button class="delete" onclick="deleteData(${i+1})">🗑️ Hapus</button>
-                </td>
-              </tr>`;
-          });
-          setStatus("connected", `Loaded ${data.length} records`);
+          
+          if (data && Array.isArray(data) && data.length > 0) {
+            data.forEach((row, i) => {
+              tbody.innerHTML += `
+                <tr>
+                  <td>${row.username || ''}</td>
+                  <td>${row.password || ''}</td>
+                  <td>${row.nama || ''}</td>
+                  <td>${row.level || ''}</td>
+                  <td>${row.divisi || ''}</td>
+                  <td>
+                    <button class="edit" onclick='editData(${i+2}, ${JSON.stringify(row).replace(/'/g, "&apos;")})'>✏️ Edit</button>
+                    <button class="delete" onclick="deleteData(${i+2})">🗑️ Hapus</button>
+                  </td>
+                </tr>`;
+            });
+            setStatus("connected", `Loaded ${data.length} records`);
+          } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tidak ada data</td></tr>';
+            setStatus("connected", "No data found");
+          }
         })
-        .catch(err => {
-          console.error('Error loading data:', err);
-          setStatus("disconnected", "Error loading data");
+        .catch(error => {
+          console.error('Error loading data:', error);
+          setStatus("disconnected", "Error loading data: " + error.message);
+          const tbody = document.getElementById("dataBody");
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Error loading data</td></tr>';
         });
     }
 
