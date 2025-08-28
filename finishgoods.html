@@ -485,14 +485,14 @@ function goBackToDashboard() {
       // Method 4: Fallback options
       console.log('Using fallback method');
       if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
-        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+        window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
       }
     }
   } catch (error) {
     console.error('Error in goBackToDashboard:', error);
     // Final fallback
     if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
-      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+      window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
     }
   }
 }
@@ -563,32 +563,37 @@ function populateAlertTable(rows) {
     return;
   }
   
-  // Create mini table with negative items
+  // Create mini table with columns B, L, M, N, O with proper headers from main table
+  const headers = rows[0];
+  
   let tableHTML = `
     <table class="mini-table">
       <thead>
         <tr>
           <th>No</th>
-          <th>Nama Item</th>
-          <th>Saldo Akhir (N)</th>
-          <th>Saldo Akhir Kgs (P)</th>
-          <th>Kategori</th>
+          <th>${headers[1] || 'Nama Item'}</th>
+          <th>${headers[11] || 'Sub Total Masuk'}</th>
+          <th>${headers[12] || 'Sub Total Keluar'}</th>
+          <th>${headers[13] || 'Saldo Akhir Crtn'}</th>
+          <th>${headers[14] || 'Status Produk'}</th>
         </tr>
       </thead>
       <tbody>
   `;
   
   negativeRows.forEach((item, index) => {
-    const valueN = parseFloat(item.data[13]) || 0;
-    const valueP = parseFloat(item.data[15]) || 0;
+    const valueL = parseFloat(item.data[11]) || 0; // Column L
+    const valueM = parseFloat(item.data[12]) || 0; // Column M
+    const valueN = parseFloat(item.data[13]) || 0; // Column N
     
     tableHTML += `
       <tr>
         <td>${index + 1}</td>
-        <td>${item.data[0] || 'N/A'}</td>
-        <td class="${item.negativeN ? 'negative-col' : ''}">${valueN.toLocaleString('id-ID')}</td>
-        <td class="${item.negativeP ? 'negative-col' : ''}">${valueP.toLocaleString('id-ID')}</td>
         <td>${item.data[1] || 'N/A'}</td>
+        <td class="${valueL < 0 ? 'negative-col' : ''}">${valueL.toLocaleString('id-ID')}</td>
+        <td class="${valueM < 0 ? 'negative-col' : ''}">${valueM.toLocaleString('id-ID')}</td>
+        <td class="${item.negativeN ? 'negative-col' : ''}">${valueN.toLocaleString('id-ID')}</td>
+        <td>${item.data[14] || 'N/A'}</td>
       </tr>
     `;
   });
