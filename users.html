@@ -2,53 +2,473 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Form Input Login</title>
+  <title>Form Pegawai</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:20px; }
-    h2 { color:#2c3e50; }
-    form, table { background:white; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
-    input, select { padding:8px; margin:5px 0; width:100%; border:1px solid #ccc; border-radius:6px; }
-    button { padding:10px 15px; border:none; border-radius:6px; background:#3498db; color:white; cursor:pointer; }
-    button:hover { background:#2980b9; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
-    th { background:#34495e; color:white; }
+    body { 
+      font-family:'Segoe UI',Tahoma,sans-serif; 
+      margin:0; 
+      background:#eef2f7; 
+      min-height:100vh;
+    }
+
+    header {
+      display:flex; 
+      align-items:center; 
+      justify-content:flex-start;
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
+      padding:15px 20px; 
+      color:#2c3e50; 
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      gap: 30px;
+    }
+    
+    .logo { 
+      display:flex; 
+      align-items:center; 
+      flex-shrink:0; 
+    }
+    
+    .logo img { 
+      width:100px; 
+      height:50px; 
+      margin-right:15px; 
+      border-radius:8px; 
+    }
+    
+    .logo-text { 
+      display:flex; 
+      flex-direction:column; 
+      line-height:1.3; 
+    }
+    
+    .logo-text strong { 
+      font-size:18px; 
+      color:#2c3e50;
+    }
+    
+    .logo-text span { 
+      font-size:14px; 
+      opacity:0.7; 
+      color:#7f8c8d;
+    }
+    
+    .controls { 
+      display:flex; 
+      gap:10px; 
+      align-items:center; 
+      flex-wrap:wrap; 
+    }
+    
+    button.ctrl { 
+      padding:8px 15px; 
+      border:none; 
+      border-radius:6px; 
+      cursor:pointer; 
+      font-size:13px; 
+      color:white; 
+      font-weight:500;
+      transition:all 0.3s ease;
+    }
+    
+    button.ctrl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .back{background:#8e44ad;}
+    
+    .status { 
+      display:flex; 
+      align-items:center; 
+      font-size:12px; 
+      margin-left:15px; 
+    }
+    
+    .status span { 
+      width:10px; 
+      height:10px; 
+      border-radius:50%; 
+      display:inline-block; 
+      margin-right:6px; 
+    }
+    
+    .connected{background:#2ecc71;} 
+    .disconnected{background:#e74c3c;} 
+    .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
+      border-radius: 8px;
+      font-size: 14px;
+      color: #000;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* Form Container */
+    .form-container {
+      margin: 0 20px 20px 20px;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .form-container h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 20px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #2c3e50;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    input[type="text"], input[type="password"], select {
+      padding: 12px 15px;
+      border: 1px solid #bdc3c7;
+      border-radius: 8px;
+      width: 100%;
+      box-sizing: border-box;
+      background: #ffffff;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    input[type="text"]:focus, input[type="password"]:focus, select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+    }
+
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button.save {
+      background: #3498db;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    button.save:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Table Container */
+    .table-container {
+      margin: 0 20px 20px 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow-x: auto;
+    }
+
+    .table-container h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 18px;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    
+    th, td {
+      border: 1px solid #e8e8e8;
+      padding: 12px 8px;
+      text-align: left;
+    }
+    
+    th {
+      background: #34495e;
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+    
+    tr:hover {
+      background: #e3f2fd;
+    }
+
+    button.edit {
+      background: #f39c12;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    button.edit:hover {
+      background: #e67e22;
+    }
+
+    button.delete {
+      background: #e74c3c;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    button.delete:hover {
+      background: #c0392b;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .controls {
+        flex-wrap: wrap;
+      }
+      
+      .logo-text strong {
+        font-size: 14px;
+      }
+      
+      .form-buttons {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>User Management</h2>
-  <form id="pegawaiForm">
-    <input type="text" id="username" placeholder="Username" required>
-    <input type="password" id="password" placeholder="Password" required>
-    <input type="text" id="nama" placeholder="Nama" required>
-    <!-- Ubah select jadi input bebas -->
-    <input type="text" id="level" placeholder="Level (misal: Admin, User, Manager)" required>
-    <input type="text" id="divisi" placeholder="Divisi" required>
-    <button type="submit">Simpan</button>
-  </form>
+  <!-- Main Content -->
+  <div class="main" id="main">
+    <header>
+      <div class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
+        <div class="logo-text">
+          <strong>User Management</strong>
+          <span>Kelola login App</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
+        <div class="status" id="status">
+          <span class="connected"></span><span id="statusText">Ready</span>
+        </div>
+      </div>
+    </header>
 
-  <h2>Data User App</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Password</th>
-        <th>Nama</th>
-        <th>Level</th>
-        <th>Divisi</th>
-        <th>Tanggal</th>
-      </tr>
-    </thead>
-    <tbody id="dataBody"></tbody>
-  </table>
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > User Management
+    </div>
+
+    <!-- Form Section -->
+    <div class="form-container">
+      <h2>📝 Form Input</h2>
+      <form id="pegawaiForm">
+        <input type="hidden" id="rowId">
+        
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" placeholder="Masukkan username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" placeholder="Masukkan password" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="nama">Nama Lengkap:</label>
+          <input type="text" id="nama" placeholder="Masukkan nama lengkap" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="level">Level:</label>
+          <input type="text" id="level" placeholder="Masukkan level" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="divisi">Divisi:</label>
+          <input type="text" id="divisi" placeholder="Masukkan divisi" required>
+        </div>
+        
+        <div class="form-buttons">
+          <button type="submit" class="save">💾 Simpan Data</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table Section -->
+    <div class="table-container">
+      <h2>📋 Data Pegawai</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Nama</th>
+            <th>Level</th>
+            <th>Divisi</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dataBody"></tbody>
+      </table>
+    </div>
+  </div>
 
   <script>
-    const scriptURL = "PASTE_WEB_APP_URL_HERE"; // ganti dengan URL Web App Google Script
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzbGK9FBBxouD4HVUiVzkE-mgJLnChmtRBiaGGWkwFxMnBBJ-FWdpu0XJPkslzqcwDcow/exec";
+
+    // Function to get dashboard URL from various sources
+    function getDashboardUrl() {
+      console.log('Current URL:', window.location.href);
+      console.log('Current Path:', window.location.pathname);
+      console.log('Referrer:', document.referrer);
+      
+      // Try to get dashboard URL from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return');
+      if (returnUrl) {
+        console.log('Using return URL:', returnUrl);
+        return decodeURIComponent(returnUrl);
+      }
+      
+      // Try to get from document referrer
+      if (document.referrer && document.referrer !== window.location.href) {
+        console.log('Using referrer URL:', document.referrer);
+        return document.referrer;
+      }
+      
+      // For GitHub Pages - specific URLs
+      const githubPagesUrls = [
+        'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
+        '/UtilisasiWarehouse/dashboard.html',
+        './dashboard.html',
+        '../dashboard.html'
+      ];
+      
+      console.log('Trying dashboard URLs:', githubPagesUrls);
+      return githubPagesUrls[0];
+    }
+
+    // Navigation function - Fixed to be properly global
+    function goBackToDashboard() {
+      console.log('Going back to dashboard...');
+      
+      try {
+        // Method 1: Use referrer if available and valid
+        if (document.referrer && 
+            document.referrer !== window.location.href && 
+            document.referrer.includes('dashboard.html')) {
+          console.log('Using referrer method');
+          window.location.href = document.referrer;
+          return;
+        }
+        
+        // Method 2: Use browser history if available
+        if (window.history.length > 1) {
+          console.log('Using history back method');
+          window.history.back();
+          return;
+        }
+        
+        // Method 3: Navigate to specific dashboard URL
+        const dashboardUrl = getDashboardUrl();
+        console.log('Using direct navigation to:', dashboardUrl);
+        if (dashboardUrl) {
+          window.location.href = dashboardUrl;
+        } else {
+          // Method 4: Fallback options
+          console.log('Using fallback method');
+          if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+            window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+          }
+        }
+      } catch (error) {
+        console.error('Error in goBackToDashboard:', error);
+        // Final fallback
+        if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+          window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+        }
+      }
+    }
+
+    // Update page title and breadcrumb based on referrer or URL params
+    function updateNavigationContext() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get('return');
+      const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+      
+      if (returnUrl || document.referrer) {
+        const breadcrumb = document.getElementById('breadcrumb');
+        breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > User Management`;
+      }
+    }
+
+    function setStatus(status, text) {
+      const statusSpan = document.querySelector("#status span");
+      const statusText = document.getElementById("statusText");
+      
+      statusSpan.className = status;
+      statusText.textContent = text;
+    }
 
     // Submit form
     document.getElementById("pegawaiForm").addEventListener("submit", e => {
       e.preventDefault();
+      
+      setStatus("loading", "Saving...");
+
+      const rowId = document.getElementById("rowId").value;
       const data = {
+        action: rowId ? "update" : "create",
+        rowId: rowId,
         username: document.getElementById("username").value,
         password: document.getElementById("password").value,
         nama: document.getElementById("nama").value,
@@ -63,20 +483,62 @@
       .then(res => res.json())
       .then(() => {
         alert("Data berhasil disimpan!");
-        loadData(); // refresh tabel
         document.getElementById("pegawaiForm").reset();
+        document.getElementById("rowId").value = "";
+        loadData();
+        setStatus("connected", "Data saved successfully");
       })
-      .catch(err => alert("Error: " + err));
+      .catch(err => {
+        alert("Error: " + err);
+        setStatus("disconnected", "Error saving data");
+      });
     });
+
+    // Hapus data
+    function deleteData(id) {
+      if (!confirm("Yakin hapus data ini?")) return;
+      
+      setStatus("loading", "Deleting...");
+      
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify({ action:"delete", rowId:id })
+      })
+      .then(res => res.json())
+      .then(() => {
+        alert("Data berhasil dihapus!");
+        loadData();
+        setStatus("connected", "Data deleted successfully");
+      })
+      .catch(err => {
+        alert("Error: " + err);
+        setStatus("disconnected", "Error deleting data");
+      });
+    }
+
+    // Edit data
+    function editData(id, row) {
+      document.getElementById("rowId").value = id;
+      document.getElementById("username").value = row.username;
+      document.getElementById("password").value = row.password;
+      document.getElementById("nama").value = row.nama;
+      document.getElementById("level").value = row.level;
+      document.getElementById("divisi").value = row.divisi;
+      
+      // Scroll to form
+      document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
+    }
 
     // Load data ke tabel
     function loadData() {
+      setStatus("loading", "Loading data...");
+      
       fetch(scriptURL)
         .then(res => res.json())
         .then(data => {
           const tbody = document.getElementById("dataBody");
           tbody.innerHTML = "";
-          data.forEach(row => {
+          data.forEach((row, i) => {
             tbody.innerHTML += `
               <tr>
                 <td>${row.username}</td>
@@ -84,14 +546,30 @@
                 <td>${row.nama}</td>
                 <td>${row.level}</td>
                 <td>${row.divisi}</td>
-                <td>${row.tanggal}</td>
+                <td>
+                  <button class="edit" onclick='editData(${i+1}, ${JSON.stringify(row)})'>✏️ Edit</button>
+                  <button class="delete" onclick="deleteData(${i+1})">🗑️ Hapus</button>
+                </td>
               </tr>`;
           });
+          setStatus("connected", `Loaded ${data.length} records`);
+        })
+        .catch(err => {
+          console.error('Error loading data:', err);
+          setStatus("disconnected", "Error loading data");
         });
     }
 
-    // Load data saat halaman dibuka
-    loadData();
+    // Initialize page when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavigationContext();
+      loadData();
+    });
+
+    // Make functions globally accessible
+    window.goBackToDashboard = goBackToDashboard;
+    window.deleteData = deleteData;
+    window.editData = editData;
   </script>
 </body>
 </html>
