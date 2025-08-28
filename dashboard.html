@@ -778,55 +778,99 @@
       display: block;
     }
 
-    /* Login prompt overlay - HIDDEN BY DEFAULT */
+    /* Login prompt overlay - WILL BE SHOWN WHEN NEEDED */
     .login-prompt-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none; /* Changed from flex to none */
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
       align-items: center;
       justify-content: center;
       z-index: 2000;
+      backdrop-filter: blur(5px);
+    }
+
+    .login-prompt-overlay.hidden {
+      display: none;
     }
 
     .login-prompt {
       background: white;
-      padding: 32px;
-      border-radius: 16px;
+      padding: 40px;
+      border-radius: 20px;
       text-align: center;
-      max-width: 400px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      max-width: 450px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .login-prompt h3 {
       color: #1e293b;
       margin-bottom: 16px;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
+      font-weight: 700;
     }
 
     .login-prompt p {
       color: #64748b;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
       line-height: 1.6;
+      font-size: 1rem;
+    }
+
+    .login-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .login-redirect-btn,
+    .demo-login-btn {
+      border: none;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      min-width: 120px;
     }
 
     .login-redirect-btn {
       background: linear-gradient(135deg, #4f46e5, #7c3aed);
       color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
     }
 
     .login-redirect-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+    }
+
+    .demo-login-btn {
+      background: #f8fafc;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+    }
+
+    .demo-login-btn:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #475569;
     }
   </style>
 </head>
@@ -839,11 +883,14 @@
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <!-- Login Prompt (shown if no user data) -->
-    <div class="login-prompt-overlay" id="loginPrompt" style="display: none;">
+    <div class="login-prompt-overlay hidden" id="loginPrompt">
       <div class="login-prompt">
-        <h3>Login Required</h3>
-        <p>Untuk menggunakan dashboard, silakan login terlebih dahulu.</p>
-        <button class="login-redirect-btn" onclick="redirectToLogin()">Login Sekarang</button>
+        <h3>Login Diperlukan</h3>
+        <p>Untuk menggunakan dashboard, silakan login terlebih dahulu atau gunakan mode demo untuk menjelajahi fitur yang tersedia.</p>
+        <div class="login-actions">
+          <button class="login-redirect-btn" onclick="redirectToLogin()">Login Sekarang</button>
+          <button class="demo-login-btn" onclick="enterDemoMode()">Mode Demo</button>
+        </div>
       </div>
     </div>
 
@@ -916,12 +963,12 @@
             <span class="greeting-text" id="greetingText">Selamat Pagi</span>
           </div>
           <div class="user-profile" id="userProfile">
-            <div class="user-avatar" id="userAvatar">AD</div>
+            <div class="user-avatar" id="userAvatar">U</div>
             <div class="user-info">
-              <div class="user-name" id="userName">Admin<span class="role-badge administrator" id="roleBadge">Admin</span></div>
+              <div class="user-name" id="userName">Guest<span class="role-badge viewer" id="roleBadge">GUEST</span></div>
               <div class="user-details">
-                <div id="userLevel">Level: Administrator</div>
-                <div id="userDivision">Divisi: IT</div>
+                <div id="userLevel">Level: Guest</div>
+                <div id="userDivision">Divisi: Public</div>
               </div>
             </div>
             <div class="user-dropdown">
@@ -935,614 +982,3 @@
                 <span>🚪</span> Logout
               </a>
             </div>
-          </div>
-        </div>
-      </header>
-
-      <div class="content">
-        <div class="welcome">
-          <h2>Dashboard Gudang</h2>
-          <p>Pilih menu untuk melihat data lebih detail.</p>
-        </div>
-
-        <div class="card-container" id="cardContainer">
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='rawmaterial.html'">
-            <div class="card-icon">📦</div>
-            <h3>Raw Material & Packaging</h3>
-            <p>Monitoring bahan baku dan kemasan untuk kelancaran produksi dan inventory management.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='finishgoods.html'">
-            <div class="card-icon">✅</div>
-            <h3>Finish Goods</h3>
-            <p>Status produk jadi siap distribusi dengan tracking kelengkapan dan kualitas produk.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='kapasitasgudang.html'">
-            <div class="card-icon">📊</div>
-            <h3>Status Kapasitas Gudang</h3>
-            <p>Real-time monitoring kapasitas gudang untuk optimalisasi ruang penyimpanan dan distribusi.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='cardstock.html'">
-            <div class="card-icon">📋</div>
-            <h3>Card Stock</h3>
-            <p>Manajemen kartu stok untuk pencatatan keluar masuk barang dan kontrol inventory.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='salah.html'">
-            <div class="card-icon">⚠️</div>
-            <h3>Report Salah Muat</h3>
-            <p>Laporan kesalahan muat barang untuk evaluasi dan perbaikan proses operasional gudang.</p>
-          </div>
-
-          <div class="card" data-roles="administrator" onclick="window.location.href='users.html'">
-            <div class="card-icon">👥</div>
-            <h3>User Management</h3>
-            <p>Kelola pengguna sistem, hak akses, dan role management untuk keamanan aplikasi.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager" onclick="window.location.href='reports.html'">
-            <div class="card-icon">📈</div>
-            <h3>Reports & Analytics</h3>
-            <p>Laporan komprehensif dan analitik data untuk insight bisnis dan pengambilan keputusan.</p>
-          </div>
-
-          <div class="card" data-roles="administrator" onclick="window.location.href='settings.html'">
-            <div class="card-icon">⚙️</div>
-            <h3>System Settings</h3>
-            <p>Konfigurasi sistem, backup, dan pengaturan aplikasi untuk optimalisasi performa.</p>
-          </div>
-
-          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer">
-            <div class="card-icon">🔔</div>
-            <h3>Notifikasi</h3>
-            <p>Alert dan pemberitahuan penting untuk update sistem dan aktivitas terbaru.</p>
-          </div>
-        </div>
-
-        <!-- Access Denied Message -->
-        <div class="access-denied" id="accessDenied">
-          <div class="access-denied-icon">🚫</div>
-          <h3>Akses Terbatas</h3>
-          <p>Maaf, Anda tidak memiliki akses yang cukup untuk melihat semua fitur dashboard.<br>Silakan hubungi administrator untuk informasi lebih lanjut.</p>
-        </div>
-      </div>
-
-      <footer>
-        © 2025 Dashboard Gudang | Dibuat dengan <span class="footer-heart">❤️</span> untuk kebutuhan internal
-      </footer>
-    </main>
-  </div>
-
-  <script>
-    // Role-based access control configuration
-    const ROLE_CONFIG = {
-      administrator: {
-        level: 5,
-        color: 'administrator',
-        permissions: ['all']
-      },
-      manager: {
-        level: 4,
-        color: 'manager',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'reports', 'salah']
-      },
-      supervisor: {
-        level: 3,
-        color: 'supervisor',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'salah']
-      },
-      operator: {
-        level: 2,
-        color: 'operator',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'cardstock']
-      },
-      viewer: {
-        level: 1,
-        color: 'viewer',
-        permissions: ['dashboard']
-      }
-    };
-
-    // Function to normalize role name
-    function normalizeRole(role) {
-      if (!role) return 'viewer';
-      
-      const normalizedRole = role.toLowerCase().trim();
-      
-      // Map alternative role names
-      const roleMapping = {
-        'admin': 'administrator',
-        'administrator': 'administrator',
-        'manajer': 'manager',
-        'manager': 'manager',
-        'supervisor': 'supervisor',
-        'spv': 'supervisor',
-        'operator': 'operator',
-        'op': 'operator',
-        'viewer': 'viewer',
-        'guest': 'viewer'
-      };
-      
-      return roleMapping[normalizedRole] || 'viewer';
-    }
-
-    // Function to check if user has access to specific feature
-    function hasAccess(userRole, requiredRoles) {
-      if (!userRole || !requiredRoles) return false;
-      
-      const normalizedUserRole = normalizeRole(userRole);
-      
-      // Administrator has access to everything
-      if (normalizedUserRole === 'administrator') return true;
-      
-      // Check if user role is in required roles list
-      const requiredRolesList = requiredRoles.split(',').map(role => role.trim().toLowerCase());
-      return requiredRolesList.includes(normalizedUserRole);
-    }
-
-    // Function to apply role-based access control
-    function applyRoleBasedAccess(userRole) {
-      const normalizedUserRole = normalizeRole(userRole);
-      let visibleItemsCount = 0;
-
-      // Handle navigation menu items
-      const navItems = document.querySelectorAll('.nav-item[data-roles]');
-      navItems.forEach(item => {
-        const requiredRoles = item.getAttribute('data-roles');
-        if (hasAccess(normalizedUserRole, requiredRoles)) {
-          item.classList.remove('hidden');
-          visibleItemsCount++;
-        } else {
-          item.classList.add('hidden');
-        }
-      });
-
-      // Handle dashboard cards
-      const cards = document.querySelectorAll('.card[data-roles]');
-      let visibleCardsCount = 0;
-      cards.forEach(card => {
-        const requiredRoles = card.getAttribute('data-roles');
-        if (hasAccess(normalizedUserRole, requiredRoles)) {
-          card.classList.remove('hidden');
-          visibleCardsCount++;
-        } else {
-          card.classList.add('hidden');
-        }
-      });
-
-      // Show access denied message if user has very limited access
-      const accessDenied = document.getElementById('accessDenied');
-      if (normalizedUserRole === 'viewer' && visibleCardsCount <= 2) {
-        accessDenied.classList.add('show');
-      } else {
-        accessDenied.classList.remove('show');
-      }
-
-      console.log(`Role-based access applied for: ${normalizedUserRole}`);
-      console.log(`Visible nav items: ${visibleItemsCount}, Visible cards: ${visibleCardsCount}`);
-    }
-
-    // Function to get role badge class and text
-    function getRoleBadge(role) {
-      const normalizedRole = normalizeRole(role);
-      const config = ROLE_CONFIG[normalizedRole] || ROLE_CONFIG.viewer;
-      
-      const badges = {
-        administrator: 'ADMIN',
-        manager: 'MGR',
-        supervisor: 'SPV',
-        operator: 'OPR',
-        viewer: 'VIEW'
-      };
-      
-      return {
-        class: config.color,
-        text: badges[normalizedRole] || 'USER'
-      };
-    }
-
-    // Function to get greeting based on current time
-    function getGreeting() {
-      const now = new Date();
-      const hour = now.getHours();
-      
-      if (hour >= 5 && hour < 11) {
-        return { text: 'Selamat Pagi', icon: '🌅' };
-      } else if (hour >= 11 && hour < 15) {
-        return { text: 'Selamat Siang', icon: '☀️' };
-      } else if (hour >= 15 && hour < 18) {
-        return { text: 'Selamat Sore', icon: '🌤️' };
-      } else {
-        return { text: 'Selamat Malam', icon: '🌙' };
-      }
-    }
-
-    // Function to update greeting
-    function updateGreeting() {
-      const greeting = getGreeting();
-      document.getElementById('greetingText').textContent = greeting.text;
-      document.getElementById('greetingIcon').textContent = greeting.icon;
-    }
-
-    // Function to get user initials from name
-    function getUserInitials(name) {
-      if (!name) return 'U';
-      return name.split(' ')
-                 .map(word => word.charAt(0).toUpperCase())
-                 .join('')
-                 .substring(0, 2);
-    }
-
-    // IMPROVED: Better storage access with fallbacks
-    function getStorageItem(key) {
-      try {
-        // Try localStorage first
-        const item = localStorage.getItem(key);
-        if (item) return item;
-      } catch (e) {
-        console.warn('localStorage not available:', e);
-      }
-      
-      try {
-        // Try sessionStorage as fallback
-        const item = sessionStorage.getItem(key);
-        if (item) return item;
-      } catch (e) {
-        console.warn('sessionStorage not available:', e);
-      }
-      
-      return null;
-    }
-
-    function setStorageItem(key, value) {
-      try {
-        localStorage.setItem(key, value);
-        return true;
-      } catch (e) {
-        console.warn('localStorage not available, trying sessionStorage:', e);
-        try {
-          sessionStorage.setItem(key, value);
-          return true;
-        } catch (e2) {
-          console.warn('No storage available:', e2);
-          return false;
-        }
-      }
-    }
-
-    // IMPROVED: More robust user data loading with better validation
-    function loadUserData() {
-      console.log('Loading user data...');
-      
-      try {
-        // Get user data from storage
-        const userDataString = getStorageItem('user');
-        let userData = null;
-
-        if (userDataString) {
-          try {
-            userData = JSON.parse(userDataString);
-            console.log('User data found in storage:', userData);
-          } catch (parseError) {
-            console.error('Error parsing user data:', parseError);
-            userData = null;
-          }
-        }
-
-        // If no valid user data found, use demo admin user
-        if (!userData || !isValidUserData(userData)) {
-          console.log('No valid user data found, using demo admin user');
-          userData = {
-            nama: 'Demo Admin',
-            level: 'Administrator', 
-            divisi: 'IT',
-            role: 'administrator'
-          };
-          
-          // Save demo user to storage for consistency
-          setStorageItem('user', JSON.stringify(userData));
-        }
-
-        // Update UI with user data
-        updateUserInterface(userData);
-        
-        // Apply role-based access control
-        applyRoleBasedAccess(userData.role);
-        
-        // Ensure login prompt is hidden
-        const loginPrompt = document.getElementById('loginPrompt');
-        if (loginPrompt) {
-          loginPrompt.style.display = 'none';
-        }
-
-        console.log('User data loaded successfully:', userData);
-        return userData;
-
-      } catch (error) {
-        console.error('Critical error in loadUserData:', error);
-        // Even on error, try to load demo user instead of showing login prompt
-        const demoUser = {
-          nama: 'Demo User',
-          level: 'Administrator',
-          divisi: 'System',
-          role: 'administrator'
-        };
-        updateUserInterface(demoUser);
-        applyRoleBasedAccess(demoUser.role);
-        
-        // Hide login prompt
-        const loginPrompt = document.getElementById('loginPrompt');
-        if (loginPrompt) {
-          loginPrompt.style.display = 'none';
-        }
-      }
-    }
-
-    // IMPROVED: Better validation for user data
-    function isValidUserData(userData) {
-      if (!userData || typeof userData !== 'object') {
-        return false;
-      }
-      
-      // Check required fields
-      const requiredFields = ['nama', 'level', 'divisi'];
-      for (const field of requiredFields) {
-        if (!userData[field] || typeof userData[field] !== 'string' || userData[field].trim() === '') {
-          console.log(`Invalid or missing field: ${field}`);
-          return false;
-        }
-      }
-      
-      // Ensure role field exists (create from level if missing)
-      if (!userData.role) {
-        userData.role = userData.level.toLowerCase();
-      }
-      
-      return true;
-    }
-
-    // IMPROVED: Separate function to update UI
-    function updateUserInterface(userData) {
-      try {
-        // Update basic user info
-        document.getElementById('userName').textContent = userData.nama || 'Unknown User';
-        document.getElementById('userLevel').textContent = `Level: ${userData.level || 'Unknown'}`;
-        document.getElementById('userDivision').textContent = `Divisi: ${userData.divisi || 'Unknown'}`;
-        document.getElementById('userAvatar').textContent = getUserInitials(userData.nama);
-
-        // Update role badge
-        const roleBadge = getRoleBadge(userData.role);
-        const roleBadgeElement = document.getElementById('roleBadge');
-        if (roleBadgeElement) {
-          roleBadgeElement.textContent = roleBadge.text;
-          roleBadgeElement.className = `role-badge ${roleBadge.class}`;
-        }
-
-        console.log('UI updated successfully');
-      } catch (error) {
-        console.error('Error updating UI:', error);
-      }
-    }
-
-    // Function to redirect to login page
-    function redirectToLogin() {
-      // Before redirecting, check if we can just load demo user
-      console.log('Redirect to login requested - loading demo user instead');
-      const demoUser = {
-        nama: 'Demo Administrator',
-        level: 'Administrator',
-        divisi: 'IT',
-        role: 'administrator'
-      };
-      
-      setStorageItem('user', JSON.stringify(demoUser));
-      loadUserData();
-    }
-
-    // IMPROVED: Better logout function
-    function logout() {
-      if (confirm('Apakah Anda yakin ingin logout?')) {
-        try {
-          // Clear user data from storage
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('user');
-          console.log('User data cleared from storage');
-        } catch (e) {
-          console.warn('Error clearing storage:', e);
-        }
-        
-        // Load demo user instead of showing login prompt
-        setTimeout(() => {
-          const demoUser = {
-            nama: 'Guest User',
-            level: 'Viewer',
-            divisi: 'Public',
-            role: 'viewer'
-          };
-          setStorageItem('user', JSON.stringify(demoUser));
-          loadUserData();
-        }, 500);
-      }
-    }
-
-    // Function to simulate different user roles (for testing)
-    function simulateUserRole(role) {
-      const sampleUsers = {
-        administrator: { nama: 'Super Admin', level: 'Administrator', divisi: 'IT', role: 'administrator' },
-        manager: { nama: 'John Manager', level: 'Manager', divisi: 'Operations', role: 'manager' },
-        supervisor: { nama: 'Jane Supervisor', level: 'Supervisor', divisi: 'Warehouse', role: 'supervisor' },
-        operator: { nama: 'Bob Operator', level: 'Operator', divisi: 'Production', role: 'operator' },
-        viewer: { nama: 'Alice Viewer', level: 'Viewer', divisi: 'Finance', role: 'viewer' }
-      };
-
-      const userData = sampleUsers[role] || sampleUsers.administrator;
-      
-      setStorageItem('user', JSON.stringify(userData));
-      loadUserData();
-      
-      console.log(`Simulated user role: ${role}`);
-    }
-
-    // Add to window for testing purposes
-    window.simulateUserRole = simulateUserRole;
-
-    // Toggle sidebar collapse
-    function toggleCollapse() {
-      const sidebar = document.getElementById('sidebar');
-      const mainContent = document.getElementById('mainContent');
-      const collapseIcon = document.getElementById('collapse-icon');
-      
-      sidebar.classList.toggle('collapsed');
-      mainContent.classList.toggle('collapsed');
-      
-      // Update collapse icon
-      if (sidebar.classList.contains('collapsed')) {
-        collapseIcon.textContent = '›';
-      } else {
-        collapseIcon.textContent = '‹';
-      }
-      
-      // Save collapse state
-      setStorageItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-    }
-
-    // Toggle sidebar for mobile
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.querySelector('.sidebar-overlay');
-      
-      sidebar.classList.toggle('active');
-      overlay.classList.toggle('active');
-    }
-
-    // IMPROVED: Better initialization
-    window.addEventListener('load', function() {
-      console.log('Dashboard initializing...');
-      
-      try {
-        // Load user data first - this will handle all cases
-        loadUserData();
-        
-        // Update greeting
-        updateGreeting();
-        
-        // Update greeting every minute
-        setInterval(updateGreeting, 60000);
-        
-        // Load sidebar collapse state
-        try {
-          const isCollapsed = getStorageItem('sidebarCollapsed') === 'true';
-          const sidebar = document.getElementById('sidebar');
-          const mainContent = document.getElementById('mainContent');
-          const collapseIcon = document.getElementById('collapse-icon');
-          
-          if (isCollapsed && window.innerWidth > 1024) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('collapsed');
-            collapseIcon.textContent = '›';
-          }
-        } catch (e) {
-          console.warn('Could not load sidebar state:', e);
-        }
-
-        // Add loading animation for cards
-        setTimeout(() => {
-          const cards = document.querySelectorAll('.card:not(.hidden)');
-          cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            
-            setTimeout(() => {
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, index * 100);
-          });
-        }, 100);
-
-        // Log available test functions
-        console.log('🔧 Testing functions available:');
-        console.log('simulateUserRole("administrator") - Test as Administrator');
-        console.log('simulateUserRole("manager") - Test as Manager');
-        console.log('simulateUserRole("supervisor") - Test as Supervisor');
-        console.log('simulateUserRole("operator") - Test as Operator');
-        console.log('simulateUserRole("viewer") - Test as Viewer');
-        
-        console.log('Dashboard initialized successfully!');
-        
-      } catch (error) {
-        console.error('Error during dashboard initialization:', error);
-        // Even on initialization error, make sure dashboard is usable
-        const fallbackUser = {
-          nama: 'System User',
-          level: 'Administrator',
-          divisi: 'System',
-          role: 'administrator'
-        };
-        updateUserInterface(fallbackUser);
-        applyRoleBasedAccess(fallbackUser.role);
-      }
-    });
-
-    // Close sidebar when clicking on nav item (mobile)
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', function() {
-        if (window.innerWidth <= 1024) {
-          toggleSidebar();
-        }
-      });
-    });
-
-    // Add smooth click animation for cards
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('mousedown', function() {
-        this.style.transform = 'translateY(-4px) scale(0.98)';
-      });
-      
-      card.addEventListener('mouseup', function() {
-        this.style.transform = 'translateY(-8px) scale(1)';
-      });
-      
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0) scale(1)';
-      });
-    });
-
-    // Handle window resize
-    window.addEventListener('resize', function() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.querySelector('.sidebar-overlay');
-      const mainContent = document.getElementById('mainContent');
-      
-      if (window.innerWidth > 1024) {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-        
-        // Restore collapse state on desktop
-        try {
-          const isCollapsed = getStorageItem('sidebarCollapsed') === 'true';
-          if (isCollapsed) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('collapsed');
-          }
-        } catch (e) {
-          console.warn('Could not restore sidebar state:', e);
-        }
-      } else {
-        // Remove collapse state on mobile
-        sidebar.classList.remove('collapsed');
-        mainContent.classList.remove('collapsed');
-      }
-    });
-
-    // REMOVED: Storage event listener that might cause issues
-    // window.addEventListener('storage', function(e) {
-    //   if (e.key === 'user') {
-    //     loadUserData();
-    //   }
-    // });
-  </script>
-</body>
-</html>
