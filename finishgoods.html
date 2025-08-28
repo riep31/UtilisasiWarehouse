@@ -155,6 +155,67 @@
       min-width:150px;
     }
 
+    /* Mini Alert Table Styles */
+    .alert-container {
+      margin: 0 20px 20px 20px;
+      background: #f1f3f4;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+      
+    }
+
+    .alert-header {
+      background: #34495e;
+      color: white;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-content {
+      padding: 15px 20px;
+    }
+
+    .mini-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .mini-table th {
+      background: #f8f9fa;
+      color: #2c3e50;
+      padding: 10px 8px;
+      border: 1px solid #e8e8e8;
+      font-weight: 600;
+      text-align: left;
+    }
+
+    .mini-table td {
+      padding: 8px;
+      border: 1px solid #e8e8e8;
+      background: #fff;
+    }
+
+    .mini-table .negative-col {
+      color: #c62828;
+      font-weight: bold;
+    }
+
+    .no-alerts {
+      text-align: center;
+      color: #27ae60;
+      font-weight: 500;
+      padding: 15px;
+      background: #d4edda;
+      border-radius: 6px;
+      border: 1px solid #c3e6cb;
+    }
+
     /* Tabel */
     .table-container{
       margin:0 20px 20px 20px;
@@ -316,6 +377,16 @@
       <select id="filterC" onchange="applyFilters()"><option value="">-- Filter --</option></select>
     </div>
 
+    <!-- Alert Mini Table -->
+    <div class="alert-container" id="alertContainer">
+      <div class="alert-header">
+        ⚠️ Item dengan Stok Minus
+      </div>
+      <div class="alert-content" id="alertContent">
+        <!-- Mini table will be populated here -->
+      </div>
+    </div>
+
     <!-- Main Table -->
     <div class="table-container">
       <table id="sheetTable"><thead></thead><tbody></tbody></table>
@@ -458,6 +529,79 @@ async function fetchSheetData(sheetNameParam) {
   return data.values || [];
 }
 
+// Function to populate mini alert table with negative values
+function populateAlertTable(rows) {
+  const alertContent = document.getElementById('alertContent');
+  const alertContainer = document.getElementById('alertContainer');
+  
+  if (rows.length <= 1) {
+    alertContainer.style.display = 'none';
+    return;
+  }
+  
+  // Find rows with negative values in column N (index 13) or P (index 15)
+  const negativeRows = [];
+  
+  rows.slice(1).forEach((row, index) => {
+    const valueN = parseFloat(row[13]) || 0; // Column N
+    const valueP = parseFloat(row[15]) || 0; // Column P
+    
+    if (valueN < 0 || valueP < 0) {
+      negativeRows.push({
+        rowIndex: index + 1,
+        data: row,
+        negativeN: valueN < 0,
+        negativeP: valueP < 0
+      });
+    }
+  });
+  
+  if (negativeRows.length === 0) {
+    // No negative values found
+    alertContent.innerHTML = '<div class="no-alerts">✅ Tidak ada item yang kurang</div>';
+    alertContainer.style.display = 'block';
+    return;
+  }
+  
+  // Create mini table with negative items
+  let tableHTML = `
+    <table class="mini-table">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama Item</th>
+          <th>Saldo Akhir (N)</th>
+          <th>Saldo Akhir Kgs (P)</th>
+          <th>Kategori</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  
+  negativeRows.forEach((item, index) => {
+    const valueN = parseFloat(item.data[13]) || 0;
+    const valueP = parseFloat(item.data[15]) || 0;
+    
+    tableHTML += `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.data[0] || 'N/A'}</td>
+        <td class="${item.negativeN ? 'negative-col' : ''}">${valueN.toLocaleString('id-ID')}</td>
+        <td class="${item.negativeP ? 'negative-col' : ''}">${valueP.toLocaleString('id-ID')}</td>
+        <td>${item.data[1] || 'N/A'}</td>
+      </tr>
+    `;
+  });
+  
+  tableHTML += `
+      </tbody>
+    </table>
+  `;
+  
+  alertContent.innerHTML = tableHTML;
+  alertContainer.style.display = 'block';
+}
+
 // Function to calculate subtotals
 function calculateSubtotals(rows) {
   if (rows.length <= 1) return { subtotalL: 0, subtotalP: 0, subtotalM: 0, subtotalQ: 0 };
@@ -516,6 +660,7 @@ async function loadSheet(){
   try{
     const mainSheetData = await fetchSheetData(sheetName);
     allRows = mainSheetData;
+    populateAlertTable(allRows);
     renderTable(allRows);
     fillFilter(allRows);
     updateSubtotals(allRows);
@@ -550,7 +695,13 @@ function renderTable(rows){
     
     r.forEach((c,i)=>{
       let td=document.createElement("td"); 
-      td.textContent=c;
+      
+      // 🔹 Sembunyikan nilai 0 di kolom F, G, H, I
+      if ((i >= 5 && i <= 8) && (c === "0" || c === 0)) {
+        td.textContent = "";
+      } else {
+        td.textContent = c;
+      }
       
       // Apply conditional formatting
       let numValue = parseFloat(c);
@@ -599,6 +750,7 @@ function sortTable(i){
   let sortedRows = [header,...rows];
   renderTable(sortedRows);
   updateSubtotals(sortedRows);
+  populateAlertTable([header, ...rows]); // Update alert table after sorting
 }
 
 function applyFilters(){
@@ -612,6 +764,7 @@ function applyFilters(){
   });
   renderTable(filtered);
   updateSubtotals(filtered);
+  populateAlertTable(filtered); // Update alert table after filtering
 }
 
 function fillFilter(rows){
