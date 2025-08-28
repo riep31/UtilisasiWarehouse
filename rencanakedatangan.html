@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Rencana Kedatangan Material</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { 
+      font-family:'Segoe UI',Tahoma,sans-serif; 
+      margin:0; 
+      background:#eef2f7; 
+      min-height:100vh;
+    }
+
+    header {
+      display:flex; 
+      align-items:center; 
+      justify-content:flex-start;
+       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
+      padding:15px 20px; 
+      color:#2c3e50; 
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      gap: 30px;
+    }
+    
+    .logo { 
+      display:flex; 
+      align-items:center; 
+      flex-shrink:0; 
+    }
+    
+    .logo img { 
+      width:100px; 
+      height:50px; 
+      margin-right:15px; 
+      border-radius:8px; 
+    }
+    
+    .logo-text { 
+      display:flex; 
+      flex-direction:column; 
+      line-height:1.3; 
+    }
+    
+    .logo-text strong { 
+      font-size:18px; 
+      color:#2c3e50;
+    }
+    
+    .logo-text span { 
+      font-size:14px; 
+      opacity:0.7; 
+      color:#7f8c8d;
+    }
+    
+    .controls { 
+      display:flex; 
+      gap:10px; 
+      align-items:center; 
+      flex-wrap:wrap; 
+    }
+    
+    button.ctrl { 
+      padding:8px 15px; 
+      border:none; 
+      border-radius:6px; 
+      cursor:pointer; 
+      font-size:13px; 
+      color:white; 
+      font-weight:500;
+      transition:all 0.3s ease;
+    }
+    
+    button.ctrl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .export{background:#27ae60;} 
+    .print{background:#2980b9;} 
+    .refresh{background:#f39c12;}
+    .back{background:#8e44ad;} /* Purple color for back button */
+    
+    .status { 
+      display:flex; 
+      align-items:center; 
+      font-size:12px; 
+      margin-left:15px; 
+    }
+    
+    .status span { 
+      width:10px; 
+      height:10px; 
+      border-radius:50%; 
+      display:inline-block; 
+      margin-right:6px; 
+    }
+    
+    .connected{background:#2ecc71;} 
+    .disconnected{background:#e74c3c;} 
+    .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
+      border-radius: 8px;
+      font-size: 14px;
+      color: #000;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* Sheet Selection Buttons */
+    .sheet-selection {
+      margin: 0 20px 20px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .sheet-btn {
+      padding: 12px 24px;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      background: white;
+      color: #3498db;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .sheet-btn:hover {
+      background: #3498db;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .sheet-btn.active {
+      background: #3498db;
+      color: white;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .sheet-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-right: 15px;
+    }
+
+    /* Mini Table for Today's Data */
+    .mini-table-container {
+      margin: 0 20px 20px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      color: white;
+    }
+
+    .mini-table-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mini-table {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    .mini-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      padding: 8px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .mini-table th {
+      background: rgba(255,255,255,0.2);
+      font-weight: 600;
+    }
+
+    .mini-table td {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .today-count {
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .filters{
+      margin:0 20px 20px 20px;
+      display:flex;
+      gap:15px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    
+    input[type=text]{
+      padding:10px 12px;
+      border:1px solid #bdc3c7;
+      border-radius:8px;
+      flex:1; 
+      background:#ffffff;
+      font-size:14px;
+      min-width:250px;
+    }
+    
+    input[type=text]:focus {
+      outline:none;
+      border-color:#3498db;
+      box-shadow:0 0 0 3px rgba(52,152,219,0.1);
+    }
+    
+    select{
+      padding:10px 12px;
+      border-radius:8px;
+      background:#ffffff;
+      border:1px solid #bdc3c7;
+      font-size:14px;
+      min-width:150px;
+    }
+
+    /* Tabel */
+    .table-container{
+      margin:0 20px 20px 20px;
+      background:white;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      overflow-x:auto;
+    }
+    
+    .table-title {
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .location-badge {
+      background: #3498db;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    
+    th,td{
+      border:1px solid #e8e8e8;
+      padding:12px 8px;
+      text-align:left;
+    }
+    
+    th{
+      background:#34495e;
+      color:white;
+      cursor:pointer;
+      font-weight:600;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    
+    th:hover {
+      background:#2c3e50;
+    }
+    
+    th.sorted-asc::after{content:" ▲";} 
+    th.sorted-desc::after{content:" ▼";}
+    
+    tr:nth-child(even){background:#f8f9fa;}
+    tr:hover { background:#e3f2fd; }
+    tr.selected { background:#bbdefb !important; border-left: 4px solid #2196f3; }
+    
+    .totals{
+      margin-top:15px;
+      font-weight:bold;
+      font-size:14px;
+      text-align:right;
+      color:#2c3e50;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+      
+      input[type=text], select {
+        min-width: 100%;
+      }
+      
+      .controls {
+        flex-wrap: wrap;
+      }
+      
+      .logo-text strong {
+        font-size: 14px;
+      }
+      
+      .sheet-selection {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .sheet-selection div {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+      }
+      
+      .sheet-btn {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Main Content -->
+  <div class="main" id="main">
+    <header>
+      <div class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
+        <div class="logo-text">
+          <strong>Rencana Kedatangan Material</strong>
+          <span>Monitoring Jadwal Kedatangan Material</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
+        <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
+        <button class="ctrl print" onclick="printTable()">🖨 Print</button>
+        <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
+        <div class="status" id="status">
+          <span class="disconnected"></span><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Rencana Kedatangan Material
+    </div>
+
+    <!-- Sheet Selection -->
+    <div class="sheet-selection">
+      <span class="sheet-label">📍 Pilih Lokasi:</span>
+      <div>
+        <button class="sheet-btn active" id="bantulBtn" onclick="selectSheet('bantul')">
+          🏭 Bantul
+        </button>
+        <button class="sheet-btn" id="sentulBtn" onclick="selectSheet('sentul')">
+          🏪 Sentul
+        </button>
+      </div>
+    </div>
+
+    <!-- Today's Data Mini Table -->
+    <div class="mini-table-container" id="todayTableContainer">
+      <div class="mini-table-title">
+        🗓️ Kedatangan Material Hari Ini - <span id="todayDate"></span>
+      </div>
+      <div class="today-count" id="todayCount">0 item kedatangan hari ini</div>
+      <div class="mini-table" id="todayTable">
+        <table id="todayMiniTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="todayEmptyState" style="display: none; color: rgba(255,255,255,0.8);">
+          <div>📦</div>
+          <p>Tidak ada kedatangan material hari ini</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
+      <select id="monthFilter" onchange="applyFilters()">
+        <option value="">-- Filter Bulan --</option>
+      </select>
+    </div>
+
+    <!-- Main Table -->
+    <div class="table-container">
+      <div class="table-title">
+        📋 Data Rencana Kedatangan Material
+        <span class="location-badge" id="locationBadge">Bantul</span>
+      </div>
+      
+      <table id="sheetTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state-icon">📦</div>
+        <h3>Tidak Ada Data</h3>
+        <p>Belum ada data rencana kedatangan material untuk lokasi ini.</p>
+      </div>
+      
+      <div class="totals" id="totalsSection" style="display: none;">
+        <div id="totalInfo"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Google Sheets API Configuration
+let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis';
+let spreadsheetId = '1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw';
+
+// Sheet configurations
+const sheetConfig = {
+  bantul: {
+    name: 'BANTUL_KEDATANGAN',
+    displayName: 'Bantul',
+    dateColumn: 5 // Column F (0-indexed)
+  },
+  sentul: {
+    name: 'SENTUL_KEDATANGAN',
+    displayName: 'Sentul',
+    dateColumn: 6 // Column G (0-indexed)
+  }
+};
+
+let currentSheet = 'bantul';
+let allRows = [];
+let currentSort = { index: -1, asc: true };
+
+// Function to get dashboard URL from various sources
+function getDashboardUrl() {
+  console.log('Current URL:', window.location.href);
+  console.log('Current Path:', window.location.pathname);
+  console.log('Referrer:', document.referrer);
+  
+  // Try to get dashboard URL from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  if (returnUrl) {
+    console.log('Using return URL:', returnUrl);
+    return decodeURIComponent(returnUrl);
+  }
+  
+  // Try to get from document referrer
+  if (document.referrer && document.referrer !== window.location.href) {
+    console.log('Using referrer URL:', document.referrer);
+    return document.referrer;
+  }
+  
+  // For GitHub Pages - specific URLs
+  const githubPagesUrls = [
+    'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
+    '/UtilisasiWarehouse/dashboard.html',
+    './dashboard.html',
+    '../dashboard.html'
+  ];
+  
+  console.log('Trying dashboard URLs:', githubPagesUrls);
+  return githubPagesUrls[0];
+}
+
+// Navigation function - Fixed to be properly global
+function goBackToDashboard() {
+  console.log('Going back to dashboard...');
+  
+  try {
+    // Method 1: Use referrer if available and valid
+    if (document.referrer && 
+        document.referrer !== window.location.href && 
+        document.referrer.includes('dashboard.html')) {
+      console.log('Using referrer method');
+      window.location.href = document.referrer;
+      return;
+    }
+    
+    // Method 2: Use browser history if available
+    if (window.history.length > 1) {
+      console.log('Using history back method');
+      window.history.back();
+      return;
+    }
+    
+    // Method 3: Navigate to specific dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    console.log('Using direct navigation to:', dashboardUrl);
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 4: Fallback options
+      console.log('Using fallback method');
+      if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+        window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+      }
+    }
+  } catch (error) {
+    console.error('Error in goBackToDashboard:', error);
+    // Final fallback
+    if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+    }
+  }
+}
+
+// Update page title and breadcrumb based on referrer or URL params
+function updateNavigationContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+  
+  if (returnUrl || document.referrer) {
+    const breadcrumb = document.getElementById('breadcrumb');
+    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Rencana Kedatangan Material`;
+  }
+  
+  // Set today's date
+  const today = new Date();
+  const todayFormatted = today.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  document.getElementById('todayDate').textContent = todayFormatted;
+}
+
+// Sheet selection function
+function selectSheet(sheetKey) {
+  currentSheet = sheetKey;
+  
+  // Update button states
+  document.querySelectorAll('.sheet-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(sheetKey + 'Btn').classList.add('active');
+  
+  // Update location badge
+  document.getElementById('locationBadge').textContent = sheetConfig[sheetKey].displayName;
+  
+  // Load data for selected sheet
+  loadSheet();
+}
+
+// Date parsing function
+function parseDate(dateStr) {
+  if (!dateStr) return null;
+  
+  // Try different date formats
+  let date = new Date(dateStr);
+  if (isNaN(date)) {
+    // Try DD/MM/YYYY format
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      date = new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+  }
+  if (isNaN(date)) {
+    // Try DD-MM-YYYY format
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      date = new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+  }
+  
+  return isNaN(date) ? null : date;
+}
+
+// Check if date is today
+function isToday(date) {
+  const today = new Date();
+  return date && 
+         date.getDate() === today.getDate() &&
+         date.getMonth() === today.getMonth() &&
+         date.getFullYear() === today.getFullYear();
+}
+
+// Get month name in Indonesian
+function getMonthName(monthIndex) {
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  return months[monthIndex];
+}
+
+// Google Sheets API function to fetch data
+async function fetchSheetData(sheetName) {
+  if (!apiKey || !spreadsheetId) {
+    throw new Error('API key or spreadsheet ID not configured');
+  }
+  
+  const range = `${sheetName}!A:Z`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+  
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Google Sheets API Error: ${errorData.error?.message || response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.values || [];
+}
+
+async function loadSheet(){
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+    setStatus("disconnected", "API Key belum dikonfigurasi");
+    return;
+  }
+  
+  setStatus("loading","Loading...");
+  
+  try {
+    const sheetName = sheetConfig[currentSheet].name;
+    const sheetData = await fetchSheetData(sheetName);
+    
+    allRows = sheetData;
+    
+    // Filter for current month by default
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
+    
+    const currentMonthRows = allRows.filter((row, index) => {
+      if (index === 0) return true; // Keep header
+      
+      const dateStr = row[dateColumnIndex];
+      const date = parseDate(dateStr);
+      return date && date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    });
+    
+    renderTable(currentMonthRows);
+    renderTodayTable(allRows);
+    fillMonthFilter(allRows);
+    setStatus("connected", `Connected - ${sheetConfig[currentSheet].displayName}`);
+    
+    // Set current month as selected in filter
+    const monthFilter = document.getElementById('monthFilter');
+    monthFilter.value = currentMonth.toString();
+    
+  } catch(error) {
+    console.error('Error loading sheet:', error);
+    setStatus("disconnected", "Error: " + error.message);
+    showEmptyState();
+  }
+}
+
+function renderTodayTable(rows) {
+  const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
+  const todayRows = [];
+  
+  if (rows.length > 0) {
+    // Add header
+    todayRows.push(rows[0]);
+    
+    // Filter for today's data
+    for (let i = 1; i < rows.length; i++) {
+      const dateStr = rows[i][dateColumnIndex];
+      const date = parseDate(dateStr);
+      if (isToday(date)) {
+        todayRows.push(rows[i]);
+      }
+    }
+  }
+  
+  const todayTable = document.getElementById('todayMiniTable');
+  const todayEmptyState = document.getElementById('todayEmptyState');
+  const todayCount = document.getElementById('todayCount');
+  
+  const todayItemCount = todayRows.length - 1; // Exclude header
+  todayCount.textContent = `${todayItemCount} item kedatangan hari ini`;
+  
+  if (todayItemCount === 0) {
+    todayTable.style.display = 'none';
+    todayEmptyState.style.display = 'block';
+    return;
+  }
+  
+  todayTable.style.display = 'table';
+  todayEmptyState.style.display = 'none';
+  
+  // Render mini table (show only first 5 columns for space)
+  const thead = todayTable.querySelector('thead');
+  const tbody = todayTable.querySelector('tbody');
+  
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+  
+  // Create header (limit to 5 columns)
+  const headerRow = document.createElement('tr');
+  for (let i = 0; i < Math.min(5, todayRows[0].length); i++) {
+    const th = document.createElement('th');
+    th.textContent = todayRows[0][i];
+    headerRow.appendChild(th);
+  }
+  thead.appendChild(headerRow);
+  
+  // Create data rows (limit to 5 columns and 3 rows)
+  for (let i = 1; i < Math.min(4, todayRows.length); i++) {
+    const tr = document.createElement('tr');
+    for (let j = 0; j < Math.min(5, todayRows[i].length); j++) {
+      const td = document.createElement('td');
+      td.textContent = todayRows[i][j] || '';
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  
+  // Show "..." if there are more rows
+  if (todayRows.length > 4) {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = Math.min(5, todayRows[0].length);
+    td.textContent = `... dan ${todayRows.length - 4} item lainnya`;
+    td.style.textAlign = 'center';
+    td.style.fontStyle = 'italic';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+}
+
+function renderTable(rows){
+  let thead = document.querySelector("#sheetTable thead");
+  let tbody = document.querySelector("#sheetTable tbody");
+  let emptyState = document.getElementById('emptyState');
+  
+  thead.innerHTML = ""; 
+  tbody.innerHTML = "";
+  
+  if(rows.length === 0 || (rows.length === 1 && rows[0].length === 0)) {
+    showEmptyState();
+    return;
+  }
+  
+  // Hide empty state
+  emptyState.style.display = 'none';
+  
+  // Create header
+  let header = document.createElement("tr");
+  rows[0].forEach((h, i) => {
+    let th = document.createElement("th"); 
+    th.textContent = h;
+    th.onclick = () => sortTable(i);
+    if(currentSort.index === i) {
+      th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
+    }
+    header.appendChild(th);
+  }); 
+  thead.appendChild(header);
+
+  // Create data rows
+  rows.slice(1).forEach((r, index) => {
+    let tr = document.createElement("tr");
+    r.forEach((c, i) => {
+      let td = document.createElement("td"); 
+      td.textContent = c || '';
+      tr.appendChild(td);
+    });
+    
+    // Add click functionality to highlight selected row
+    tr.onclick = () => {
+      document.querySelectorAll("#sheetTable tbody tr").forEach(row => row.classList.remove("selected"));
+      tr.classList.add("selected");
+    };
+    
+    tbody.appendChild(tr);
+  });
+  
+  updateTotals(rows);
+}
+
+function showEmptyState() {
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('totalsSection').style.display = 'none';
+}
+
+function updateTotals(rows) {
+  const totalsSection = document.getElementById('totalsSection');
+  const totalInfo = document.getElementById('totalInfo');
+  
+  if (rows.length <= 1) {
+    totalsSection.style.display = 'none';
+    return;
+  }
+  
+  const totalRows = rows.length - 1;
+  totalInfo.textContent = `Total: ${totalRows} item kedatangan material`;
+  totalsSection.style.display = 'block';
+}
+
+function sortTable(i){
+  let rows = [...allRows]; 
+  if(i === currentSort.index) {
+    currentSort.asc = !currentSort.asc; 
+  } else {
+    currentSort = {index: i, asc: true};
+  }
+  
+  let header = rows.shift();
+  rows.sort((a, b) => {
+    let va = a[i] || '', vb = b[i] || ''; 
+    let na = parseFloat(va), nb = parseFloat(vb);
+    if(!isNaN(na) && !isNaN(nb)) {
+      return currentSort.asc ? na - nb : nb - na;
+    }
+    return currentSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  
+  let sortedRows = [header, ...rows];
+  renderTable(sortedRows);
+}
+
+function applyFilters(){
+  let search = document.getElementById("searchBox").value.toLowerCase();
+  let selectedMonth = document.getElementById("monthFilter").value;
+  
+  const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
+  
+  let filtered = allRows.filter((r, i) => {
+    if(i === 0) return true; // Keep header
+    
+    // Search filter
+    let searchMatch = r.some(c => (c || '').toString().toLowerCase().includes(search));
+    
+    // Month filter
+    let monthMatch = true;
+    if (selectedMonth !== '') {
+      const dateStr = r[dateColumnIndex];
+      const date = parseDate(dateStr);
+      if (date) {
+        monthMatch = date.getMonth() === parseInt(selectedMonth);
+      } else {
+        monthMatch = false;
+      }
+    }
+    
+    return searchMatch && monthMatch;
+  });
+  
+  renderTable(filtered);
+}
+
+function fillMonthFilter(rows){
+  let monthFilter = document.getElementById("monthFilter");
+  monthFilter.innerHTML = "<option value=''>-- Filter Bulan --</option>";
+  
+  const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
+  const monthsFound = new Set();
+  
+  // Extract unique months from data
+  for (let i = 1; i < rows.length; i++) {
+    const dateStr = rows[i][dateColumnIndex];
+    const date = parseDate(dateStr);
+    if (date) {
+      monthsFound.add(date.getMonth());
+    }
+  }
+  
+  // Add current month if not found in data
+  const currentMonth = new Date().getMonth();
+  monthsFound.add(currentMonth);
+  
+  // Sort months and add to select
+  const sortedMonths = Array.from(monthsFound).sort((a, b) => a - b);
+  sortedMonths.forEach(monthIndex => {
+    const option = document.createElement("option");
+    option.value = monthIndex;
+    option.textContent = getMonthName(monthIndex);
+    monthFilter.appendChild(option);
+  });
+}
+
+function exportTable(){ 
+  if(allRows.length === 0) {
+    alert('Tidak ada data untuk diekspor');
+    return;
+  }
+  
+  let csv = Papa.unparse(allRows); 
+  let blob = new Blob([csv], {type: "text/csv"}); 
+  let url = URL.createObjectURL(blob); 
+  let a = document.createElement("a"); 
+  a.href = url; 
+  a.download = `rencana_kedatangan_material_${currentSheet}_${new Date().toISOString().split('T')[0]}.csv`; 
+  a.click(); 
+  URL.revokeObjectURL(url);
+}
+
+function printTable(){ 
+  window.print(); 
+}
+
+function setStatus(st, t){ 
+  let span = document.querySelector("#status span"); 
+  span.className = st === "connected" ? "connected" : st === "loading" ? "loading" : "disconnected"; 
+  document.getElementById("statusText").textContent = t; 
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
+
+// Make functions globally accessible
+window.goBackToDashboard = goBackToDashboard;
+window.selectSheet = selectSheet;
+window.loadSheet = loadSheet;
+window.applyFilters = applyFilters;
+window.exportTable = exportTable;
+window.printTable = printTable;
+</script>
+</body>
+</html>
