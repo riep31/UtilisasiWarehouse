@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Form Input Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f6f9; margin:0; padding:20px; }
+    h2 { color:#2c3e50; }
+    form, table { background:white; padding:15px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.1); margin-bottom:20px; }
+    input, select { padding:8px; margin:5px 0; width:100%; border:1px solid #ccc; border-radius:6px; }
+    button { padding:10px 15px; border:none; border-radius:6px; background:#3498db; color:white; cursor:pointer; }
+    button:hover { background:#2980b9; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+    th { background:#34495e; color:white; }
+  </style>
+</head>
+<body>
+  <h2>User Management</h2>
+  <form id="pegawaiForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <input type="text" id="nama" placeholder="Nama" required>
+    <!-- Ubah select jadi input bebas -->
+    <input type="text" id="level" placeholder="Level (misal: Admin, User, Manager)" required>
+    <input type="text" id="divisi" placeholder="Divisi" required>
+    <button type="submit">Simpan</button>
+  </form>
+
+  <h2>Data User App</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Nama</th>
+        <th>Level</th>
+        <th>Divisi</th>
+        <th>Tanggal</th>
+      </tr>
+    </thead>
+    <tbody id="dataBody"></tbody>
+  </table>
+
+  <script>
+    const scriptURL = "PASTE_WEB_APP_URL_HERE"; // ganti dengan URL Web App Google Script
+
+    // Submit form
+    document.getElementById("pegawaiForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const data = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value,
+        nama: document.getElementById("nama").value,
+        level: document.getElementById("level").value,
+        divisi: document.getElementById("divisi").value
+      };
+
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(() => {
+        alert("Data berhasil disimpan!");
+        loadData(); // refresh tabel
+        document.getElementById("pegawaiForm").reset();
+      })
+      .catch(err => alert("Error: " + err));
+    });
+
+    // Load data ke tabel
+    function loadData() {
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById("dataBody");
+          tbody.innerHTML = "";
+          data.forEach(row => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${row.username}</td>
+                <td>${row.password}</td>
+                <td>${row.nama}</td>
+                <td>${row.level}</td>
+                <td>${row.divisi}</td>
+                <td>${row.tanggal}</td>
+              </tr>`;
+          });
+        });
+    }
+
+    // Load data saat halaman dibuka
+    loadData();
+  </script>
+</body>
+</html>
