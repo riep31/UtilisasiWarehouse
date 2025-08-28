@@ -210,6 +210,11 @@
       background: rgba(255,255,255,0.05);
     }
 
+    .mini-table tr:hover td {
+      background: rgba(255,255,255,0.15);
+      color: #2c3e50;
+    }
+
     .today-count {
       text-align: center;
       padding: 15px;
@@ -505,7 +510,7 @@ function getDashboardUrl() {
   // For GitHub Pages - specific URLs
   const githubPagesUrls = [
     'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
-    '/UtilisasiWarehouse/dashboard.html',
+    '/UtilisasiTes/dashboard.html',
     './dashboard.html',
     '../dashboard.html'
   ];
@@ -544,14 +549,14 @@ function goBackToDashboard() {
       // Method 4: Fallback options
       console.log('Using fallback method');
       if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
-        window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
       }
     }
   } catch (error) {
     console.error('Error in goBackToDashboard:', error);
     // Final fallback
     if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
-      window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/';
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
     }
   }
 }
@@ -732,7 +737,7 @@ function renderTodayTable(rows) {
   todayTable.style.display = 'table';
   todayEmptyState.style.display = 'none';
   
-  // Render mini table (show only first 5 columns for space)
+  // Render mini table - show first 5 columns, all data rows (dynamic)
   const thead = todayTable.querySelector('thead');
   const tbody = todayTable.querySelector('tbody');
   
@@ -741,33 +746,22 @@ function renderTodayTable(rows) {
   
   // Create header (limit to 5 columns)
   const headerRow = document.createElement('tr');
-  for (let i = 0; i < Math.min(5, todayRows[0].length); i++) {
+  const maxColumns = Math.min(5, todayRows[0].length);
+  for (let i = 0; i < maxColumns; i++) {
     const th = document.createElement('th');
-    th.textContent = todayRows[0][i];
+    th.textContent = todayRows[0][i] || '';
     headerRow.appendChild(th);
   }
   thead.appendChild(headerRow);
   
-  // Create data rows (limit to 5 columns and 3 rows)
-  for (let i = 1; i < Math.min(4, todayRows.length); i++) {
+  // Create all data rows dynamically (limit to 5 columns)
+  for (let i = 1; i < todayRows.length; i++) {
     const tr = document.createElement('tr');
-    for (let j = 0; j < Math.min(5, todayRows[i].length); j++) {
+    for (let j = 0; j < maxColumns; j++) {
       const td = document.createElement('td');
       td.textContent = todayRows[i][j] || '';
       tr.appendChild(td);
     }
-    tbody.appendChild(tr);
-  }
-  
-  // Show "..." if there are more rows
-  if (todayRows.length > 4) {
-    const tr = document.createElement('tr');
-    const td = document.createElement('td');
-    td.colSpan = Math.min(5, todayRows[0].length);
-    td.textContent = `... dan ${todayRows.length - 4} item lainnya`;
-    td.style.textAlign = 'center';
-    td.style.fontStyle = 'italic';
-    tr.appendChild(td);
     tbody.appendChild(tr);
   }
 }
