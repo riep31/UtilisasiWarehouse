@@ -195,24 +195,39 @@
 
     .mini-table th,
     .mini-table td {
-      padding: 8px 12px;
-      border: 1px solid rgba(255,255,255,0.2);
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
       text-align: left;
       font-size: 13px;
+      color: #2c3e50;
     }
 
     .mini-table th {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.9);
       font-weight: 600;
+      color: #2c3e50;
+      text-shadow: none;
     }
 
     .mini-table td {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.7);
+      color: #2c3e50;
     }
 
-    .mini-table tr:hover td {
-      background: rgba(255,255,255,0.15);
+    .mini-table tbody tr:nth-child(even) td {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .mini-table tbody tr:nth-child(odd) td {
+      background: rgba(255,255,255,0.7);
+    }
+
+    .mini-table tbody tr:hover td {
+      background: rgba(255,255,255,0.95) !important;
       color: #2c3e50;
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .today-count {
@@ -864,98 +879,4 @@ function applyFilters(){
   const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
   
   let filtered = allRows.filter((r, i) => {
-    if(i === 0) return true; // Keep header
-    
-    // Search filter
-    let searchMatch = r.some(c => (c || '').toString().toLowerCase().includes(search));
-    
-    // Month filter
-    let monthMatch = true;
-    if (selectedMonth !== '') {
-      const dateStr = r[dateColumnIndex];
-      const date = parseDate(dateStr);
-      if (date) {
-        monthMatch = date.getMonth() === parseInt(selectedMonth);
-      } else {
-        monthMatch = false;
-      }
-    }
-    
-    return searchMatch && monthMatch;
-  });
-  
-  renderTable(filtered);
-}
-
-function fillMonthFilter(rows){
-  let monthFilter = document.getElementById("monthFilter");
-  monthFilter.innerHTML = "<option value=''>-- Filter Bulan --</option>";
-  
-  const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
-  const monthsFound = new Set();
-  
-  // Extract unique months from data
-  for (let i = 1; i < rows.length; i++) {
-    const dateStr = rows[i][dateColumnIndex];
-    const date = parseDate(dateStr);
-    if (date) {
-      monthsFound.add(date.getMonth());
-    }
-  }
-  
-  // Add current month if not found in data
-  const currentMonth = new Date().getMonth();
-  monthsFound.add(currentMonth);
-  
-  // Sort months and add to select
-  const sortedMonths = Array.from(monthsFound).sort((a, b) => a - b);
-  sortedMonths.forEach(monthIndex => {
-    const option = document.createElement("option");
-    option.value = monthIndex;
-    option.textContent = getMonthName(monthIndex);
-    monthFilter.appendChild(option);
-  });
-}
-
-function exportTable(){ 
-  if(allRows.length === 0) {
-    alert('Tidak ada data untuk diekspor');
-    return;
-  }
-  
-  let csv = Papa.unparse(allRows); 
-  let blob = new Blob([csv], {type: "text/csv"}); 
-  let url = URL.createObjectURL(blob); 
-  let a = document.createElement("a"); 
-  a.href = url; 
-  a.download = `rencana_kedatangan_material_${currentSheet}_${new Date().toISOString().split('T')[0]}.csv`; 
-  a.click(); 
-  URL.revokeObjectURL(url);
-}
-
-function printTable(){ 
-  window.print(); 
-}
-
-function setStatus(st, t){ 
-  let span = document.querySelector("#status span"); 
-  span.className = st === "connected" ? "connected" : st === "loading" ? "loading" : "disconnected"; 
-  document.getElementById("statusText").textContent = t; 
-}
-
-// Initialize page when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  updateNavigationContext();
-  loadSheet();
-});
-
-// Make functions globally accessible
-window.goBackToDashboard = goBackToDashboard;
-window.selectSheet = selectSheet;
-window.loadSheet = loadSheet;
-window.applyFilters = applyFilters;
-window.exportTable = exportTable;
-window.printTable = printTable;
-</script>
-</body>
-</html>
+    if(i === 0) return true; // Keep
