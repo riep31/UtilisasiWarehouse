@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Bahan Baku</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { 
+      font-family:'Segoe UI',Tahoma,sans-serif; 
+      margin:0; 
+      background:#eef2f7; 
+      min-height:100vh;
+    }
+
+    header {
+      display:flex; 
+      align-items:center; 
+      justify-content:flex-start;
+       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
+      padding:15px 20px; 
+      color:#2c3e50; 
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      gap: 30px;
+    }
+    
+    .logo { 
+      display:flex; 
+      align-items:center; 
+      flex-shrink:0; 
+    }
+    
+    .logo img { 
+      width:100px; 
+      height:50px; 
+      margin-right:15px; 
+      border-radius:8px; 
+    }
+    
+    .logo-text { 
+      display:flex; 
+      flex-direction:column; 
+      line-height:1.3; 
+    }
+    
+    .logo-text strong { 
+      font-size:18px; 
+      color:#2c3e50;
+    }
+    
+    .logo-text span { 
+      font-size:14px; 
+      opacity:0.7; 
+      color:#7f8c8d;
+    }
+    
+    .controls { 
+      display:flex; 
+      gap:10px; 
+      align-items:center; 
+      flex-wrap:wrap; 
+    }
+    
+    button.ctrl { 
+      padding:8px 15px; 
+      border:none; 
+      border-radius:6px; 
+      cursor:pointer; 
+      font-size:13px; 
+      color:white; 
+      font-weight:500;
+      transition:all 0.3s ease;
+    }
+    
+    button.ctrl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .export{background:#27ae60;} 
+    .print{background:#2980b9;} 
+    .refresh{background:#f39c12;}
+    .back{background:#8e44ad;} /* Purple color for back button */
+    
+    .status { 
+      display:flex; 
+      align-items:center; 
+      font-size:12px; 
+      margin-left:15px; 
+    }
+    
+    .status span { 
+      width:10px; 
+      height:10px; 
+      border-radius:50%; 
+      display:inline-block; 
+      margin-right:6px; 
+    }
+    
+    .connected{background:#2ecc71;} 
+    .disconnected{background:#e74c3c;} 
+    .loading{background:#f1c40f;}
+
+    /* Navigation breadcrumb */
+    .breadcrumb {
+      margin: 0 20px 10px 20px;
+      padding: 10px 15px;
+      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
+      border-radius: 8px;
+      font-size: 14px;
+      color: #000;
+      border-left: 4px solid #3498db;
+    }
+    
+    .breadcrumb a {
+      color: #3498db;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    /* Sheet Selection Buttons */
+    .sheet-selection {
+      margin: 0 20px 20px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .sheet-btn {
+      padding: 12px 24px;
+      border: 1px solid #000;
+      border-radius: 8px;
+      background: #34495e;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .sheet-btn:hover {
+      background: #fff;
+      color: #000;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .sheet-btn.active {
+      background: #00BFFF;
+      color: #000;
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    }
+    
+    .sheet-label {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-right: 15px;
+    }
+
+    /* Alert Mini Table for Low Stock */
+    .alert-table-container {
+      margin: 0 20px 20px 20px;
+      background: linear-gradient(90deg,  	#FF4500 0%, #c0392b 100%);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      color: white;
+    }
+
+    .alert-table-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .alert-table {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      backdrop-filter: blur(10px);
+    }
+
+    .alert-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .alert-table th,
+    .alert-table td {
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      text-align: left;
+      font-size: 13px;
+      color: #2c3e50;
+    }
+
+    .alert-table th {
+      background: #34495e;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: none;
+    }
+
+    .alert-table td {
+      background: rgba(255,255,255,0.7);
+      color: #2c3e50;
+    }
+
+    .alert-table tbody tr:nth-child(even) td {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .alert-table tbody tr:nth-child(odd) td {
+      background: rgba(255,255,255,0.7);
+    }
+
+    .alert-table tbody tr:hover td {
+      background: rgba(255,255,255,0.9) !important;
+      color: #2c3e50;
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .alert-count {
+      text-align: center;
+      padding: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffd700;
+    }
+
+    .filters{
+      margin:0 20px 20px 20px;
+      display:flex;
+      gap:15px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    
+    input[type=text]{
+      padding:10px 12px;
+      border:1px solid #bdc3c7;
+      border-radius:8px;
+      flex:1; 
+      background:#ffffff;
+      font-size:14px;
+      min-width:250px;
+    }
+    
+    input[type=text]:focus {
+      outline:none;
+      border-color:#3498db;
+      box-shadow:0 0 0 3px rgba(52,152,219,0.1);
+    }
+    
+    select{
+      padding:10px 12px;
+      border-radius:8px;
+      background:#ffffff;
+      border:1px solid #bdc3c7;
+      font-size:14px;
+      min-width:150px;
+    }
+
+    /* Tabel */
+    .table-container{
+      margin:0 20px 20px 20px;
+      background:white;
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      overflow-x:auto;
+    }
+    
+    .table-title {
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .category-badge {
+      background: #3498db;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    
+    th,td{
+      border:1px solid #e8e8e8;
+      padding:12px 8px;
+      text-align:left;
+    }
+    
+    th{
+      background:#34495e;
+      color:white;
+      cursor:pointer;
+      font-weight:600;
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    
+    th:hover {
+      background:#2c3e50;
+    }
+    
+    th.sorted-asc::after{content:" ▲";} 
+    th.sorted-desc::after{content:" ▼";}
+    
+    tr:nth-child(even){background:#f8f9fa;}
+    tr:hover { background:#e3f2fd; }
+    tr.selected { background:#bbdefb !important; border-left: 4px solid #2196f3; }
+    
+    /* Status styling in table */
+    .status-at-rop {
+      background: #f39c12 !important;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    
+    .status-below-rop {
+      background: #e74c3c !important;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    
+    .status-normal {
+      background: #27ae60 !important;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    
+    .totals{
+      margin-top:15px;
+      font-weight:bold;
+      font-size:14px;
+      text-align:right;
+      color:#2c3e50;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .filters {
+        flex-direction: column;
+      }
+      
+      input[type=text], select {
+        min-width: 100%;
+      }
+      
+      .controls {
+        flex-wrap: wrap;
+      }
+      
+      .logo-text strong {
+        font-size: 14px;
+      }
+      
+      .sheet-selection {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .sheet-selection div {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+      }
+      
+      .sheet-btn {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Main Content -->
+  <div class="main" id="main">
+    <header>
+      <div class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU">
+        <div class="logo-text">
+          <strong>Stock Bahan Baku</strong>
+          <span>Monitoring Persediaan Bahan Baku</span>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl back" onclick="goBackToDashboard()" title="Kembali ke Dashboard Utama">← Dashboard</button>
+        <button class="ctrl export" onclick="exportTable()">⬇ Export</button>
+        <button class="ctrl print" onclick="printTable()">🖨 Print</button>
+        <button class="ctrl refresh" onclick="loadSheet()">🔄 Refresh Data</button>
+        <div class="status" id="status">
+          <span class="disconnected"></span><span id="statusText">Disconnected</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Stock Bahan Baku
+    </div>
+
+    <!-- Sheet Selection -->
+    <div class="sheet-selection">
+      <span class="sheet-label">📦 Pilih Kategori:</span>
+      <div>
+        <button class="sheet-btn active" id="bumbuBtn" onclick="selectSheet('bumbu')">
+          🌶️ BUMBU
+        </button>
+        <button class="sheet-btn" id="rawmatBtn" onclick="selectSheet('rawmat')">
+          🥩 RAWMAT
+        </button>
+        <button class="sheet-btn" id="packagingBtn" onclick="selectSheet('packaging')">
+          📦 PACKAGING
+        </button>
+        <button class="sheet-btn" id="chemicalBtn" onclick="selectSheet('chemical')">
+          🧪 CHEMICAL
+        </button>
+      </div>
+    </div>
+
+    <!-- Alert Mini Table for Low Stock -->
+    <div class="alert-table-container" id="alertTableContainer" style="display: none;">
+      <div class="alert-table-title">
+        ⚠️ Peringatan Stock - <span id="categoryName">BUMBU</span>
+      </div>
+      <div class="alert-count" id="alertCount">0 item perlu perhatian</div>
+      <div class="alert-table" id="alertTable">
+        <table id="alertMiniTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="alertEmptyState" style="display: none; color: rgba(255,255,255,0.8);">
+          <div>✅</div>
+          <p>Semua stock dalam kondisi baik</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" id="searchBox" placeholder="🔍 Search..." oninput="applyFilters()">
+      <select id="itemDescriptionFilter" onchange="applyFilters()">
+        <option value="">-- Filter Item Description --</option>
+      </select>
+      <select id="statusFilter" onchange="applyFilters()">
+        <option value="">-- Filter Status --</option>
+        <option value="At ROP (Reorder)">At ROP (Reorder)</option>
+        <option value="Below ROP (Low)">Below ROP (Low)</option>
+        <option value="Normal">Normal</option>
+      </select>
+    </div>
+
+    <!-- Main Table -->
+    <div class="table-container">
+      <div class="table-title">
+        📋 Data Stock Bahan Baku
+        <span class="category-badge" id="categoryBadge">BUMBU</span>
+      </div>
+      
+      <table id="sheetTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+      
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state-icon">📦</div>
+        <h3>Tidak Ada Data</h3>
+        <p>Belum ada data stock untuk kategori ini.</p>
+      </div>
+      
+      <div class="totals" id="totalsSection" style="display: none;">
+        <div id="totalInfo"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Google Sheets API Configuration
+let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis';
+let spreadsheetId = '1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw';
+
+// Sheet configurations
+const sheetConfig = {
+  bumbu: {
+    name: 'BUMBU',
+    displayName: 'BUMBU',
+    statusColumn: 5, // Column F (0-indexed) for stock status
+    descriptionColumn: 1 // Column B (0-indexed) for item description
+  },
+  rawmat: {
+    name: 'RAWMAT',
+    displayName: 'RAWMAT',
+    statusColumn: 5, // Column F (0-indexed) for stock status
+    descriptionColumn: 1 // Column B (0-indexed) for item description
+  },
+  packaging: {
+    name: 'PACKAGING',
+    displayName: 'PACKAGING', 
+    statusColumn: 5, // Column F (0-indexed) for stock status
+    descriptionColumn: 1 // Column B (0-indexed) for item description
+  },
+  chemical: {
+    name: 'CHEMICAL',
+    displayName: 'CHEMICAL',
+    statusColumn: 5, // Column F (0-indexed) for stock status
+    descriptionColumn: 1 // Column B (0-indexed) for item description
+  }
+};
+
+let currentSheet = 'bumbu';
+let allRows = [];
+let currentSort = { index: -1, asc: true };
+
+// Function to get dashboard URL from various sources
+function getDashboardUrl() {
+  console.log('Current URL:', window.location.href);
+  console.log('Current Path:', window.location.pathname);
+  console.log('Referrer:', document.referrer);
+  
+  // Try to get dashboard URL from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  if (returnUrl) {
+    console.log('Using return URL:', returnUrl);
+    return decodeURIComponent(returnUrl);
+  }
+  
+  // Try to get from document referrer
+  if (document.referrer && document.referrer !== window.location.href) {
+    console.log('Using referrer URL:', document.referrer);
+    return document.referrer;
+  }
+  
+  // For GitHub Pages - specific URLs
+  const githubPagesUrls = [
+    'https://riep31.github.io/UtilisasiWarehouse/dashboard.html',
+    '/UtilisasiTes/dashboard.html',
+    './dashboard.html',
+    '../dashboard.html'
+  ];
+  
+  console.log('Trying dashboard URLs:', githubPagesUrls);
+  return githubPagesUrls[0];
+}
+
+// Navigation function - Fixed to be properly global
+function goBackToDashboard() {
+  console.log('Going back to dashboard...');
+  
+  try {
+    // Method 1: Use referrer if available and valid
+    if (document.referrer && 
+        document.referrer !== window.location.href && 
+        document.referrer.includes('dashboard.html')) {
+      console.log('Using referrer method');
+      window.location.href = document.referrer;
+      return;
+    }
+    
+    // Method 2: Use browser history if available
+    if (window.history.length > 1) {
+      console.log('Using history back method');
+      window.history.back();
+      return;
+    }
+    
+    // Method 3: Navigate to specific dashboard URL
+    const dashboardUrl = getDashboardUrl();
+    console.log('Using direct navigation to:', dashboardUrl);
+    if (dashboardUrl) {
+      window.location.href = dashboardUrl;
+    } else {
+      // Method 4: Fallback options
+      console.log('Using fallback method');
+      if (confirm('Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?')) {
+        window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+      }
+    }
+  } catch (error) {
+    console.error('Error in goBackToDashboard:', error);
+    // Final fallback
+    if (confirm('Terjadi error saat navigasi. Apakah ingin ke halaman utama?')) {
+      window.location.href = 'https://riep31.github.io/UtilisasiTes/';
+    }
+  }
+}
+
+// Update page title and breadcrumb based on referrer or URL params
+function updateNavigationContext() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const returnUrl = urlParams.get('return');
+  const returnName = urlParams.get('returnName') || 'Dashboard Utama';
+  
+  if (returnUrl || document.referrer) {
+    const breadcrumb = document.getElementById('breadcrumb');
+    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Stock Bahan Baku`;
+  }
+}
+
+// Sheet selection function
+function selectSheet(sheetKey) {
+  currentSheet = sheetKey;
+  
+  // Update button states
+  document.querySelectorAll('.sheet-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(sheetKey + 'Btn').classList.add('active');
+  
+  // Update category badge and name
+  document.getElementById('categoryBadge').textContent = sheetConfig[sheetKey].displayName;
+  document.getElementById('categoryName').textContent = sheetConfig[sheetKey].displayName;
+  
+  // Reset filters when switching sheets
+  document.getElementById('searchBox').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('itemDescriptionFilter').value = '';
+  
+  // Load data for selected sheet
+  loadSheet();
+}
+
+// Check if status needs alert
+function needsAlert(status) {
+  return status === "At ROP (Reorder)" || status === "Below ROP (Low)";
+}
+
+// Function to populate Item Description filter dropdown
+function populateItemDescriptionFilter(rows) {
+  const itemDescriptionFilter = document.getElementById('itemDescriptionFilter');
+  const descriptionColumnIndex = sheetConfig[currentSheet].descriptionColumn;
+  
+  // Clear existing options except the first one
+  itemDescriptionFilter.innerHTML = '<option value="">-- Filter Item Description --</option>';
+  
+  if (rows.length <= 1) return;
+  
+  // Get unique descriptions from column B (excluding header)
+  const uniqueDescriptions = new Set();
+  for (let i = 1; i < rows.length; i++) {
+    const description = rows[i][descriptionColumnIndex];
+    if (description && description.trim() !== '') {
+      uniqueDescriptions.add(description.trim());
+    }
+  }
+  
+  // Sort descriptions alphabetically and add to dropdown
+  const sortedDescriptions = Array.from(uniqueDescriptions).sort();
+  sortedDescriptions.forEach(description => {
+    const option = document.createElement('option');
+    option.value = description;
+    option.textContent = description;
+    itemDescriptionFilter.appendChild(option);
+  });
+}
+
+// Google Sheets API function to fetch data
+async function fetchSheetData(sheetName) {
+  if (!apiKey || !spreadsheetId) {
+    throw new Error('API key or spreadsheet ID not configured');
+  }
+  
+  const range = `${sheetName}!A:Z`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+  
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`Google Sheets API Error: ${errorData.error?.message || response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.values || [];
+}
+
+async function loadSheet(){
+  if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
+    setStatus("disconnected", "API Key belum dikonfigurasi");
+    return;
+  }
+  
+  setStatus("loading","Loading...");
+  
+  try {
+    const sheetName = sheetConfig[currentSheet].name;
+    const sheetData = await fetchSheetData(sheetName);
+    
+    allRows = sheetData;
+    
+    renderTable(allRows);
+    renderAlertTable(allRows);
+    populateItemDescriptionFilter(allRows); // Populate the item description filter
+    setStatus("connected", `Connected - ${sheetConfig[currentSheet].displayName}`);
+    
+  } catch(error) {
+    console.error('Error loading sheet:', error);
+    setStatus("disconnected", "Error: " + error.message);
+    showEmptyState();
+    hideAlertTable();
+  }
+}
+
+function hideAlertTable() {
+  const alertContainer = document.getElementById('alertTableContainer');
+  alertContainer.style.display = 'none';
+}
+
+function showAlertTable() {
+  const alertContainer = document.getElementById('alertTableContainer');
+  alertContainer.style.display = 'block';
+}
+
+function renderAlertTable(rows) {
+  const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
+  const alertRows = [];
+  
+  if (rows.length > 0) {
+    // Add header
+    alertRows.push(rows[0]);
+    
+    // Filter for alert data (At ROP or Below ROP)
+    for (let i = 1; i < rows.length; i++) {
+      const status = rows[i][statusColumnIndex];
+      if (needsAlert(status)) {
+        alertRows.push(rows[i]);
+      }
+    }
+  }
+  
+  const alertTable = document.getElementById('alertMiniTable');
+  const alertEmptyState = document.getElementById('alertEmptyState');
+  const alertCount = document.getElementById('alertCount');
+  
+  const alertItemCount = alertRows.length - 1; // Exclude header
+  alertCount.textContent = `${alertItemCount} item perlu perhatian`;
+  
+  if (alertItemCount === 0 || rows.length === 0) {
+    // Hide entire alert table container if no alert data
+    hideAlertTable();
+    return;
+  }
+  
+  // Show alert table container
+  showAlertTable();
+  alertTable.style.display = 'table';
+  alertEmptyState.style.display = 'none';
+  
+  // Render alert table - show first 6 columns, all alert data rows
+  const thead = alertTable.querySelector('thead');
+  const tbody = alertTable.querySelector('tbody');
+  
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+  
+  // Create header (limit to 6 columns)
+  const headerRow = document.createElement('tr');
+  const maxColumns = Math.min(6, alertRows[0].length);
+  for (let i = 0; i < maxColumns; i++) {
+    const th = document.createElement('th');
+    th.textContent = alertRows[0][i] || '';
+    headerRow.appendChild(th);
+  }
+  thead.appendChild(headerRow);
+  
+  // Create all alert data rows (limit to 6 columns)
+  for (let i = 1; i < alertRows.length; i++) {
+    const tr = document.createElement('tr');
+    for (let j = 0; j < maxColumns; j++) {
+      const td = document.createElement('td');
+      const cellValue = alertRows[i][j] || '';
+      
+      // Style status column with appropriate colors
+      if (j === statusColumnIndex && needsAlert(cellValue)) {
+        td.innerHTML = `<span class="${cellValue === 'At ROP (Reorder)' ? 'status-at-rop' : 'status-below-rop'}">${cellValue}</span>`;
+      } else {
+        td.textContent = cellValue;
+      }
+      
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+function renderTable(rows){
+  let thead = document.querySelector("#sheetTable thead");
+  let tbody = document.querySelector("#sheetTable tbody");
+  let emptyState = document.getElementById('emptyState');
+  
+  thead.innerHTML = ""; 
+  tbody.innerHTML = "";
+  
+  if(rows.length === 0 || (rows.length === 1 && rows[0].length === 0)) {
+    showEmptyState();
+    return;
+  }
+  
+  // Hide empty state
+  emptyState.style.display = 'none';
+  
+  const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
+  
+  // Create header
+  let header = document.createElement("tr");
+  rows[0].forEach((h, i) => {
+    let th = document.createElement("th"); 
+    th.textContent = h;
+    th.onclick = () => sortTable(i);
+    if(currentSort.index === i) {
+      th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
+    }
+    header.appendChild(th);
+  }); 
+  thead.appendChild(header);
+
+  // Create data rows
+  rows.slice(1).forEach((r, index) => {
+    let tr = document.createElement("tr");
+    r.forEach((c, i) => {
+      let td = document.createElement("td"); 
+      
+      // Style status column with appropriate colors
+      if (i === statusColumnIndex) {
+        let statusClass = '';
+        if (c === 'At ROP (Reorder)') {
+          statusClass = 'status-at-rop';
+        } else if (c === 'Below ROP (Low)') {
+          statusClass = 'status-below-rop';
+        } else {
+          statusClass = 'status-normal';
+        }
+        td.innerHTML = `<span class="${statusClass}">${c || ''}</span>`;
+      } else {
+        td.textContent = c || '';
+      }
+      
+      tr.appendChild(td);
+    });
+    
+    // Add click functionality to highlight selected row
+    tr.onclick = () => {
+      document.querySelectorAll("#sheetTable tbody tr").forEach(row => row.classList.remove("selected"));
+      tr.classList.add("selected");
+    };
+    
+    tbody.appendChild(tr);
+  });
+  
+  updateTotals(rows);
+}
+
+function showEmptyState() {
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('totalsSection').style.display = 'none';
+}
+
+function updateTotals(rows) {
+  const totalsSection = document.getElementById('totalsSection');
+  const totalInfo = document.getElementById('totalInfo');
+  
+  if (rows.length <= 1) {
+    totalsSection.style.display = 'none';
+    return;
+  }
+  
+  const totalRows = rows.length - 1;
+  const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
+  
+  // Count different statuses
+  let normalCount = 0;
+  let atRopCount = 0;
+  let belowRopCount = 0;
+  
+  for (let i = 1; i < rows.length; i++) {
+    const status = rows[i][statusColumnIndex];
+    if (status === 'At ROP (Reorder)') {
+      atRopCount++;
+    } else if (status === 'Below ROP (Low)') {
+      belowRopCount++;
+    } else {
+      normalCount++;
+    }
+  }
+  
+  totalInfo.innerHTML = `
+    Total: ${totalRows} item | 
+    <span style="color: #27ae60;">Normal: ${normalCount}</span> | 
+    <span style="color: #f39c12;">At ROP: ${atRopCount}</span> | 
+    <span style="color: #e74c3c;">Below ROP: ${belowRopCount}</span>
+  `;
+  totalsSection.style.display = 'block';
+}
+
+function sortTable(i){
+  let rows = [...allRows]; 
+  if(i === currentSort.index) {
+    currentSort.asc = !currentSort.asc; 
+  } else {
+    currentSort = {index: i, asc: true};
+  }
+  
+  let header = rows.shift();
+  rows.sort((a, b) => {
+    let va = a[i] || '', vb = b[i] || ''; 
+    let na = parseFloat(va), nb = parseFloat(vb);
+    if(!isNaN(na) && !isNaN(nb)) {
+      return currentSort.asc ? na - nb : nb - na;
+    }
+    return currentSort.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  
+  let sortedRows = [header, ...rows];
+  renderTable(sortedRows);
+}
+
+function applyFilters(){
+  let search = document.getElementById("searchBox").value.toLowerCase();
+  let selectedStatus = document.getElementById("statusFilter").value;
+  let selectedDescription = document.getElementById("itemDescriptionFilter").value;
+  
+  const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
+  const descriptionColumnIndex = sheetConfig[currentSheet].descriptionColumn;
+  
+  let filtered = allRows.filter((r, i) => {
+    if(i === 0) return true; // Keep header
+    
+    // Search filter - check all columns
+    let searchMatch = r.some(c => (c || '').toString().toLowerCase().includes(search));
+    
+    // Status filter
+    let statusMatch = true;
+    if (selectedStatus !== '') {
+      const status = r[statusColumnIndex];
+      statusMatch = status === selectedStatus;
+    }
+    
+    // Item Description filter (Column B)
+    let descriptionMatch = true;
+    if (selectedDescription !== '') {
+      const description = r[descriptionColumnIndex];
+      descriptionMatch = description === selectedDescription;
+    }
+    
+    return searchMatch && statusMatch && descriptionMatch;
+  });
+  
+  renderTable(filtered);
+  // Update alert table based on filtered data
+  renderAlertTable(filtered);
+}
+
+function exportTable(){ 
+  if(allRows.length === 0) {
+    alert('Tidak ada data untuk diekspor');
+    return;
+  }
+  
+  let csv = Papa.unparse(allRows); 
+  let blob = new Blob([csv], {type: "text/csv"}); 
+  let url = URL.createObjectURL(blob); 
+  let a = document.createElement("a"); 
+  a.href = url; 
+  a.download = `stock_bahan_baku_${currentSheet}_${new Date().toISOString().split('T')[0]}.csv`; 
+  a.click(); 
+  URL.revokeObjectURL(url);
+}
+
+function printTable(){ 
+  window.print(); 
+}
+
+function setStatus(st, t){ 
+  let span = document.querySelector("#status span"); 
+  span.className = st === "connected" ? "connected" : st === "loading" ? "loading" : "disconnected"; 
+  document.getElementById("statusText").textContent = t; 
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  updateNavigationContext();
+  loadSheet();
+});
+
+// Make functions globally accessible
+window.goBackToDashboard = goBackToDashboard;
+window.selectSheet = selectSheet;
+window.loadSheet = loadSheet;
+window.applyFilters = applyFilters;
+window.exportTable = exportTable;
+window.printTable = printTable;
+</script>
+</body>
+</html>
