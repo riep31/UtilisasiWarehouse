@@ -1065,7 +1065,7 @@
       }
     };
 
-    // Function to normalize role name
+    // Function to normalize role name - FIXED: Missing comma
     function normalizeRole(role) {
       if (!role) return 'guest';
       
@@ -1082,7 +1082,7 @@
         'operator': 'operator',
         'op': 'operator',
         'viewer': 'viewer',
-        'guest': 'guest'
+        'guest': 'guest',
         'tamu': 'guest'
       };
       
@@ -1161,7 +1161,7 @@
       
       return {
         class: config.color,
-        text: badges[normalizedRole] ||'GUEST'
+        text: badges[normalizedRole] || 'GUEST'
       };
     }
 
@@ -1197,20 +1197,24 @@
                  .substring(0, 2);
     }
 
-    // Storage access with fallbacks
+    // Enhanced storage access with better error handling
     function getStorageItem(key) {
       try {
         // Try localStorage first
-        const item = localStorage.getItem(key);
-        if (item) return item;
+        if (typeof localStorage !== 'undefined' && localStorage) {
+          const item = localStorage.getItem(key);
+          if (item) return item;
+        }
       } catch (e) {
         console.warn('localStorage not available:', e);
       }
       
       try {
         // Try sessionStorage as fallback
-        const item = sessionStorage.getItem(key);
-        if (item) return item;
+        if (typeof sessionStorage !== 'undefined' && sessionStorage) {
+          const item = sessionStorage.getItem(key);
+          if (item) return item;
+        }
       } catch (e) {
         console.warn('sessionStorage not available:', e);
       }
@@ -1220,21 +1224,26 @@
 
     function setStorageItem(key, value) {
       try {
-        localStorage.setItem(key, value);
-        return true;
+        if (typeof localStorage !== 'undefined' && localStorage) {
+          localStorage.setItem(key, value);
+          return true;
+        }
       } catch (e) {
         console.warn('localStorage not available, trying sessionStorage:', e);
         try {
-          sessionStorage.setItem(key, value);
-          return true;
+          if (typeof sessionStorage !== 'undefined' && sessionStorage) {
+            sessionStorage.setItem(key, value);
+            return true;
+          }
         } catch (e2) {
           console.warn('No storage available:', e2);
           return false;
         }
       }
+      return false;
     }
 
-    // Load user data from localStorage (from login page)
+    // Enhanced user data loading with better validation
     function loadUserData() {
       console.log('Loading user data...');
       
@@ -1264,7 +1273,7 @@
         updateUserInterface(userData);
         
         // Apply role-based access control
-        applyRoleBasedAccess(userData.role);
+        applyRoleBasedAccess(userData.role || userData.level);
         
         // Ensure login prompt is hidden
         hideLoginPrompt();
@@ -1279,31 +1288,66 @@
       }
     }
 
-    // Validation for user data from login page
+    // Enhanced validation for user data
     function isValidUserData(userData) {
       if (!userData || typeof userData !== 'object') {
+        console.log('Invalid userData: not an object');
         return false;
       }
       
-      // Check required fields (adjust based on your login page structure)
-      const requiredFields = ['nama', 'level'];
-      for (const field of requiredFields) {
-        if (!userData[field] || typeof userData[field] !== 'string' || userData[field].trim() === '') {
-          console.log(`Invalid or missing field: ${field}`);
-          return false;
+      // Check required fields - be more flexible with field names
+      const nameFields = ['nama', 'name', 'username'];
+      const levelFields = ['level', 'role', 'position'];
+      
+      let hasName = false;
+      let hasLevel = false;
+      
+      // Check for name field
+      for (const field of nameFields) {
+        if (userData[field] && typeof userData[field] === 'string' && userData[field].trim() !== '') {
+          hasName = true;
+          // Normalize to 'nama'
+          if (field !== 'nama') {
+            userData.nama = userData[field];
+          }
+          break;
         }
       }
       
-      // Ensure role field exists (create from level if missing)
-      if (!userData.role) {
-        userData.role = normalizeRole(userData.level);
+      // Check for level field
+      for (const field of levelFields) {
+        if (userData[field] && typeof userData[field] === 'string' && userData[field].trim() !== '') {
+          hasLevel = true;
+          // Normalize to 'level' and 'role'
+          if (field !== 'level') {
+            userData.level = userData[field];
+          }
+          if (!userData.role) {
+            userData.role = userData[field];
+          }
+          break;
+        }
       }
       
-      // Set default divisi if missing
+      if (!hasName) {
+        console.log('Invalid userData: missing name field');
+        return false;
+      }
+      
+      if (!hasLevel) {
+        console.log('Invalid userData: missing level/role field');
+        return false;
+      }
+      
+      // Set default values for missing optional fields
       if (!userData.divisi) {
         userData.divisi = userData.departemen || userData.department || 'General';
       }
       
+      // Ensure role is normalized
+      userData.role = normalizeRole(userData.role || userData.level);
+      
+      console.log('User data validation passed:', userData);
       return true;
     }
 
@@ -1311,10 +1355,15 @@
     function updateUserInterface(userData) {
       try {
         // Update basic user info
-        document.getElementById('userName').textContent = userData.nama || 'Unknown User';
-        document.getElementById('userLevel').textContent = `Level: ${userData.level || 'Unknown'}`;
-        document.getElementById('userDivision').textContent = `Divisi: ${userData.divisi || 'Unknown'}`;
-        document.getElementById('userAvatar').textContent = getUserInitials(userData.nama);
+        const userName = document.getElementById('userName');
+        const userLevel = document.getElementById('userLevel');
+        const userDivision = document.getElementById('userDivision');
+        const userAvatar = document.getElementById('userAvatar');
+        
+        if (userName) userName.textContent = userData.nama || 'Unknown User';
+        if (userLevel) userLevel.textContent = `Level: ${userData.level || 'Unknown'}`;
+        if (userDivision) userDivision.textContent = `Divisi: ${userData.divisi || 'Unknown'}`;
+        if (userAvatar) userAvatar.textContent = getUserInitials(userData.nama);
 
         // Update role badge
         const roleBadge = getRoleBadge(userData.role);
@@ -1356,8 +1405,12 @@
       if (confirm('Apakah Anda yakin ingin logout?')) {
         try {
           // Clear user data from storage
-          localStorage.removeItem('user');
-          sessionStorage.removeItem('user');
+          if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('user');
+          }
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.removeItem('user');
+          }
           console.log('User data cleared from storage');
         } catch (e) {
           console.warn('Error clearing storage:', e);
@@ -1374,18 +1427,20 @@
       const mainContent = document.getElementById('mainContent');
       const collapseIcon = document.getElementById('collapse-icon');
       
-      sidebar.classList.toggle('collapsed');
-      mainContent.classList.toggle('collapsed');
-      
-      // Update collapse icon
-      if (sidebar.classList.contains('collapsed')) {
-        collapseIcon.textContent = '›';
-      } else {
-        collapseIcon.textContent = '‹';
+      if (sidebar && mainContent && collapseIcon) {
+        sidebar.classList.toggle('collapsed');
+        mainContent.classList.toggle('collapsed');
+        
+        // Update collapse icon
+        if (sidebar.classList.contains('collapsed')) {
+          collapseIcon.textContent = '›';
+        } else {
+          collapseIcon.textContent = '‹';
+        }
+        
+        // Save collapse state
+        setStorageItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
       }
-      
-      // Save collapse state
-      setStorageItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
     }
 
     // Toggle sidebar for mobile
@@ -1393,12 +1448,12 @@
       const sidebar = document.getElementById('sidebar');
       const overlay = document.querySelector('.sidebar-overlay');
       
-      sidebar.classList.toggle('active');
-      overlay.classList.toggle('active');
+      if (sidebar) sidebar.classList.toggle('active');
+      if (overlay) overlay.classList.toggle('active');
     }
 
-    // Initialize dashboard
-    window.addEventListener('load', function() {
+    // Initialize dashboard with better error handling
+    function initializeDashboard() {
       console.log('Dashboard initializing...');
       
       try {
@@ -1423,7 +1478,7 @@
           const mainContent = document.getElementById('mainContent');
           const collapseIcon = document.getElementById('collapse-icon');
           
-          if (isCollapsed && window.innerWidth > 1024) {
+          if (isCollapsed && window.innerWidth > 1024 && sidebar && mainContent && collapseIcon) {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('collapsed');
             collapseIcon.textContent = '›';
@@ -1436,14 +1491,16 @@
         setTimeout(() => {
           const cards = document.querySelectorAll('.card:not(.hidden)');
           cards.forEach((card, index) => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            
-            setTimeout(() => {
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }, index * 100);
+            if (card) {
+              card.style.opacity = '0';
+              card.style.transform = 'translateY(20px)';
+              card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+              
+              setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+              }, index * 100);
+            }
           });
         }, 100);
 
@@ -1453,56 +1510,74 @@
         console.error('Error during dashboard initialization:', error);
         showLoginPrompt();
       }
+    }
+
+    // Event listeners with better error handling
+    window.addEventListener('load', function() {
+      try {
+        initializeDashboard();
+      } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+        showLoginPrompt();
+      }
     });
 
     // Close sidebar when clicking on nav item (mobile)
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', function() {
-        if (window.innerWidth <= 1024) {
-          toggleSidebar();
-        }
+    document.addEventListener('DOMContentLoaded', function() {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.addEventListener('click', function() {
+          if (window.innerWidth <= 1024) {
+            toggleSidebar();
+          }
+        });
       });
-    });
 
-    // Add smooth click animation for cards
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('mousedown', function() {
-        this.style.transform = 'translateY(-4px) scale(0.98)';
-      });
-      
-      card.addEventListener('mouseup', function() {
-        this.style.transform = 'translateY(-8px) scale(1)';
-      });
-      
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0) scale(1)';
+      // Add smooth click animation for cards
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        card.addEventListener('mousedown', function() {
+          this.style.transform = 'translateY(-4px) scale(0.98)';
+        });
+        
+        card.addEventListener('mouseup', function() {
+          this.style.transform = 'translateY(-8px) scale(1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          this.style.transform = 'translateY(0) scale(1)';
+        });
       });
     });
 
     // Handle window resize
     window.addEventListener('resize', function() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.querySelector('.sidebar-overlay');
-      const mainContent = document.getElementById('mainContent');
-      
-      if (window.innerWidth > 1024) {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
+      try {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.querySelector('.sidebar-overlay');
+        const mainContent = document.getElementById('mainContent');
         
-        // Restore collapse state on desktop
-        try {
-          const isCollapsed = getStorageItem('sidebarCollapsed') === 'true';
-          if (isCollapsed) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('collapsed');
+        if (window.innerWidth > 1024) {
+          if (sidebar) sidebar.classList.remove('active');
+          if (overlay) overlay.classList.remove('active');
+          
+          // Restore collapse state on desktop
+          try {
+            const isCollapsed = getStorageItem('sidebarCollapsed') === 'true';
+            if (isCollapsed && sidebar && mainContent) {
+              sidebar.classList.add('collapsed');
+              mainContent.classList.add('collapsed');
+            }
+          } catch (e) {
+            console.warn('Could not restore sidebar state:', e);
           }
-        } catch (e) {
-          console.warn('Could not restore sidebar state:', e);
+        } else {
+          // Remove collapse state on mobile
+          if (sidebar) sidebar.classList.remove('collapsed');
+          if (mainContent) mainContent.classList.remove('collapsed');
         }
-      } else {
-        // Remove collapse state on mobile
-        sidebar.classList.remove('collapsed');
-        mainContent.classList.remove('collapsed');
+      } catch (error) {
+        console.error('Error handling window resize:', error);
       }
     });
   </script>
