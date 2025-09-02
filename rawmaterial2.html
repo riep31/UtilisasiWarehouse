@@ -162,14 +162,15 @@
       margin-right: 15px;
     }
 
-    /* Alert Mini Table for Low Stock */
+    /* Alert Mini Table for Low Stock - Updated Design */
     .alert-table-container {
       margin: 0 20px 20px 20px;
-      background: linear-gradient(90deg,  	#FF4500 0%, #c0392b 100%);
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #dee2e6;
+      border-left: 4px solid #ffc107;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     .alert-table-title {
@@ -179,63 +180,89 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      color: #495057;
+    }
+
+    .alert-count {
+      text-align: center;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #856404;
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ffeaa7;
     }
 
     .alert-table {
-      background: rgba(255,255,255,0.1);
+      background: #ffffff;
       border-radius: 8px;
-      padding: 15px;
-      backdrop-filter: blur(10px);
+      border: 1px solid #e9ecef;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .alert-table table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 13px;
     }
 
     .alert-table th,
     .alert-table td {
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,0.3);
+      padding: 12px 10px;
       text-align: left;
-      font-size: 13px;
-      color: #2c3e50;
+      border-bottom: 1px solid #e9ecef;
     }
 
     .alert-table th {
-      background: #34495e;
-      font-weight: 800;
-      color: #fff;
-      text-shadow: none;
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .alert-table td {
-      background: rgba(255,255,255,0.7);
-      color: #2c3e50;
+      background: #ffffff;
+      color: #495057;
+      transition: all 0.2s ease;
     }
 
     .alert-table tbody tr:nth-child(even) td {
-      background: rgba(255,255,255,0.5);
-    }
-
-    .alert-table tbody tr:nth-child(odd) td {
-      background: rgba(255,255,255,0.7);
+      background: #f8f9fa;
     }
 
     .alert-table tbody tr:hover td {
-      background: rgba(255,255,255,0.9) !important;
-      color: #2c3e50;
-      transform: scale(1.02);
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: #e3f2fd !important;
+      transform: none;
+      box-shadow: none;
     }
 
-    .alert-count {
-      text-align: center;
-      padding: 15px;
-      font-size: 24px;
-      font-weight: bold;
-      color: #ffd700;
+    .alert-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .alert-table .status-at-rop {
+      background: #ffc107 !important;
+      color: #212529;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    
+    .alert-table .status-below-rop {
+      background: #dc3545 !important;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
     }
 
     .filters{
@@ -411,6 +438,17 @@
         flex: 1;
         text-align: center;
       }
+      
+      .alert-table {
+        overflow-x: auto;
+      }
+      
+      .alert-table th,
+      .alert-table td {
+        min-width: 100px;
+        font-size: 12px;
+        padding: 8px 6px;
+      }
     }
   </style>
 </head>
@@ -471,7 +509,7 @@
           <thead></thead>
           <tbody></tbody>
         </table>
-        <div class="empty-state" id="alertEmptyState" style="display: none; color: rgba(255,255,255,0.8);">
+        <div class="empty-state" id="alertEmptyState" style="display: none; color: #6c757d;">
           <div>✅</div>
           <p>Semua stock dalam kondisi baik</p>
         </div>
@@ -526,25 +564,25 @@ const sheetConfig = {
   bumbu: {
     name: 'BUMBU',
     displayName: 'BUMBU',
-    statusColumn: 5, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column F (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   rawmat: {
     name: 'RAWMAT',
     displayName: 'RAWMAT',
-    statusColumn: 5, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column F (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   packaging: {
     name: 'PACKAGING',
     displayName: 'PACKAGING', 
-    statusColumn: 5, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column F (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   chemical: {
     name: 'CHEMICAL',
     displayName: 'CHEMICAL',
-    statusColumn: 5, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column F (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   }
 };
@@ -552,6 +590,9 @@ const sheetConfig = {
 let currentSheet = 'bumbu';
 let allRows = [];
 let currentSort = { index: -1, asc: true };
+
+// Define columns to show in mini table (B,C,D,G,I,J = indices 1,2,3,6,8,9)
+const miniTableColumns = [1, 2, 3, 6, 8, 9];
 
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
@@ -786,39 +827,38 @@ function renderAlertTable(rows) {
   alertTable.style.display = 'table';
   alertEmptyState.style.display = 'none';
   
-  // Render alert table - show first 6 columns, all alert data rows
+  // Render alert table - show only specific columns (B,C,D,G,I,J)
   const thead = alertTable.querySelector('thead');
   const tbody = alertTable.querySelector('tbody');
   
   thead.innerHTML = '';
   tbody.innerHTML = '';
   
-  // Create header (limit to 6 columns)
+  // Create header with only selected columns
   const headerRow = document.createElement('tr');
-  const maxColumns = Math.min(6, alertRows[0].length);
-  for (let i = 0; i < maxColumns; i++) {
+  miniTableColumns.forEach(colIndex => {
     const th = document.createElement('th');
-    th.textContent = alertRows[0][i] || '';
+    th.textContent = rows[0][colIndex] || '';
     headerRow.appendChild(th);
-  }
+  });
   thead.appendChild(headerRow);
   
-  // Create all alert data rows (limit to 6 columns)
+  // Create alert data rows with only selected columns
   for (let i = 1; i < alertRows.length; i++) {
     const tr = document.createElement('tr');
-    for (let j = 0; j < maxColumns; j++) {
+    miniTableColumns.forEach(colIndex => {
       const td = document.createElement('td');
-      const cellValue = alertRows[i][j] || '';
+      const cellValue = alertRows[i][colIndex] || '';
       
-      // Style status column with appropriate colors
-      if (j === statusColumnIndex && needsAlert(cellValue)) {
+      // Style status column with appropriate colors (column J = index 9)
+      if (colIndex === statusColumnIndex && needsAlert(cellValue)) {
         td.innerHTML = `<span class="${cellValue === 'At ROP (Reorder)' ? 'status-at-rop' : 'status-below-rop'}">${cellValue}</span>`;
       } else {
         td.textContent = cellValue;
       }
       
       tr.appendChild(td);
-    }
+    });
     tbody.appendChild(tr);
   }
 }
@@ -1029,6 +1069,6 @@ window.loadSheet = loadSheet;
 window.applyFilters = applyFilters;
 window.exportTable = exportTable;
 window.printTable = printTable;
-</script>
+  </script>
 </body>
 </html>
