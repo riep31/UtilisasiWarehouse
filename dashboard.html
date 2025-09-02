@@ -559,6 +559,11 @@
       background: linear-gradient(135deg, #64748b, #94a3b8);
       color: white;
     }
+    
+    .role-badge.guest {
+      background: linear-gradient(135deg, #f97316, #fb923c);
+      color: white;
+    }
 
     /* Access denied message */
     .access-denied {
@@ -859,19 +864,23 @@
         </button>
       </div>
       <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item active" data-tooltip="Dashboard" data-roles="administrator,manager,supervisor,operator,viewer">
+        <a href="dashboard.html" class="nav-item active" data-tooltip="Dashboard" data-roles="administrator,manager,supervisor,operator,viewer,guest">
           <span class="nav-icon">🏠</span>
           <span class="nav-text">Dashboard</span>
         </a>
-        <a href="rawmaterial.html" class="nav-item" data-tooltip="Raw Material & Packaging" data-roles="administrator,manager,supervisor,operator">
+        <a href="rawmaterial2.html" class="nav-item" data-tooltip="Raw Material & Packaging" data-roles="administrator,manager,supervisor,operator,viewer">
           <span class="nav-icon">📦</span>
           <span class="nav-text">Raw Material & Packaging</span>
         </a>
-        <a href="finishgoods.html" class="nav-item" data-tooltip="Finish Goods" data-roles="administrator,manager,supervisor,operator">
+        <a href="rawmaterial.html" class="nav-item" data-tooltip="Raw Material 2" data-roles="administrator,manager,supervisor,operator,viewer">
+  <span class="nav-icon">📦</span>
+  <span class="nav-text">Raw Material by Racking</span>
+</a>
+        <a href="finishgoods.html" class="nav-item" data-tooltip="Finish Goods" data-roles="administrator,manager,supervisor,operator,viewer">
           <span class="nav-icon">👨‍💼</span>
           <span class="nav-text">Finish Goods</span>
         </a>
-        <a href="kapasitasgudang.html" class="nav-item" data-tooltip="Status Kapasitas Gudang" data-roles="administrator,manager,supervisor">
+        <a href="kapasitasgudang.html" class="nav-item" data-tooltip="Status Kapasitas Gudang" data-roles="administrator,manager,supervisor,viewer">
           <span class="nav-icon">📊</span>
           <span class="nav-text">Status Kapasitas Gudang</span>
         </a>
@@ -883,7 +892,7 @@
           <span class="nav-icon">⚠️</span>
           <span class="nav-text">Report Salah Muat</span>
         </a>
-        <a href="rencanakedatangan.html" class="nav-item" data-tooltip="Rencana Kedatangan" data-roles="administrator,manager,supervisor,operator">
+        <a href="rencanakedatangan.html" class="nav-item" data-tooltip="Rencana Kedatangan" data-roles="administrator,manager,supervisor,operator,viewer">
           <span class="nav-icon">📋</span>
           <span class="nav-text">Rencana Kedatangan</span>
         </a>
@@ -946,40 +955,46 @@
         </div>
 
         <div class="card-container" id="cardContainer">
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='rawmaterial.html'">
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='rawmaterial2.html'">
             <div class="card-icon">📦</div>
             <h3>Raw Material & Packaging</h3>
-            <p>Monitoring bahan baku dan kemasan untuk kelancaran produksi dan inventory management.</p>
+            <p>Monitoring bahan baku dan kemasan by "Stock Card Report"</p>
           </div>
+          
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='rawmaterial.html'">
+  <div class="card-icon">📦</div>
+  <h3>Raw Material by Racking</h3>
+  <p>Monitoring bahan baku dan kemasan by "Racking Gudang"</p>
+</div>
 
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='finishgoods.html'">
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='finishgoods.html'">
             <div class="card-icon">✅</div>
             <h3>Finish Goods</h3>
-            <p>Status produk jadi siap distribusi dengan tracking kelengkapan dan kualitas produk.</p>
+            <p> Finished Goods Stock Card Report with Low Stock Notification</p>
           </div>
 
-          <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='kapasitasgudang.html'">
+          <div class="card" data-roles="administrator,manager,supervisor,viewer" onclick="window.location.href='kapasitasgudang.html'">
             <div class="card-icon">📊</div>
             <h3>Status Kapasitas Gudang</h3>
-            <p>Real-time monitoring kapasitas gudang untuk optimalisasi ruang penyimpanan dan distribusi.</p>
+            <p>Real-time Warehouse Capacity Monitoring</p>
           </div>
 
           <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='cardstock.html'">
             <div class="card-icon">📋</div>
             <h3>Card Stock</h3>
-            <p>Manajemen kartu stok untuk pencatatan keluar masuk barang dan kontrol inventory.</p>
+            <p>Inventory Control with Detailed Stock Movement Recording</p>
           </div>
 
           <div class="card" data-roles="administrator,manager,supervisor" onclick="window.location.href='salah.html'">
             <div class="card-icon">⚠️</div>
             <h3>Report Salah Muat</h3>
-            <p>Laporan kesalahan muat barang untuk evaluasi dan perbaikan proses operasional gudang.</p>
+            <p>Loading Error Report for Warehouse Operational Evaluation and Improvement</p>
           </div>
           
-          <div class="card" data-roles="administrator,manager,supervisor,operator" onclick="window.location.href='rencanakedatangan.html'">
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='rencanakedatangan.html'">
             <div class="card-icon">📋</div>
             <h3>Rencana Kedatangan Material</h3>
-            <p>Rencana kedatangan material untuk kontrol stock dan optimalisasi ruang penyimpanan.</p>
+            <p>Incoming Material Schedule for Inventory Control and Warehouse Space Utilization</p>
           </div>
 
           <div class="card" data-roles="administrator" onclick="window.location.href='users.html'">
@@ -1026,7 +1041,7 @@
       manager: {
         level: 4,
         color: 'manager',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'reports', 'salah']
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'rencanakedatangan', 'salah']
       },
       supervisor: {
         level: 3,
@@ -1041,13 +1056,18 @@
       viewer: {
         level: 1,
         color: 'viewer',
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods','kapasitasgudang','rencanakedatangan']
+      },
+      guest: {
+        level: 0.5,  
+        color: 'guest',
         permissions: ['dashboard']
       }
     };
 
     // Function to normalize role name
     function normalizeRole(role) {
-      if (!role) return 'viewer';
+      if (!role) return 'guest';
       
       const normalizedRole = role.toLowerCase().trim();
       
@@ -1062,10 +1082,11 @@
         'operator': 'operator',
         'op': 'operator',
         'viewer': 'viewer',
-        'guest': 'viewer'
+        'guest': 'guest'
+        'tamu': 'guest'
       };
       
-      return roleMapping[normalizedRole] || 'viewer';
+      return roleMapping[normalizedRole] || 'guest';
     }
 
     // Function to check if user has access to specific feature
@@ -1127,19 +1148,20 @@
     // Function to get role badge class and text
     function getRoleBadge(role) {
       const normalizedRole = normalizeRole(role);
-      const config = ROLE_CONFIG[normalizedRole] || ROLE_CONFIG.viewer;
+      const config = ROLE_CONFIG[normalizedRole] || ROLE_CONFIG.guest;
       
       const badges = {
         administrator: 'ADMIN',
         manager: 'MGR',
         supervisor: 'SPV',
         operator: 'OPR',
-        viewer: 'VIEW'
+        viewer: 'VIEW',
+        guest: 'GUEST'
       };
       
       return {
         class: config.color,
-        text: badges[normalizedRole] || 'USER'
+        text: badges[normalizedRole] ||'GUEST'
       };
     }
 
