@@ -124,7 +124,7 @@
 
     /* Sheet Selection Buttons */
     .sheet-selection {
-      margin: 0 20px 20px 20px;
+      margin: 0 20px 10px 20px;
       display: flex;
       gap: 10px;
       align-items: center;
@@ -160,6 +160,50 @@
       font-weight: 600;
       color: #2c3e50;
       margin-right: 15px;
+    }
+
+    /* Detail Toggle Button */
+    .detail-toggle-container {
+      margin: 0 20px 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      border-left: 4px solid #3498db;
+    }
+    
+    .detail-toggle-btn {
+      padding: 10px 20px;
+      border: 1px solid #3498db;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #3498db;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(52, 152, 219, 0.1);
+    }
+    
+    .detail-toggle-btn:hover {
+      background: #3498db;
+      color: #ffffff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+    }
+    
+    .detail-toggle-btn.active {
+      background: #3498db;
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+    }
+    
+    .detail-toggle-info {
+      font-size: 13px;
+      color: #6c757d;
+      font-style: italic;
     }
 
     /* Alert Mini Table for Low Stock - Updated Design */
@@ -449,6 +493,17 @@
         font-size: 12px;
         padding: 8px 6px;
       }
+      
+      .detail-toggle-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      .detail-toggle-btn {
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
@@ -496,6 +551,14 @@
           🧪 CHEMICAL
         </button>
       </div>
+    </div>
+
+    <!-- Detail View Toggle -->
+    <div class="detail-toggle-container">
+      <button class="detail-toggle-btn" id="detailToggleBtn" onclick="toggleDetailView()">
+        📋 Tampilkan Detail
+      </button>
+      <span class="detail-toggle-info" id="detailToggleInfo">Mode ringkas - Hanya kolom utama</span>
     </div>
 
     <!-- Alert Mini Table for Low Stock -->
@@ -564,25 +627,25 @@ const sheetConfig = {
   bumbu: {
     name: 'BUMBU',
     displayName: 'BUMBU',
-    statusColumn: 9, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column J (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   rawmat: {
     name: 'RAWMAT',
     displayName: 'RAWMAT',
-    statusColumn: 9, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column J (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   packaging: {
     name: 'PACKAGING',
     displayName: 'PACKAGING', 
-    statusColumn: 9, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column J (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   },
   chemical: {
     name: 'CHEMICAL',
     displayName: 'CHEMICAL',
-    statusColumn: 9, // Column F (0-indexed) for stock status
+    statusColumn: 9, // Column J (0-indexed) for stock status
     descriptionColumn: 1 // Column B (0-indexed) for item description
   }
 };
@@ -590,9 +653,41 @@ const sheetConfig = {
 let currentSheet = 'bumbu';
 let allRows = [];
 let currentSort = { index: -1, asc: true };
+let isDetailView = false; // Default mode is simple (kolom A,B,C,D only)
 
 // Define columns to show in mini table (B,C,D,G,I,J = indices 1,2,3,6,8,9)
 const miniTableColumns = [1, 2, 3, 6, 8, 9];
+
+// Define columns to show in simple view (A,B,C,D = indices 0,1,2,3)
+const simpleViewColumns = [0, 1, 2, 3];
+
+// Toggle detail view function
+function toggleDetailView() {
+  isDetailView = !isDetailView;
+  const toggleBtn = document.getElementById('detailToggleBtn');
+  const toggleInfo = document.getElementById('detailToggleInfo');
+  const alertContainer = document.getElementById('alertTableContainer');
+  
+  if (isDetailView) {
+    toggleBtn.textContent = '📋 Sembunyikan Detail';
+    toggleBtn.classList.add('active');
+    toggleInfo.textContent = 'Mode detail - Semua kolom ditampilkan';
+    alertContainer.style.display = 'block';
+  } else {
+    toggleBtn.textContent = '📋 Tampilkan Detail';
+    toggleBtn.classList.remove('active');
+    toggleInfo.textContent = 'Mode ringkas - Hanya kolom utama';
+    alertContainer.style.display = 'none';
+  }
+  
+  // Re-render table and alert table with current data
+  if (allRows.length > 0) {
+    renderTable(allRows);
+    if (isDetailView) {
+      renderAlertTable(allRows);
+    }
+  }
+}
 
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
@@ -770,7 +865,9 @@ async function loadSheet(){
     allRows = sheetData;
     
     renderTable(allRows);
-    renderAlertTable(allRows);
+    if (isDetailView) {
+      renderAlertTable(allRows);
+    }
     populateItemDescriptionFilter(allRows); // Populate the item description filter
     setStatus("connected", `Connected - ${sheetConfig[currentSheet].displayName}`);
     
@@ -795,6 +892,12 @@ function showAlertTable() {
 function renderAlertTable(rows) {
   const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
   const alertRows = [];
+  
+  // Only show alert table in detail view
+  if (!isDetailView) {
+    hideAlertTable();
+    return;
+  }
   
   if (rows.length > 0) {
     // Add header
@@ -881,41 +984,51 @@ function renderTable(rows){
   
   const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
   
+  // Determine which columns to show based on detail view mode
+  const columnsToShow = isDetailView ? 
+    Array.from({length: rows[0].length}, (_, i) => i) : // Show all columns in detail view
+    simpleViewColumns; // Show only A,B,C,D in simple view
+  
   // Create header
   let header = document.createElement("tr");
-  rows[0].forEach((h, i) => {
-    let th = document.createElement("th"); 
-    th.textContent = h;
-    th.onclick = () => sortTable(i);
-    if(currentSort.index === i) {
-      th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
+  columnsToShow.forEach(colIndex => {
+    if (colIndex < rows[0].length) {
+      let th = document.createElement("th"); 
+      th.textContent = rows[0][colIndex] || '';
+      th.onclick = () => sortTable(colIndex);
+      if(currentSort.index === colIndex) {
+        th.classList.add(currentSort.asc ? "sorted-asc" : "sorted-desc");
+      }
+      header.appendChild(th);
     }
-    header.appendChild(th);
   }); 
   thead.appendChild(header);
 
   // Create data rows
   rows.slice(1).forEach((r, index) => {
     let tr = document.createElement("tr");
-    r.forEach((c, i) => {
-      let td = document.createElement("td"); 
-      
-      // Style status column with appropriate colors
-      if (i === statusColumnIndex) {
-        let statusClass = '';
-        if (c === 'At ROP (Reorder)') {
-          statusClass = 'status-at-rop';
-        } else if (c === 'Below ROP (Low)') {
-          statusClass = 'status-below-rop';
+    columnsToShow.forEach(colIndex => {
+      if (colIndex < r.length) {
+        let td = document.createElement("td"); 
+        const cellValue = r[colIndex] || '';
+        
+        // Style status column with appropriate colors (only in detail view)
+        if (isDetailView && colIndex === statusColumnIndex) {
+          let statusClass = '';
+          if (cellValue === 'At ROP (Reorder)') {
+            statusClass = 'status-at-rop';
+          } else if (cellValue === 'Below ROP (Low)') {
+            statusClass = 'status-below-rop';
+          } else {
+            statusClass = 'status-normal';
+          }
+          td.innerHTML = `<span class="${statusClass}">${cellValue}</span>`;
         } else {
-          statusClass = 'status-normal';
+          td.textContent = cellValue;
         }
-        td.innerHTML = `<span class="${statusClass}">${c || ''}</span>`;
-      } else {
-        td.textContent = c || '';
+        
+        tr.appendChild(td);
       }
-      
-      tr.appendChild(td);
     });
     
     // Add click functionality to highlight selected row
@@ -947,7 +1060,14 @@ function updateTotals(rows) {
   const totalRows = rows.length - 1;
   const statusColumnIndex = sheetConfig[currentSheet].statusColumn;
   
-  // Count different statuses
+  // Only show detailed status count in detail view
+  if (!isDetailView) {
+    totalInfo.innerHTML = `Total: ${totalRows} item`;
+    totalsSection.style.display = 'block';
+    return;
+  }
+  
+  // Count different statuses (only in detail view)
   let normalCount = 0;
   let atRopCount = 0;
   let belowRopCount = 0;
@@ -1008,9 +1128,9 @@ function applyFilters(){
     // Search filter - check all columns
     let searchMatch = r.some(c => (c || '').toString().toLowerCase().includes(search));
     
-    // Status filter
+    // Status filter (only apply in detail view when status column is visible)
     let statusMatch = true;
-    if (selectedStatus !== '') {
+    if (selectedStatus !== '' && isDetailView) {
       const status = r[statusColumnIndex];
       statusMatch = status === selectedStatus;
     }
@@ -1026,8 +1146,10 @@ function applyFilters(){
   });
   
   renderTable(filtered);
-  // Update alert table based on filtered data
-  renderAlertTable(filtered);
+  // Update alert table based on filtered data (only in detail view)
+  if (isDetailView) {
+    renderAlertTable(filtered);
+  }
 }
 
 function exportTable(){ 
@@ -1059,12 +1181,16 @@ function setStatus(st, t){
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   updateNavigationContext();
+  // Set default state - detail view is OFF
+  isDetailView = false;
+  document.getElementById('alertTableContainer').style.display = 'none';
   loadSheet();
 });
 
 // Make functions globally accessible
 window.goBackToDashboard = goBackToDashboard;
 window.selectSheet = selectSheet;
+window.toggleDetailView = toggleDetailView;
 window.loadSheet = loadSheet;
 window.applyFilters = applyFilters;
 window.exportTable = exportTable;
