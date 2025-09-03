@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil - Dashboard Gudang</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #334155;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #fff 10%, #2c3e50 100%);
+      padding: 20px 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .brand-info h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0 0 4px 0;
+      line-height: 1.2;
+    }
+
+    .brand-info p {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .back-button {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .back-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .breadcrumb {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      font-size: 14px;
+    }
+
+    .breadcrumb a {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .breadcrumb span {
+      color: #64748b;
+      margin: 0 8px;
+    }
+
+    .profile-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .profile-header h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .profile-header p {
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      border: 1px solid #f1f5f9;
+    }
+
+    .profile-card-header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      padding: 40px 32px;
+      text-align: center;
+      color: white;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 auto 16px;
+      backdrop-filter: blur(10px);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .profile-name {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .profile-role {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      display: inline-block;
+      backdrop-filter: blur(10px);
+    }
+
+    .profile-content {
+      padding: 40px 32px;
+    }
+
+    .profile-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    .info-group {
+      background: #f8fafc;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .info-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      word-break: break-word;
+    }
+
+    .info-value.empty {
+      color: #94a3b8;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .login-required {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+
+    .login-required-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .login-required h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      color: #dc2626;
+    }
+
+    .login-required p {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .role-badge.administrator {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+    }
+
+    .role-badge.manager {
+      background: linear-gradient(135deg, #7c3aed, #a855f7);
+      color: white;
+    }
+
+    .role-badge.supervisor {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+    }
+
+    .role-badge.operator {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: white;
+    }
+
+    .role-badge.viewer {
+      background: linear-gradient(135deg, #64748b, #94a3b8);
+      color: white;
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .container {
+        padding: 24px 16px;
+      }
+
+      .header {
+        padding: 16px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .profile-card-header {
+        padding: 32px 24px;
+      }
+
+      .profile-content {
+        padding: 32px 24px;
+      }
+
+      .profile-info {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .profile-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+      }
+
+      .profile-name {
+        font-size: 1.5rem;
+      }
+
+      .info-group {
+        padding: 20px;
+      }
+
+      .info-value {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
+      </div>
+      <div class="brand-info">
+        <h1>PT. Dagsap Endura Eatore</h1>
+        <p>Sistem Manajemen Gudang Terpadu</p>
+      </div>
+    </div>
+    <a href="dashboard.html" class="back-button">
+      Kembali ke Dashboard
+    </a>
+  </header>
+
+  <div class="container">
+    <!-- Breadcrumb Navigation -->
+    <nav class="breadcrumb">
+      <a href="dashboard.html">Dashboard</a>
+      <span>></span>
+      <span>Profil Pengguna</span>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <h2>Profil Pengguna</h2>
+      <p>Informasi akun dan data pengguna sistem</p>
+    </div>
+
+    <!-- Login Required Message (hidden by default) -->
+    <div class="login-required hidden" id="loginRequired">
+      <div class="login-required-icon">🔒</div>
+      <h3>Login Diperlukan</h3>
+      <p>Silakan login terlebih dahulu untuk mengakses halaman profil.</p>
+      <a href="index.html" class="btn btn-primary">Login Sekarang</a>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-card" id="profileCard">
+      <!-- Profile Header -->
+      <div class="profile-card-header">
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <div class="profile-name" id="profileName">Nama Pengguna</div>
+        <div class="profile-role" id="profileRole">Role</div>
+      </div>
+
+      <!-- Profile Information -->
+      <div class="profile-content">
+        <div class="profile-info">
+          <div class="info-group">
+            <div class="info-label">Username</div>
+            <div class="info-value" id="infoUsername">-</div>
+          </div>
+
+          <div class="info-group">
+            <div class="info-label">Nama Lengkap</div>
+            <div class="info-value" id="infoNama">-</div>
+          </div>
+
+          <div class="info-group">
+            <div class="info-label">Level/Jabatan</div>
+            <div class="info-value" id="infoLevel">-</div>
+          </div>
+
+          <div class="info-group">
+            <div class="info-label">Divisi</div>
+            <div class="info-value" id="infoDivisi">-</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to get user initials
+    function getUserInitials(name) {
+      if (!name) return 'U';
+      return name.split(' ')
+                 .map(word => word.charAt(0).toUpperCase())
+                 .join('')
+                 .substring(0, 2);
+    }
+
+    // Function to normalize role name
+    function normalizeRole(role) {
+      if (!role) return 'viewer';
+      
+      const normalizedRole = role.toLowerCase().trim();
+      
+      const roleMapping = {
+        'admin': 'administrator',
+        'administrator': 'administrator',
+        'manajer': 'manager',
+        'manager': 'manager',
+        'supervisor': 'supervisor',
+        'spv': 'supervisor',
+        'operator': 'operator',
+        'op': 'operator',
+        'viewer': 'viewer'
+      };
+      
+      return roleMapping[normalizedRole] || 'viewer';
+    }
+
+    // Function to get role badge
+    function getRoleBadge(role) {
+      const normalizedRole = normalizeRole(role);
+      
+      const badges = {
+        administrator: { class: 'administrator', text: 'ADMIN' },
+        manager: { class: 'manager', text: 'MGR' },
+        supervisor: { class: 'supervisor', text: 'SPV' },
+        operator: { class: 'operator', text: 'OPR' },
+        viewer: { class: 'viewer', text: 'VIEW' }
+      };
+      
+      return badges[normalizedRole] || { class: 'viewer', text: 'VIEW' };
+    }
+
+    // Function to get storage item with fallback
+    function getStorageItem(key) {
+      try {
+        if (typeof localStorage !== 'undefined' && localStorage) {
+          const item = localStorage.getItem(key);
+          if (item) return item;
+        }
+      } catch (e) {
+        console.warn('localStorage not available:', e);
+      }
+      
+      try {
+        if (typeof sessionStorage !== 'undefined' && sessionStorage) {
+          const item = sessionStorage.getItem(key);
+          if (item) return item;
+        }
+      } catch (e) {
+        console.warn('sessionStorage not available:', e);
+      }
+      
+      return null;
+    }
+
+    // Function to load user profile data
+    function loadUserProfile() {
+      const userDataString = getStorageItem('user');
+      
+      if (!userDataString) {
+        // No user data found, show login required message
+        document.getElementById('loginRequired').classList.remove('hidden');
+        document.getElementById('profileCard').style.display = 'none';
+        return null;
+      }
+
+      try {
+        const userData = JSON.parse(userDataString);
+        console.log('User data loaded:', userData);
+        
+        // Extract data based on available fields
+        const username = userData.Username || userData.username || '-';
+        const nama = userData.Nama || userData.nama || userData.name || '-';
+        const level = userData.Level || userData.level || userData.role || '-';
+        const divisi = userData.Divisi || userData.divisi || userData.department || '-';
+        
+        // Update profile header
+        const initials = getUserInitials(nama);
+        document.getElementById('profileAvatar').textContent = initials;
+        document.getElementById('profileName').textContent = nama;
+        
+        // Update role with badge
+        const roleBadge = getRoleBadge(level);
+        const profileRoleElement = document.getElementById('profileRole');
+        profileRoleElement.innerHTML = `${level} <span class="role-badge ${roleBadge.class}">${roleBadge.text}</span>`;
+        
+        // Fill profile information
+        document.getElementById('infoUsername').textContent = username;
+        document.getElementById('infoUsername').className = username === '-' ? 'info-value empty' : 'info-value';
+        
+        document.getElementById('infoNama').textContent = nama;
+        document.getElementById('infoNama').className = nama === '-' ? 'info-value empty' : 'info-value';
+        
+        document.getElementById('infoLevel').textContent = level;
+        document.getElementById('infoLevel').className = level === '-' ? 'info-value empty' : 'info-value';
+        
+        document.getElementById('infoDivisi').textContent = divisi;
+        document.getElementById('infoDivisi').className = divisi === '-' ? 'info-value empty' : 'info-value';
+        
+        // Show profile card, hide login required message
+        document.getElementById('loginRequired').classList.add('hidden');
+        document.getElementById('profileCard').style.display = 'block';
+        
+        console.log('User profile loaded successfully');
+        return userData;
+        
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+        document.getElementById('loginRequired').classList.remove('hidden');
+        document.getElementById('profileCard').style.display = 'none';
+        return null;
+      }
+    }
+
+    // Initialize profile page
+    function initializeProfilePage() {
+      console.log('Initializing profile page...');
+      
+      const userData = loadUserProfile();
+      
+      if (!userData) {
+        console.log('No user data available');
+        return;
+      }
+      
+      console.log('Profile page initialized successfully');
+    }
+
+    // CSS for hidden class
+    const style = document.createElement('style');
+    style.textContent = '.hidden { display: none !important; }';
+    document.head.appendChild(style);
+
+    // Page load event
+    window.addEventListener('load', initializeProfilePage);
+  </script>
+</body>
+</html>
