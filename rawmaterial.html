@@ -364,15 +364,15 @@ tr.selected {
    .subtotals {
   margin-top: 25px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(248, 249, 250, 0.8) 100%);
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(248, 249, 250, 0.5) 100%);
   border-radius: 15px;
-  border: 2px solid rgba(52, 73, 94, 0.1);
-  backdrop-filter: blur(10px);
+  border: 2px solid rgba(33, 37, 41, 0.1);
+  backdrop-filter: blur(8px);
 }
 
 .subtotals h4 {
   margin: 0 0 20px 0;
-  color: #2c3e50;
+  color: #212529;
   font-size: 18px;
   font-weight: 700;
   text-transform: uppercase;
@@ -383,17 +383,22 @@ tr.selected {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 0; /* tetap sama di hover */
-  border-bottom: 2px solid rgba(52, 73, 94, 0.1);
+  padding: 15px 25px; 
+  border-bottom: 1px solid rgba(73, 80, 87, 0.25);
   font-weight: bold;
-  color: #222;
-  transition: background 0.3s ease, border-radius 0.3s ease;
+  color: #343a40;
+  transition: background 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
+  border-radius: 10px;
 }
 
 .subtotal-row:hover {
-  background: rgba(52, 152, 219, 0.1);
-  border-radius: 8px;
- 
+  background: rgba(52, 152, 219, 0.2);
+  
+}
+
+.subtotal-row:hover .subtotal-label {
+  color: #212529;
+  
 }
 
 .subtotal-row:last-child {
@@ -403,16 +408,22 @@ tr.selected {
 .subtotal-label {
   font-weight: 700;
   font-size: 15px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .subtotal-value {
-  color: #2c3e50;
+  color: #212529;
   font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
   font-size: 16px;
   font-weight: bold;
-  background: rgba(52, 152, 219, 0.1);
+  background: rgba(52, 58, 64, 0.15);
   padding: 8px 15px;
   border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.subtotal-value:hover {
+  background: rgba(52, 58, 64, 0.3);
 }
 
     /* Responsive */
