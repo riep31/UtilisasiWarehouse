@@ -6,9 +6,9 @@
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     body { 
-      font-family:'Segoe UI',Tahoma,sans-serif; 
+      font-family:'Inter', 'Segoe UI', Tahoma, sans-serif; 
       margin:0; 
-      background:#eef2f7; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       min-height:100vh;
     }
 
@@ -16,12 +16,14 @@
       display:flex; 
       align-items:center; 
       justify-content:flex-start;
-       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%); 
-      padding:15px 20px; 
+      background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
+      padding:20px 30px; 
       color:#2c3e50; 
-      box-shadow:0 2px 5px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      gap: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      margin-bottom: 25px;
+      gap: 40px;
+      border-bottom: 1px solid rgba(52, 73, 94, 0.1);
+      backdrop-filter: blur(10px);
     }
     
     .logo { 
@@ -31,10 +33,16 @@
     }
     
     .logo img { 
-      width:100px; 
-      height:50px; 
-      margin-right:15px; 
-      border-radius:8px; 
+      width:110px; 
+      height:55px; 
+      margin-right:20px; 
+      border-radius:12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    .logo img:hover {
+      transform: scale(1.05);
     }
     
     .logo-text { 
@@ -44,14 +52,17 @@
     }
     
     .logo-text strong { 
-      font-size:18px; 
+      font-size:22px; 
       color:#2c3e50;
+      font-weight: 700;
+      letter-spacing: -0.5px;
     }
     
     .logo-text span { 
-      font-size:14px; 
-      opacity:0.7; 
-      color:#7f8c8d;
+      font-size:15px; 
+      opacity:0.8; 
+      color:#6c757d;
+      font-weight: 400;
     }
     
     .controls { 
@@ -62,25 +73,43 @@
     }
     
     button.ctrl { 
-      padding:8px 15px; 
+      padding:12px 20px; 
       border:none; 
-      border-radius:6px; 
+      border-radius:10px; 
       cursor:pointer; 
-      font-size:13px; 
+      font-size:14px; 
       color:white; 
-      font-weight:500;
-      transition:all 0.3s ease;
+      font-weight:600;
+      transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    button.ctrl::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+    
+    button.ctrl:hover::before {
+      left: 100%;
     }
     
     button.ctrl:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     }
     
-    .export{background:#27ae60;} 
-    .print{background:#2980b9;} 
-    .refresh{background:#f39c12;}
-    .back{background:#8e44ad;} /* Purple color for back button */
+    .export{background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);} 
+    .print{background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);} 
+    .refresh{background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);}
+    .back{background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);}
     
     .status { 
       display:flex; 
@@ -101,157 +130,305 @@
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
 
-    /* Navigation breadcrumb */
+    /* Enhanced Navigation breadcrumb */
     .breadcrumb {
-      margin: 0 20px 10px 20px;
-      padding: 10px 15px;
-      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
-      border-radius: 8px;
-      font-size: 14px;
-      color: #000;
-      border-left: 4px solid #3498db;
+      margin: 0 30px 15px 30px;
+      padding: 18px 25px;
+      background: linear-gradient(135deg,#f5f5f5 0%, #dcdcdc 30%, #b0b0b0 70%, #707070 100%);
+      border-radius: 15px;
+      font-size: 15px;
+      color: #495057;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      
+      backdrop-filter: blur(10px);
+    }
+    
+    .breadcrumb::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.9) 30%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1;
+      position: relative;
+    }
+    
+    .breadcrumb-nav .home-icon {
+      font-size: 16px;
+      margin-right: 5px;
     }
     
     .breadcrumb a {
-      color: #3498db;
+      color: #495057;
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      background: rgba(108, 117, 125, 0.1);
+      backdrop-filter: blur(10px);
     }
     
     .breadcrumb a:hover {
-      text-decoration: underline;
+      background: rgba(108, 117, 125, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      color: #2c3e50;
+    }
+    
+    .breadcrumb-separator {
+      color: #6c757d;
+      margin: 0 5px;
+      font-weight: bold;
+    }
+    
+    .breadcrumb-current {
+      color: #2c3e50;
+      font-weight: bold;
+      text-shadow: none;
+    }
+    
+    .breadcrumb-date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 13px;
+      z-index: 1;
+      position: relative;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      padding: 10px 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(44, 62, 80, 0.3);
+      color: #495057;
+      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    }
+    
+    .breadcrumb-date .date-main {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 2px;
+      color: white;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .breadcrumb-date .date-day {
+      opacity: 1;
+      font-size: 13px;
+      text-transform: capitalize;
+      color: white;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
-
-
     .filters{
-      margin:0 20px 20px 20px;
+      margin:0 30px 25px 30px;
       display:flex;
-      gap:15px;
+      gap:20px;
       flex-wrap:wrap;
       align-items:center;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     input[type=text]{
-      padding:10px 12px;
-      border:1px solid #bdc3c7;
-      border-radius:8px;
+      padding:15px 20px;
+      border:2px solid rgba(52, 73, 94, 0.1);
+      border-radius:12px;
       flex:1; 
-      background:#ffffff;
-      font-size:14px;
-      min-width:250px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size:15px;
+      min-width:280px;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
     
     input[type=text]:focus {
       outline:none;
       border-color:#3498db;
-      box-shadow:0 0 0 3px rgba(52,152,219,0.1);
+      box-shadow:0 0 0 4px rgba(52,152,219,0.2);
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 1);
     }
     
     select{
-      padding:10px 12px;
-      border-radius:8px;
-      background:#ffffff;
-      border:1px solid #bdc3c7;
-      font-size:14px;
-      min-width:150px;
+      padding:15px 18px;
+      border-radius:12px;
+      background: rgba(255, 255, 255, 0.9);
+      border:2px solid rgba(52, 73, 94, 0.1);
+      font-size:15px;
+      min-width:180px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 4px rgba(52,152,219,0.2);
+      transform: translateY(-2px);
     }
 
     /* Tabel */
     .table-container{
-      margin:0 20px 20px 20px;
-      background:white;
-      padding:20px;
-      border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      margin:0 30px 30px 30px;
+      background: rgba(255, 255, 255, 0.95);
+      padding:30px;
+      border-radius:20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
       overflow-x:auto;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     table{
       width:100%;
       border-collapse:collapse;
       font-size:14px;
+     
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     
-    th,td{
-      border:1px solid #e8e8e8;
-      padding:12px 8px;
+    td{
+      border:1px solid rgba(52, 73, 94, 0.1);
+      padding:16px 12px;
       text-align:left;
     }
     
-    th{
-      background:#34495e;
-      color:white;
-      cursor:pointer;
-      font-weight:600;
-      position:sticky;
-      top:0;
-      z-index:10;
-    }
-    
-    th:hover {
-      background:#2c3e50;
-    }
-    
-    th.sorted-asc::after{content:" ▲";} 
-    th.sorted-desc::after{content:" ▼";}
-    
-    tr:nth-child(even){background:#f8f9fa;}
-    tr:hover { background:#e3f2fd; }
-    tr.selected { background:#bbdefb !important; border-left: 4px solid #2196f3; }
-    
-    .totals{
-      margin-top:15px;
-      font-weight:bold;
-      font-size:14px;
-      text-align:right;
-      color:#2c3e50;
-    }
+    th {
+  border: 1px solid rgba(52, 73, 94, 0.1);
+  padding: 16px 12px;
+  text-align: left;
+  background: #2c3e50;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  }
+
+th.sorted-asc::after { content: " ▲"; } 
+th.sorted-desc::after { content: " ▼"; }
+
+tr:nth-child(even) { 
+  background: rgba(248, 249, 250, 0.8); 
+}
+
+tbody tr:hover { 
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+  transform: scale(1.01);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+tr.selected { 
+  background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%) !important; 
+  border-left: 5px solid #2196f3; 
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+}
+
+.totals {
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: right;
+  color: #2c3e50;
+}
 
     /* Subtotal Styles */
-    .subtotals {
-      margin-top: 20px;
-      padding: 15px;
-      background: #f1f3f4;
-      border-radius: 8px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .subtotals h4 {
-      margin: 0 0 15px 0;
-      color: #2c3e50;
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    .subtotal-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #e9ecef;
-      font-weight: bold;
-      color: #495057;
-    }
-    
-    .subtotal-row:last-child {
-      border-bottom: none;
-    }
-    
-    .subtotal-label {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    
-    .subtotal-value {
-      color: #2c3e50;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      font-weight: bold;
-    }
+   .subtotals {
+  margin-top: 25px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(248, 249, 250, 0.8) 100%);
+  border-radius: 15px;
+  border: 2px solid rgba(52, 73, 94, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.subtotals h4 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0; /* tetap sama di hover */
+  border-bottom: 2px solid rgba(52, 73, 94, 0.1);
+  font-weight: bold;
+  color: #222;
+  transition: background 0.3s ease, border-radius 0.3s ease;
+}
+
+.subtotal-row:hover {
+  background: rgba(52, 152, 219, 0.1);
+  border-radius: 8px;
+ 
+}
+
+.subtotal-row:last-child {
+  border-bottom: none;
+}
+
+.subtotal-label {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.subtotal-value {
+  color: #2c3e50;
+  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  background: rgba(52, 152, 219, 0.1);
+  padding: 8px 15px;
+  border-radius: 8px;
+}
 
     /* Responsive */
     @media (max-width: 768px) {
+      .breadcrumb {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 15px;
+      }
+      
+      .breadcrumb-date {
+        align-self: flex-end;
+        margin-top: 10px;
+      }
+      
       .filters {
         flex-direction: column;
       }
@@ -292,9 +469,18 @@
       </div>
     </header>
 
-    <!-- Breadcrumb Navigation -->
+    <!-- Enhanced Navigation breadcrumb with date -->
     <div class="breadcrumb" id="breadcrumb">
-      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Raw Material & Packaging
+      <div class="breadcrumb-nav">
+        <span class="home-icon">🏠</span>
+        <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Raw Material & Packaging</span>
+      </div>
+      <div class="breadcrumb-date" id="breadcrumbDate">
+        <div class="date-main" id="currentDate">Loading...</div>
+        <div class="date-day" id="currentDay">Loading...</div>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -330,6 +516,33 @@ let sheetName = 'RAW PACKAGING'; // Raw Material & Packaging sheet
 
 let allRows = [];
 let currentSort = { index: -1, asc: true };
+
+// Function to update current date and time in breadcrumb
+function updateBreadcrumbDate() {
+  const now = new Date();
+  
+  // Indonesian day names
+  const dayNames = [
+    'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'
+  ];
+  
+  // Indonesian month names
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dayName = dayNames[now.getDay()];
+  const day = now.getDate();
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+  
+  // Add calendar icon to the date string
+  const dateString = `📅 ${day} ${month} ${year}`;
+  
+  document.getElementById('currentDate').innerHTML = dateString;
+  document.getElementById('currentDay').innerHTML = dayName;
+}
 
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
@@ -412,8 +625,13 @@ function updateNavigationContext() {
   const returnName = urlParams.get('returnName') || 'Dashboard Utama';
   
   if (returnUrl || document.referrer) {
-    const breadcrumb = document.getElementById('breadcrumb');
-    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Raw Material & Packaging`;
+    const breadcrumbNav = document.querySelector('.breadcrumb-nav');
+    breadcrumbNav.innerHTML = `
+      <span class="home-icon">🏠</span>
+      <a href="#" onclick="goBackToDashboard()">${returnName}</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Raw Material & Packaging</span>
+    `;
   }
 }
 
@@ -594,7 +812,11 @@ function setStatus(st,t){
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   updateNavigationContext();
+  updateBreadcrumbDate();
   loadSheet();
+  
+  // Update date every minute
+  setInterval(updateBreadcrumbDate, 60000);
 });
 
 // Make functions globally accessible
