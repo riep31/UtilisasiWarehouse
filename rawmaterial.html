@@ -17,7 +17,7 @@
       align-items:center; 
       justify-content:flex-start;
       background: linear-gradient(90deg,  #fff 10%, #2c3e50 100%);
-      padding:20px 30px; 
+      padding:20px 20px; 
       color:#2c3e50; 
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       margin-bottom: 25px;
@@ -133,7 +133,7 @@
     /* Enhanced Navigation breadcrumb */
     .breadcrumb {
       margin: 0 30px 15px 30px;
-      padding: 18px 25px;
+      padding: 14px 21px;
       background: linear-gradient(135deg,#f5f5f5 0%, #dcdcdc 30%, #b0b0b0 70%, #707070 100%);
       border-radius: 15px;
       font-size: 15px;
@@ -237,13 +237,13 @@
     }
 
     .filters{
-      margin:0 30px 25px 30px;
+      margin:0 30px 18px 30px;
       display:flex;
       gap:20px;
       flex-wrap:wrap;
       align-items:center;
       background: rgba(255, 255, 255, 0.7);
-      padding: 20px;
+      padding: 12px 21px;
       border-radius: 15px;
       backdrop-filter: blur(10px);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -293,7 +293,7 @@
     .table-container{
       margin:0 30px 30px 30px;
       background: rgba(255, 255, 255, 0.95);
-      padding:30px;
+      padding:21px;
       border-radius:20px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.1);
       overflow-x:auto;
@@ -362,69 +362,68 @@ tr.selected {
 
     /* Subtotal Styles */
    .subtotals {
-  margin-top: 25px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(108, 117, 125, 0.1) 0%, rgba(248, 249, 250, 0.5) 100%);
-  border-radius: 15px;
-  border: 2px solid rgba(33, 37, 41, 0.1);
-  backdrop-filter: blur(8px);
-}
+      margin-top: 25px;
+      padding: 21px;
+      background: rgba(108, 117, 125, 0.2);
+    
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(8px);
+    }
 
-.subtotals h4 {
-  margin: 0 0 20px 0;
-  color: #212529;
-  font-size: 18px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+    .subtotals h4 {
+      margin: 0 0 20px 0;
+      color: #212529;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-.subtotal-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 25px; 
-  border-bottom: 1px solid rgba(73, 80, 87, 0.25);
-  font-weight: bold;
-  color: #343a40;
-  transition: background 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
-  border-radius: 10px;
-}
+    .subtotal-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px; 
+      border-bottom: 1px solid rgba(73, 80, 87, 0.25);
+      font-weight: bold;
+      color: #343a40;
+      transition: background 0.3s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
+      border-radius: 10px;
+    }
 
-.subtotal-row:hover {
-  background: rgba(52, 152, 219, 0.2);
-  
-}
+    .subtotal-row:hover {
+      background: rgba(52, 152, 219, 0.2);
+    }
 
-.subtotal-row:hover .subtotal-label {
-  color: #212529;
-  
-}
+    .subtotal-row:hover .subtotal-label {
+      color: #212529;
+    }
 
-.subtotal-row:last-child {
-  border-bottom: none;
-}
+    .subtotal-row:last-child {
+      border-bottom: none;
+    }
 
-.subtotal-label {
-  font-weight: 700;
-  font-size: 15px;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
-}
+    .subtotal-label {
+      font-weight: 700;
+      font-size: 15px;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
 
-.subtotal-value {
-  color: #212529;
-  font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
-  font-size: 16px;
-  font-weight: bold;
-  background: rgba(52, 58, 64, 0.15);
-  padding: 8px 15px;
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
+    .subtotal-value {
+      color: #212529;
+      font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: bold;
+      background: rgba(52, 58, 64, 0.15);
+      padding: 8px 15px;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+    }
 
-.subtotal-value:hover {
-  background: rgba(52, 58, 64, 0.3);
-}
+    .subtotal-value:hover {
+      background: rgba(52, 58, 64, 0.3);
+    }
 
     /* Responsive */
     @media (max-width: 768px) {
