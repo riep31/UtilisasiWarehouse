@@ -101,29 +101,113 @@
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
 
-    /* Navigation breadcrumb */
+    /* Enhanced Navigation breadcrumb */
     .breadcrumb {
-      margin: 0 20px 10px 20px;
-      padding: 10px 15px;
-      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
-      border-radius: 8px;
-      font-size: 14px;
-      color: #000;
-      border-left: 4px solid #3498db;
+      margin: 0 20px 15px 20px;
+      padding: 14px 21px;
+      background: linear-gradient(135deg,#f5f5f5 0%, #dcdcdc 30%, #b0b0b0 70%, #707070 100%);
+      border-radius: 15px;
+      font-size: 15px;
+      color: #495057;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+    
+    .breadcrumb::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.9) 30%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1;
+      position: relative;
+    }
+    
+    .breadcrumb-nav .home-icon {
+      font-size: 16px;
+      margin-right: 5px;
     }
     
     .breadcrumb a {
-      color: #3498db;
+      color: #495057;
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      background: rgba(108, 117, 125, 0.1);
+      backdrop-filter: blur(10px);
     }
     
     .breadcrumb a:hover {
-      text-decoration: underline;
+      background: rgba(108, 117, 125, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      color: #2c3e50;
+    }
+    
+    .breadcrumb-separator {
+      color: #6c757d;
+      margin: 0 5px;
+      font-weight: bold;
+    }
+    
+    .breadcrumb-current {
+      color: #2c3e50;
+      font-weight: bold;
+      text-shadow: none;
+    }
+    
+    .breadcrumb-date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 13px;
+      z-index: 1;
+      position: relative;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      padding: 10px 15px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(44, 62, 80, 0.3);
+      color: #495057;
+      box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    }
+    
+    .breadcrumb-date .date-main {
+      font-weight: bold;
+      font-size: 15px;
+      margin-bottom: 2px;
+      color: white;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .breadcrumb-date .date-day {
+      opacity: 1;
+      font-size: 13px;
+      text-transform: capitalize;
+      color: white;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     .filters{
-      margin:0 20px 20px 20px;
+      margin:0 20px 5px 20px;
       display:flex;
       gap:15px;
       flex-wrap:wrap;
@@ -133,7 +217,7 @@
     input[type=text]{
       padding:10px 12px;
       border:1px solid #bdc3c7;
-      border-radius:8px;
+      
       flex:1; 
       background:#ffffff;
       font-size:14px;
@@ -143,7 +227,7 @@
     input[type=text]:focus {
       outline:none;
       border-color:#3498db;
-      box-shadow:0 0 0 3px rgba(52,152,219,0.1);
+      box-shadow:0 0 0 3px rgba(52,152,219,0.3);
     }
     
     select{
@@ -157,16 +241,17 @@
 
     /* Mini Alert Table Styles */
     .alert-container {
+      
       margin: 0 20px 20px 20px;
       background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       overflow: hidden;
       
     }
 
     .alert-header {
-      background: linear-gradient(90deg,  #ED441A 50%, #000 100%);
+      background: linear-gradient(90deg, #C41E3A 0%, #FFD700 100%);
       color: #fff;
       padding: 12px 20px;
       font-size: 16px;
@@ -222,7 +307,7 @@
       background:white;
       padding:20px;
       border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+      box-shadow:0 4px 12px rgba(0,0,0,0.5);
       overflow-x:auto;
     }
     
@@ -280,7 +365,6 @@
       margin-top: 20px;
       padding: 15px;
       background: #f1f3f4;
-      border-radius: 8px;
       border: 1px solid #dee2e6;
     }
     
@@ -326,6 +410,18 @@
 
     /* Responsive */
     @media (max-width: 768px) {
+      .breadcrumb {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 15px;
+      }
+      
+      .breadcrumb-date {
+        align-self: flex-end;
+        margin-top: 10px;
+      }
+      
       .filters {
         flex-direction: column;
       }
@@ -366,9 +462,18 @@
       </div>
     </header>
 
-    <!-- Breadcrumb Navigation -->
+    <!-- Enhanced Navigation breadcrumb with date -->
     <div class="breadcrumb" id="breadcrumb">
-      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Finish Goods
+      <div class="breadcrumb-nav">
+        <span class="home-icon">🏠</span>
+        <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Finish Goods</span>
+      </div>
+      <div class="breadcrumb-date" id="breadcrumbDate">
+        <div class="date-main" id="currentDate">Loading...</div>
+        <div class="date-day" id="currentDay">Loading...</div>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -422,6 +527,33 @@ let sheetName = 'STOCK FG'; // Finish Goods sheet
 
 let allRows = [];
 let currentSort = { index: -1, asc: true };
+
+// Function to update current date and time in breadcrumb
+function updateBreadcrumbDate() {
+  const now = new Date();
+  
+  // Indonesian day names
+  const dayNames = [
+    'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'
+  ];
+  
+  // Indonesian month names
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dayName = dayNames[now.getDay()];
+  const day = now.getDate();
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+  
+  // Add calendar icon to the date string
+  const dateString = `📅 ${day} ${month} ${year}`;
+  
+  document.getElementById('currentDate').innerHTML = dateString;
+  document.getElementById('currentDay').innerHTML = dayName;
+}
 
 // Function to get dashboard URL from various sources
 function getDashboardUrl() {
@@ -504,8 +636,13 @@ function updateNavigationContext() {
   const returnName = urlParams.get('returnName') || 'Dashboard Utama';
   
   if (returnUrl || document.referrer) {
-    const breadcrumb = document.getElementById('breadcrumb');
-    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Finish Goods`;
+    const breadcrumbNav = document.querySelector('.breadcrumb-nav');
+    breadcrumbNav.innerHTML = `
+      <span class="home-icon">🏠</span>
+      <a href="#" onclick="goBackToDashboard()">${returnName}</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Finish Goods</span>
+    `;
   }
 }
 
@@ -810,7 +947,11 @@ function setStatus(st,t){
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
   updateNavigationContext();
+  updateBreadcrumbDate();
   loadSheet();
+  
+  // Update date every minute
+  setInterval(updateBreadcrumbDate, 60000);
 });
 
 // Make functions globally accessible
@@ -819,6 +960,6 @@ window.loadSheet = loadSheet;
 window.applyFilters = applyFilters;
 window.exportTable = exportTable;
 window.printTable = printTable;
-</script>
+  </script>
 </body>
 </html>
