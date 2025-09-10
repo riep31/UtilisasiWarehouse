@@ -80,7 +80,7 @@
     .export{background:#27ae60;} 
     .print{background:#2980b9;} 
     .refresh{background:#f39c12;}
-    .back{background:#8e44ad;} /* Purple color for back button */
+    .back{background:#8e44ad;}
     
     .status { 
       display:flex; 
@@ -101,25 +101,112 @@
     .disconnected{background:#e74c3c;} 
     .loading{background:#f1c40f;}
 
-    /* Navigation breadcrumb */
+    /* =========================
+       BREADCRUMB CSS STYLES
+    ========================= */
+    
     .breadcrumb {
-      margin: 0 20px 10px 20px;
-      padding: 10px 15px;
-      background: linear-gradient(90deg,  #8e44ad 20%, #000 100%); 
-      border-radius: 8px;
-      font-size: 14px;
-      color: #000;
-      border-left: 4px solid #3498db;
+        margin: 0 20px 15px 20px;
+        padding: 14px 21px;
+        background: linear-gradient(135deg, #f5f5f5 0%, #dcdcdc 30%, #b0b0b0 70%, #707070 100%);
+        border-radius: 15px;
+        font-size: 15px;
+        color: #495057;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+    
+    .breadcrumb::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 30%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 1;
+        position: relative;
+    }
+    
+    .breadcrumb-nav .home-icon {
+        font-size: 16px;
+        margin-right: 5px;
     }
     
     .breadcrumb a {
-      color: #3498db;
-      text-decoration: none;
-      font-weight: 500;
+        color: #495057;
+        text-decoration: none;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        background: rgba(108, 117, 125, 0.1);
+        backdrop-filter: blur(10px);
     }
     
     .breadcrumb a:hover {
-      text-decoration: underline;
+        background: rgba(108, 117, 125, 0.5);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        color: #2c3e50;
+    }
+    
+    .breadcrumb-separator {
+        color: #6c757d;
+        margin: 0 5px;
+        font-weight: bold;
+    }
+    
+    .breadcrumb-current {
+        color: #2c3e50;
+        font-weight: bold;
+        text-shadow: none;
+    }
+    
+    .breadcrumb-date {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        font-size: 13px;
+        z-index: 1;
+        position: relative;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        padding: 10px 15px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(44, 62, 80, 0.3);
+        color: #495057;
+        box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    }
+    
+    .breadcrumb-date .date-main {
+        font-weight: bold;
+        font-size: 15px;
+        margin-bottom: 2px;
+        color: white;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    .breadcrumb-date .date-day {
+        opacity: 1;
+        font-size: 13px;
+        text-transform: capitalize;
+        color: white;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
     }
 
     /* Sheet Selection Buttons */
@@ -386,6 +473,19 @@
         flex: 1;
         text-align: center;
       }
+      
+      /* Responsive breadcrumb */
+      .breadcrumb {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 15px;
+      }
+      
+      .breadcrumb-date {
+        align-self: flex-end;
+        margin-top: 10px;
+      }
     }
   </style>
 </head>
@@ -411,9 +511,18 @@
       </div>
     </header>
 
-    <!-- Breadcrumb Navigation -->
+    <!-- Navigation Breadcrumb -->
     <div class="breadcrumb" id="breadcrumb">
-      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a> > Rencana Kedatangan Material
+      <div class="breadcrumb-nav">
+        <span class="home-icon">🏠</span>
+        <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Rencana Kedatangan Material</span>
+      </div>
+      <div class="breadcrumb-date" id="breadcrumbDate">
+        <div class="date-main" id="currentDate">Loading...</div>
+        <div class="date-day" id="currentDay">Loading...</div>
+      </div>
     </div>
 
     <!-- Sheet Selection -->
@@ -484,17 +593,17 @@
 let apiKey = 'AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis';
 let spreadsheetId = '1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw';
 
-// Sheet configurations
+// Sheet configurations with proper column mapping
 const sheetConfig = {
   bantul: {
     name: 'BANTUL_KEDATANGAN',
     displayName: 'Bantul',
-    dateColumn: 5 // Column F (0-indexed)
+    dateColumn: 5 // Column F (0-indexed) - for both main table filtering and today's mini table
   },
   sentul: {
     name: 'SENTUL_KEDATANGAN',
     displayName: 'Sentul',
-    dateColumn: 6 // Column G (0-indexed)
+    dateColumn: 6 // Column G (0-indexed) - for both main table filtering and today's mini table
   }
 };
 
@@ -576,6 +685,49 @@ function goBackToDashboard() {
   }
 }
 
+// Update current date and time in breadcrumb
+function updateBreadcrumbDate() {
+  const now = new Date();
+  
+  // Indonesian day names
+  const dayNames = [
+    'minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'
+  ];
+  
+  // Indonesian month names
+  const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  const dayName = dayNames[now.getDay()];
+  const day = now.getDate();
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+  
+  // Add calendar icon to the date string
+  const dateString = `📅 ${day} ${month} ${year}`;
+  
+  // Update DOM elements
+  const currentDateEl = document.getElementById('currentDate');
+  const currentDayEl = document.getElementById('currentDay');
+  
+  if (currentDateEl) currentDateEl.innerHTML = dateString;
+  if (currentDayEl) currentDayEl.innerHTML = dayName;
+  
+  // Set today's date for mini table as well
+  const todayDateEl = document.getElementById('todayDate');
+  if (todayDateEl) {
+    const todayFormatted = now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    todayDateEl.textContent = todayFormatted;
+  }
+}
+
 // Update page title and breadcrumb based on referrer or URL params
 function updateNavigationContext() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -583,19 +735,22 @@ function updateNavigationContext() {
   const returnName = urlParams.get('returnName') || 'Dashboard Utama';
   
   if (returnUrl || document.referrer) {
-    const breadcrumb = document.getElementById('breadcrumb');
-    breadcrumb.innerHTML = `<a href="#" onclick="goBackToDashboard()">${returnName}</a> > Rencana Kedatangan Material`;
+    const breadcrumbNav = document.querySelector('.breadcrumb-nav');
+    if (breadcrumbNav) {
+      breadcrumbNav.innerHTML = `
+        <span class="home-icon">🏠</span>
+        <a href="#" onclick="goBackToDashboard()">${returnName}</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Rencana Kedatangan Material</span>
+      `;
+    }
   }
   
-  // Set today's date
-  const today = new Date();
-  const todayFormatted = today.toLocaleDateString('id-ID', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  document.getElementById('todayDate').textContent = todayFormatted;
+  // Update date immediately
+  updateBreadcrumbDate();
+  
+  // Update date every minute
+  setInterval(updateBreadcrumbDate, 60000);
 }
 
 // Sheet selection function
@@ -613,35 +768,58 @@ function selectSheet(sheetKey) {
   loadSheet();
 }
 
-// Date parsing function
+// Enhanced date parsing function
 function parseDate(dateStr) {
-  if (!dateStr) return null;
+  if (!dateStr || dateStr.trim() === '') return null;
   
-  // Try different date formats
+  // Remove any whitespace
+  dateStr = dateStr.trim();
+  
+  // Try parsing as-is first
   let date = new Date(dateStr);
-  if (isNaN(date)) {
-    // Try DD/MM/YYYY format
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      date = new Date(parts[2], parts[1] - 1, parts[0]);
-    }
-  }
-  if (isNaN(date)) {
-    // Try DD-MM-YYYY format
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      date = new Date(parts[2], parts[1] - 1, parts[0]);
-    }
+  if (!isNaN(date.getTime())) return date;
+  
+  // Try DD/MM/YYYY format
+  let parts = dateStr.split('/');
+  if (parts.length === 3) {
+    // Assume DD/MM/YYYY
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2]);
+    date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) return date;
   }
   
-  return isNaN(date) ? null : date;
+  // Try DD-MM-YYYY format
+  parts = dateStr.split('-');
+  if (parts.length === 3) {
+    // Assume DD-MM-YYYY
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2]);
+    date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  // Try YYYY-MM-DD format
+  if (parts.length === 3) {
+    // Try YYYY-MM-DD
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+    const day = parseInt(parts[2]);
+    date = new Date(year, month, day);
+    if (!isNaN(date.getTime())) return date;
+  }
+  
+  console.warn('Could not parse date:', dateStr);
+  return null;
 }
 
 // Check if date is today
 function isToday(date) {
+  if (!date) return false;
   const today = new Date();
-  return date && 
-         date.getDate() === today.getDate() &&
+  return date.getDate() === today.getDate() &&
          date.getMonth() === today.getMonth() &&
          date.getFullYear() === today.getFullYear();
 }
@@ -718,7 +896,11 @@ async function loadSheet(){
   }
 }
 
+// Enhanced function to render today's mini table with proper filtering
 function renderTodayTable(rows) {
+  console.log('Rendering today table for sheet:', currentSheet);
+  console.log('Using date column index:', sheetConfig[currentSheet].dateColumn);
+  
   const dateColumnIndex = sheetConfig[currentSheet].dateColumn;
   const todayRows = [];
   
@@ -726,12 +908,21 @@ function renderTodayTable(rows) {
     // Add header
     todayRows.push(rows[0]);
     
-    // Filter for today's data
+    // Filter for today's data using the correct column for each sheet
     for (let i = 1; i < rows.length; i++) {
-      const dateStr = rows[i][dateColumnIndex];
+      const row = rows[i];
+      if (!row || row.length <= dateColumnIndex) continue;
+      
+      const dateStr = row[dateColumnIndex];
+      console.log(`Row ${i}, Date string from column ${dateColumnIndex}:`, dateStr);
+      
       const date = parseDate(dateStr);
-      if (isToday(date)) {
-        todayRows.push(rows[i]);
+      if (date) {
+        console.log('Parsed date:', date);
+        if (isToday(date)) {
+          console.log('Found today item:', row);
+          todayRows.push(row);
+        }
       }
     }
   }
@@ -742,6 +933,8 @@ function renderTodayTable(rows) {
   
   const todayItemCount = todayRows.length - 1; // Exclude header
   todayCount.textContent = `${todayItemCount} item kedatangan hari ini`;
+  
+  console.log('Today items found:', todayItemCount);
   
   if (todayItemCount === 0) {
     todayTable.style.display = 'none';
