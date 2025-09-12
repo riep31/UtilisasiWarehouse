@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapping Gudang</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f23;
+      color: #e2e8f0;
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(90deg, #fcfcfc 8%, #6f7aa8 51%, #181b29 100%);
+      border-bottom: 1px solid #2d3748;
+     
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+    }
+     .header-left {
+     display: flex;
+     align-items: center;
+     gap: 20px;
+      }
+    .logo { 
+      width: 110px; 
+      height: 60px; 
+      object-fit: contain;
+      border-radius: 8px;
+      }
+    .header h1 {
+      color: #0d0d15;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+    
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .datetime-display {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      border: 1px solid #4a5568;
+      min-width: 180px;
+      text-align: center;
+    }
+    
+    .datetime-display .date {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    
+    .datetime-display .time {
+      font-size: 0.8rem;
+      color: #a0aec0;
+    }
+    
+    .refresh-btn {
+      background: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid #3182ce;
+    }
+    
+    .refresh-btn:hover {
+      background: #3182ce;
+      transform: translateY(-1px);
+    }
+    
+    .refresh-btn.loading .refresh-icon {
+      animation: spin 1s linear infinite;
+    }
+    
+    .print-btn {
+      background: #38a169;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid #48bb78;
+    }
+    
+    .print-btn:hover {
+      background: #48bb78;
+      transform: translateY(-1px);
+    }
+    
+    .print-btn.loading .print-icon {
+      animation: pulse 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .filters-container {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      
+      margin: 8px 15px 0 15px;
+      padding: 10px;
+      width: auto;
+    }
+    
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .filter-label {
+      color: #f7fafc;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .filter-select {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #e2e8f0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .filter-select:hover {
+      border-color: #63b3ed;
+    }
+    
+    .filter-select:focus {
+      outline: none;
+      border-color: #3182ce;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+    }
+    
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    
+    .apply-filter-btn {
+      background: #38a169;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .apply-filter-btn:hover {
+      background: #48bb78;
+      transform: translateY(-1px);
+    }
+    
+    .clear-filter-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .clear-filter-btn:hover {
+      background: #f56565;
+      transform: translateY(-1px);
+    }
+    
+    .active-filters {
+      margin-top: 16px;
+      padding: 10px;
+      background: #2d3748;
+      border-radius: 10px;
+      border: 1px solid #4a5568;
+      display: none;
+    }
+    
+    .active-filters.show {
+      display: block;
+    }
+    
+    .active-filters h4 {
+      color: #f7fafc;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .filter-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-tag {
+      background: #3182ce;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .main-content {
+      padding: 24px 16px;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    
+    .warehouse-container {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .no-data-message {
+      text-align: center;
+      padding: 40px;
+      color: #a0aec0;
+      font-size: 1rem;
+    }
+    
+    .floor-section {
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .floor-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .floor-title {
+      color: #f7fafc;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-align: center;
+      padding: 6px;
+    }
+    
+    .racking-grid {
+      display: grid;
+      grid-template-columns: repeat(16, 120px);
+      gap: 8px;
+      margin-bottom: 8px;
+      width: max-content;
+      min-width: 2040px;
+      justify-self: center;
+    }
+    
+    .racking-header {
+      background: #48deea;
+      color: #000;
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid #4a5568;
+      height: 30px;
+      width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 4px;
+    }
+    
+    .slot {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #a0aec0;
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      height: 60px;
+      width: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+      hyphens: auto;
+    }
+    
+    .slot:hover {
+      transform: translateY(-2px);
+      border-color: #63b3ed;
+      box-shadow: 0 4px 12px rgba(99, 179, 237, 0.2);
+    }
+    
+    .status-terisi { 
+      background: #404f66;
+      border-color: #344154;
+      color: #fff;
+    }
+    
+    .status-kosong { 
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #fff;
+    }
+    
+    .status-kosong-sheet { 
+      background: #d23e39;
+      border-color: #e53e3e;
+      color: #000;
+    }
+    
+    .detail-panel {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    
+    .detail-panel h3 {
+      color: #f7fafc;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #2d3748;
+      padding-bottom: 8px;
+    }
+    
+    .detail-info p {
+      margin: 10px 0;
+      padding: 6px 0;
+      border-bottom: 1px solid #2d3748;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    
+    .detail-info p:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-info strong {
+      color: #63b3ed;
+      margin-right: 8px;
+    }
+    
+    .status-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+    }
+    
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid #4a5568;
+    }
+    
+    .legend-terisi { background: #404f66; }
+    .legend-kosong { background: #2d3748; }
+    .legend-kosong-sheet { background: #742a2a; }
+    
+    /* TABLET 8.7 INCH*/
+    @media screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: both),
+           screen and (width: 820px) and (height: 1180px),
+           screen and (width: 1180px) and (height: 820px) {
+      
+      .main-content {
+        padding: 16px 12px;
+        max-width: 1px; /* Membatasi lebar maksimum */
+        overflow-x: auto;
+      }
+      
+      .warehouse-container {
+        padding: 12px;
+        overflow-x: auto;
+      }
+      
+      .racking-grid {
+        grid-template-columns: repeat(16, 45px);
+        min-width: 750px;
+        gap: 3px;
+      }
+      
+      .slot {
+        height: 40px;
+        width: 45px;
+        font-size: 0.55rem;
+        padding: 2px 1px;
+      }
+      
+      .racking-header {
+        height: 24px;
+        width: 45px;
+        font-size: 0.6rem;
+        padding: 2px 1px;
+      }
+      
+      .floor-title {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+      
+      .header {
+        padding: 12px;
+      }
+      
+      .header h1 {
+        font-size: 1.2rem;
+      }
+      
+      .logo { 
+        width: 80px; 
+        height: 30px; 
+      }
+      
+      .filters-container {
+        padding: 8px;
+      }
+      
+      .filters-grid {
+        gap: 8px;
+      }
+      
+      .status-legend {
+        gap: 10px;
+        margin-top: 12px;
+      }
+      
+      .legend-item {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+      }
+    }
+
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 1200px) {
+      .main-content {
+        padding: 20px 12px;
+      }
+      
+      .warehouse-container {
+        padding: 16px;
+      }
+      
+      .racking-grid {
+        grid-template-columns: repeat(16, 55px);
+        min-width: 900px;
+        gap: 5px;
+      }
+      
+      .slot {
+        height: 45px;
+        width: 55px;
+        font-size: 0.6rem;
+        padding: 2px 1px;
+      }
+      
+      .racking-header {
+        height: 28px;
+        width: 55px;
+        font-size: 0.65rem;
+        padding: 3px 1px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+      }
+      
+      .header-left {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      
+      .header h1 {
+        font-size: 1.4rem;
+      }
+      
+      .logo { 
+        width: 90px; 
+        height: 32px; 
+      }
+      
+      .header-controls {
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      
+      .refresh-btn, .print-btn {
+        min-width: 120px;
+        justify-content: center;
+      }
+      
+      .datetime-display {
+        min-width: 160px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+      
+      .filters-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .filter-actions {
+        justify-content: center;
+      }
+      
+      .main-content {
+        padding: 16px 10px;
+      }
+      
+      .warehouse-container {
+        padding: 12px;
+        border-radius: 8px;
+      }
+      
+      .racking-grid {
+        grid-template-columns: repeat(16, 50px);
+        min-width: 820px;
+        gap: 4px;
+      }
+      
+      .slot {
+        height: 42px;
+        width: 50px;
+        font-size: 0.55rem;
+        padding: 1px;
+        border-radius: 3px;
+      }
+      
+      .racking-header {
+        height: 26px;
+        width: 50px;
+        font-size: 0.6rem;
+        padding: 2px 1px;
+        border-radius: 3px;
+      }
+      
+      .floor-title {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+      }
+      
+      .status-legend {
+        gap: 12px;
+        margin-top: 16px;
+      }
+      
+      .legend-item {
+        font-size: 0.75rem;
+        padding: 5px 8px;
+      }
+    }
+    
+    /* Desktop centering */
+    @media (min-width: 1201px) {
+      .warehouse-container {
+        justify-content: center;
+      }
+      
+      .floor-section {
+        justify-content: center;
+      }
+      
+      .racking-grid {
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    /* PRINT STYLES */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      .header, .filters-container {
+        display: none !important;
+      }
+      
+      .main-content {
+        padding: 10px !important;
+      }
+      
+      .warehouse-container {
+        background: white !important;
+        border: 1px solid #000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
+      
+      .floor-title {
+        color: black !important;
+        page-break-after: avoid;
+        font-weight: bold !important;
+      }
+      
+      .floor-section {
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+      }
+      
+      .racking-header {
+        background: #e0e0e0 !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      .slot {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      /* Slot kosong (belum ada data) - putih dengan border hitam */
+      .status-kosong {
+        background: white !important;
+        color: black !important;
+      }
+      
+      /* Slot terisi - abu-abu */
+      .status-terisi {
+        background: #d0d0d0 !important;
+        color: black !important;
+      }
+      
+      /* Slot kosong dari sheet - MERAH */
+      .status-kosong-sheet {
+        background: #ff4444 !important;
+        color: white !important;
+        font-weight: bold !important;
+      }
+      
+      .legend-item {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        margin-bottom: 5px !important;
+      }
+      
+      .legend-color {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      .legend-terisi { 
+        background: #d0d0d0 !important; 
+      }
+      
+      .legend-kosong { 
+        background: white !important;
+        border: 2px solid #000 !important;
+      }
+      
+      .legend-kosong-sheet { 
+        background: #ff4444 !important; 
+      }
+      
+      .detail-panel {
+        display: none !important;
+      }
+      
+      /* Pastikan semua warna tercetak */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Company Logo" class="logo">
+    <h1>Warehouse Mapping System</h1>
+  </div>
+  
+  <div class="header-controls">
+    <div class="datetime-display">
+      <div class="date" id="current-date"></div>
+      <div class="time" id="current-time"></div>
+    </div>
+    <button class="refresh-btn" onclick="refreshData()">
+      <span class="refresh-icon">↻</span>
+      Refresh
+    </button>
+    <button class="print-btn" onclick="printPage()">
+      <span class="print-icon">🖨</span>
+      Print
+    </button>
+  </div>
+</header>
+
+<div class="filters-container">
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label class="filter-label" for="warehouse-filter">Warehouse Location</label>
+      <select class="filter-select" id="warehouse-filter">
+        <option value="">All Warehouses</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label class="filter-label" for="storage-filter">Storage Option</label>
+      <select class="filter-select" id="storage-filter">
+        <option value="">All Storage Options</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label class="filter-label" for="zona-filter">Zona</label>
+      <select class="filter-select" id="zona-filter">
+        <option value="">All Zones</option>
+      </select>
+    </div>
+    
+    <div class="filter-actions">
+      <button class="apply-filter-btn" onclick="applyFilters()">Apply Filters</button>
+      <button class="clear-filter-btn" onclick="clearFilters()">Clear All</button>
+    </div>
+  </div>
+  
+  <div class="active-filters" id="active-filters">
+    <h4>Active Filters:</h4>
+    <div class="filter-tags" id="filter-tags"></div>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="warehouse-container">
+    <div id="warehouse"></div>
+    
+    <div class="status-legend">
+      <div class="legend-item">
+        <div class="legend-color legend-terisi"></div>
+        <span>Racking Terisi</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-kosong"></div>
+        <span>Racking Belum Ada Data</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-kosong-sheet"></div>
+        <span>Racking Kosong</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Racking Information</h3>
+    <div class="detail-info" id="info">
+      <p>Click any slot to view detailed information</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// === CONFIGURATION ===
+const sheetID = "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw";
+const sheetName = "MAPPING";
+const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis";
+const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}!A1:K1000?key=${apiKey}`;
+
+// === DATA STORAGE ===
+let allSheetData = []; 
+let filteredData = []; 
+let currentFilters = {
+  warehouse: '',
+  storage: '',
+  zona: ''
+};
+
+// All possible racks A-Z for maximum flexibility
+const ALL_RACKS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+// Update date and time
+function updateDateTime() {
+  const now = new Date();
+  
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  const dayName = days[now.getDay()];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  document.getElementById('current-date').textContent = `${dayName}, ${day} ${month} ${year}`;
+  document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds} WIB`;
+}
+
+// Convert slot to code
+function generateKode(racking, floor, raws) {
+  const rawsOrder = { "BELAKANG": 1, "TENGAH": 2, "DEPAN": 3 };
+  const rawsUpper = (raws || "").toUpperCase().trim();
+  const offset = (3 - floor) * 3;
+  const index = offset + (rawsOrder[rawsUpper] || 0);
+  const rakLabel = racking.replace("Racking ", "").trim();
+  return rakLabel + index;
+}
+
+// Get unique values for dropdown filters
+function getUniqueValues(data, field) {
+  const values = data
+    .map(item => item[field])
+    .filter(value => value && value.trim() !== '')
+    .filter((value, index, array) => array.indexOf(value) === index)
+    .sort();
+  return values;
+}
+
+// Populate filter dropdowns
+function populateFilters() {
+  const warehouseSelect = document.getElementById('warehouse-filter');
+  const storageSelect = document.getElementById('storage-filter');
+  const zonaSelect = document.getElementById('zona-filter');
+  
+  // Clear existing options
+  warehouseSelect.innerHTML = '<option value="">All Warehouses</option>';
+  storageSelect.innerHTML = '<option value="">All Storage Options</option>';
+  zonaSelect.innerHTML = '<option value="">All Zones</option>';
+  
+  // Get unique values from allSheetData
+  const warehouses = getUniqueValues(allSheetData, 'warehouse');
+  const storages = getUniqueValues(allSheetData, 'storage');
+  const zonas = getUniqueValues(allSheetData, 'zona');
+  
+  // Populate options
+  warehouses.forEach(warehouse => {
+    const option = document.createElement('option');
+    option.value = warehouse;
+    option.textContent = warehouse;
+    warehouseSelect.appendChild(option);
+  });
+  
+  storages.forEach(storage => {
+    const option = document.createElement('option');
+    option.value = storage;
+    option.textContent = storage;
+    storageSelect.appendChild(option);
+  });
+  
+  zonas.forEach(zona => {
+    const option = document.createElement('option');
+    option.value = zona;
+    option.textContent = zona;
+    zonaSelect.appendChild(option);
+  });
+  
+  console.log('✓ Filters populated:', {
+    warehouses: warehouses.length,
+    storages: storages.length, 
+    zonas: zonas.length
+  });
+}
+
+// Get display racks for 16 columns - always show 16 columns
+function getDisplayRacks() {
+  const displayRacks = [];
+  
+  if (!hasActiveFilters()) {
+    // No filters applied, show default A-P (16 columns)
+    return "ABCDEFGHIJKLMNOP".split("");
+  }
+  
+  if (filteredData.length === 0) {
+    // Filter applied but no data, show 16 empty columns
+    return new Array(16).fill('');
+  }
+  
+  // Get unique racks from filtered data and sort them
+  const availableRacks = [...new Set(filteredData.map(item => {
+    const rackLabel = item.racking.replace("Racking ", "").trim();
+    return rackLabel;
+  }))].sort();
+  
+  // Always return exactly 16 slots, fill with available racks first, then empty
+  for (let i = 0; i < 16; i++) {
+    if (i < availableRacks.length) {
+      displayRacks.push(availableRacks[i]);
+    } else {
+      displayRacks.push('');
+    }
+  }
+  
+  return displayRacks;
+}
+
+// Apply filters
+function applyFilters() {
+  const warehouseFilter = document.getElementById('warehouse-filter').value;
+  const storageFilter = document.getElementById('storage-filter').value;
+  const zonaFilter = document.getElementById('zona-filter').value;
+  
+  // Update current filters
+  currentFilters = {
+    warehouse: warehouseFilter,
+    storage: storageFilter,
+    zona: zonaFilter
+  };
+  
+  // Filter data from allSheetData
+  filteredData = allSheetData.filter(item => {
+    const matchWarehouse = !warehouseFilter || item.warehouse === warehouseFilter;
+    const matchStorage = !storageFilter || item.storage === storageFilter;
+    const matchZona = !zonaFilter || item.zona === zonaFilter;
+    
+    return matchWarehouse && matchStorage && matchZona;
+  });
+  
+  // Update active filters display
+  updateActiveFiltersDisplay();
+  
+  // Re-render grid with filtered data
+  renderGrid();
+  
+  console.log('✓ Filters applied:', {
+    total: allSheetData.length,
+    filtered: filteredData.length,
+    filters: currentFilters
+  });
+}
+
+// Clear all filters
+function clearFilters() {
+  document.getElementById('warehouse-filter').value = '';
+  document.getElementById('storage-filter').value = '';
+  document.getElementById('zona-filter').value = '';
+  
+  currentFilters = {
+    warehouse: '',
+    storage: '',
+    zona: ''
+  };
+  
+  filteredData = []; // Reset to empty to show default grid
+  updateActiveFiltersDisplay();
+  renderGrid();
+  
+  console.log('✓ Filters cleared - showing default A-P grid');
+}
+
+// Update active filters display
+function updateActiveFiltersDisplay() {
+  const activeFiltersDiv = document.getElementById('active-filters');
+  const filterTagsDiv = document.getElementById('filter-tags');
+  
+  const activeTags = [];
+  
+  if (currentFilters.warehouse) {
+    activeTags.push(`Warehouse: ${currentFilters.warehouse}`);
+  }
+  if (currentFilters.storage) {
+    activeTags.push(`Storage: ${currentFilters.storage}`);
+  }
+  if (currentFilters.zona) {
+    activeTags.push(`Zone: ${currentFilters.zona}`);
+  }
+  
+  if (activeTags.length > 0) {
+    activeFiltersDiv.classList.add('show');
+    filterTagsDiv.innerHTML = activeTags
+      .map(tag => `<span class="filter-tag">${tag}</span>`)
+      .join('');
+  } else {
+    activeFiltersDiv.classList.remove('show');
+  }
+}
+
+// Load data from Google Sheets API
+async function loadData() {
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+
+    const rows = json.values;
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+
+    allSheetData = dataRows.map(r => {
+      const rowObj = {};
+      headers.forEach((h, i) => rowObj[h] = r[i] || "");
+      return {
+        warehouse: rowObj["Warehouse Location"],
+        storage: rowObj["Storage Option"],
+        zona: rowObj["Zona"],
+        rackingCode: rowObj["Racking Code"],
+        racking: rowObj["Racking"],
+        floor: Number(rowObj["Floor"]),
+        raws: rowObj["Raws"],
+        barang: (rowObj["Item Description"] || "").split("-").slice(0,2).join("-").trim(),
+        qty: rowObj["Qty"],
+        expired: rowObj["Expired Date"],
+        status: (rowObj["Status"] || "").toLowerCase()
+      };
+    });
+
+    // Populate filter dropdowns with all data
+    populateFilters();
+    
+    // Render default grid initially (filteredData is empty, will show A-P)
+    renderGrid();
+    
+    console.log('✓ Data loaded successfully:', allSheetData.length, 'items');
+  } catch (error) {
+    console.error('✗ Error loading data:', error);
+    document.getElementById('info').innerHTML = 
+      '<p style="color: #e53e3e;">Failed to load data. Please check connection and try again.</p>';
+  }
+}
+
+// Refresh data with animation
+async function refreshData() {
+  const btn = document.querySelector('.refresh-btn');
+  btn.classList.add('loading');
+  
+  try {
+    await loadData();
+    setTimeout(() => {
+      btn.classList.remove('loading');
+    }, 500);
+  } catch (error) {
+    btn.classList.remove('loading');
+  }
+}
+
+// Check if any filter is active
+function hasActiveFilters() {
+  return currentFilters.warehouse || currentFilters.storage || currentFilters.zona;
+}
+
+// Render warehouse grid - ALWAYS 16 columns
+function renderGrid() {
+  const warehouse = document.getElementById("warehouse");
+  warehouse.innerHTML = "";
+  
+  const isFiltered = hasActiveFilters();
+  const displayRacks = getDisplayRacks();
+  
+  // If filter is applied but no data found
+  if (isFiltered && filteredData.length === 0) {
+    warehouse.innerHTML = '<div class="no-data-message">No data found matching the current filters.</div>';
+    return;
+  }
+  
+  const floors = [
+    { title: "Floor 3", rows: [1, 2, 3] },
+    { title: "Floor 2", rows: [4, 5, 6] },
+    { title: "Floor 1", rows: [7, 8, 9] }
+  ];
+
+  floors.forEach(floor => {
+    const floorSection = document.createElement("div");
+    floorSection.className = "floor-section";
+    
+    const floorTitle = document.createElement("div");
+    floorTitle.className = "floor-title";
+    floorTitle.textContent = floor.title;
+    floorSection.appendChild(floorTitle);
+    
+    // Racking headers - always 16 columns
+    const headerGrid = document.createElement("div");
+    headerGrid.className = "racking-grid";
+    
+    displayRacks.forEach(rak => {
+      const headerDiv = document.createElement("div");
+      headerDiv.className = "racking-header";
+      if (rak) {
+        headerDiv.textContent = `Rack ${rak}`;
+        headerDiv.style.visibility = 'visible';
+      } else {
+        headerDiv.textContent = '';
+        headerDiv.style.visibility = 'hidden';
+      }
+      headerGrid.appendChild(headerDiv);
+    });
+    floorSection.appendChild(headerGrid);
+
+    // Render slot rows for this floor - always 16 columns
+    floor.rows.forEach(rowNum => {
+      const rowGrid = document.createElement("div");
+      rowGrid.className = "racking-grid";
+      
+      displayRacks.forEach(rak => {
+        const div = document.createElement("div");
+        div.className = "slot";
+
+        if (rak) {
+          const kode = rak + rowNum;
+          
+          // Find slot data if filter is applied
+          let slotData = null;
+          if (isFiltered) {
+            slotData = filteredData.find(d => generateKode(d.racking, d.floor, d.raws) === kode);
+          }
+
+          if (slotData && slotData.barang) {
+            div.textContent = slotData.barang;
+            
+            // Check status from column K (Status)
+            if (slotData.status && slotData.status.toLowerCase().trim() === "kosong") {
+              div.classList.add("status-kosong-sheet");
+            } else {
+              div.classList.add("status-terisi");
+            }
+            
+            div.title = `${kode} | ${slotData.barang} (Qty: ${slotData.qty})`;
+            div.onclick = () => showDetail(kode, slotData);
+          } else {
+            div.textContent = kode;
+            div.classList.add("status-kosong");
+            div.onclick = () => showDetail(kode, null);
+          }
+        } else {
+          // Empty column - hide but maintain grid structure
+          div.style.visibility = 'hidden';
+          div.classList.add("status-kosong");
+        }
+
+        rowGrid.appendChild(div);
+      });
+      
+      floorSection.appendChild(rowGrid);
+    });
+    
+    warehouse.appendChild(floorSection);
+  });
+  
+  const visibleRacks = displayRacks.filter(rack => rack !== '');
+  console.log(`✓ Grid rendered with 16 columns, showing racks:`, visibleRacks.join(', '));
+}
+
+// Show slot details
+function showDetail(kode, data) {
+  const info = document.getElementById("info");
+  if (data) {
+    let statusIcon = "✓";
+    let statusText = "TERISI";
+    
+    // Check if status from sheet is "KOSONG"
+    if (data.status && data.status.toLowerCase().trim() === "kosong") {
+      statusText = "KOSONG (SHEET)";
+      statusIcon = "⚠";
+    }
+    
+    info.innerHTML = `
+      <p><strong>Slot:</strong> ${kode}</p>
+      <p><strong>Warehouse:</strong> ${data.warehouse}</p>
+      <p><strong>Storage:</strong> ${data.storage}</p>
+      <p><strong>Zone:</strong> ${data.zona}</p>
+      <p><strong>Racking:</strong> ${data.racking}</p>
+      <p><strong>Floor:</strong> ${data.floor}</p>
+      <p><strong>Position:</strong> ${data.raws}</p>
+      <p><strong>Item:</strong> ${data.barang}</p>
+      <p><strong>Quantity:</strong> ${data.qty}</p>
+      <p><strong>Expired:</strong> ${data.expired}</p>
+      <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
+    `;
+  } else {
+    info.innerHTML = `
+      <p><strong>Slot:</strong> ${kode}</p>
+      <p><strong>Status:</strong> ✗ KOSONG</p>
+    `;
+  }
+}
+
+// Print function
+function printPage() {
+  const btn = document.querySelector('.print-btn');
+  btn.classList.add('loading');
+  
+  try {
+    // Add print title to document
+    const originalTitle = document.title;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID');
+    const timeStr = now.toLocaleTimeString('id-ID');
+    
+    document.title = `Warehouse Mapping - ${dateStr} ${timeStr}`;
+    
+    // Trigger browser print dialog
+    window.print();
+    
+    // Restore original title
+    document.title = originalTitle;
+    
+    console.log('✓ Print dialog opened');
+    
+  } catch (error) {
+    console.error('✗ Error opening print dialog:', error);
+    alert('Failed to open print dialog. Please try again.');
+  } finally {
+    setTimeout(() => {
+      btn.classList.remove('loading');
+    }, 500);
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+  loadData();
+});
+</script>
+
+</body>
+</html>
