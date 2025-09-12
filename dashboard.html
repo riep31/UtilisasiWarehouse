@@ -896,6 +896,10 @@
           <span class="nav-icon">📋</span>
           <span class="nav-text">Rencana Kedatangan</span>
         </a>
+        <a href="mapping.html" class="nav-item" data-tooltip="Warehouse Mapping Visualization" data-roles="administrator,manager,supervisor,operator,viewer">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-text">Warehouse Mapping Visualization</span>
+        </a>
         <a href="users.html" class="nav-item" data-tooltip="User Management" data-roles="administrator">
           <span class="nav-icon">👥</span>
           <span class="nav-text">User Management</span>
@@ -994,6 +998,12 @@
             <p>Incoming Material Schedule for Inventory Control and Warehouse Space Utilization</p>
           </div>
 
+          <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='mapping.html'">
+            <div class="card-icon">🗺️</div>
+            <h3>Warehouse Mapping Visualization</h3>
+            <p>Peta Gudang Interaktif</p>
+          </div>
+          
           <div class="card" data-roles="administrator" onclick="window.location.href='users.html'">
             <div class="card-icon">👥</div>
             <h3>User Management</h3>
@@ -1038,22 +1048,22 @@
       manager: {
         level: 4,
         color: 'manager',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'rencanakedatangan', 'salah']
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'rencanakedatangan', 'salah','mapping']
       },
       supervisor: {
         level: 3,
         color: 'supervisor',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'salah']
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'kapasitasgudang', 'cardstock', 'salah','mapping']
       },
       operator: {
         level: 2,
         color: 'operator',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'cardstock']
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods', 'cardstock','mapping']
       },
       viewer: {
         level: 1,
         color: 'viewer',
-        permissions: ['dashboard', 'rawmaterial', 'finishgoods','kapasitasgudang','rencanakedatangan']
+        permissions: ['dashboard', 'rawmaterial', 'finishgoods','kapasitasgudang','rencanakedatangan','mapping']
       },
       guest: {
         level: 0.5,  
