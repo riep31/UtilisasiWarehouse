@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapping Floor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f23;
+      color: #e2e8f0;
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(90deg, #fcfcfc 8%, #6f7aa8 51%, #181b29 100%);
+      border-bottom: 1px solid #2d3748;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .logo { 
+      width: 110px; 
+      height: 60px; 
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    
+    .header h1 {
+      color: #0d0d15;
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+    
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .datetime-display {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      border: 1px solid #4a5568;
+      min-width: 180px;
+      text-align: center;
+    }
+    
+    .datetime-display .date {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    
+    .datetime-display .time {
+      font-size: 0.8rem;
+      color: #a0aec0;
+    }
+    
+    .refresh-btn {
+      background: #2b6cb0;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid #3182ce;
+    }
+    
+    .refresh-btn:hover {
+      background: #3182ce;
+      transform: translateY(-1px);
+    }
+    
+    .refresh-btn.loading .refresh-icon {
+      animation: spin 1s linear infinite;
+    }
+    
+    .print-btn {
+      background: #38a169;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      border: 1px solid #48bb78;
+    }
+    
+    .print-btn:hover {
+      background: #48bb78;
+      transform: translateY(-1px);
+    }
+    
+    .print-btn.loading .print-icon {
+      animation: pulse 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    /* Navigation Buttons */
+    .nav-container {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      margin: 8px 15px;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+      background: #6b46c1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      border: 2px solid #7c3aed;
+      min-width: 160px;
+      justify-content: center;
+    }
+    
+    .nav-btn:hover {
+      background: #7c3aed;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+    
+    .nav-btn.active {
+      background: #8b5cf6;
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+    
+    .nav-btn:active {
+      transform: translateY(0);
+    }
+    
+    .main-content {
+      padding: 18px 16px;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    
+    .warehouse-container {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      padding: 10px;
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .grid-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .row-label {
+      color: #a0aec0;
+      font-size: 0.7rem;
+      font-weight: 500;
+      margin-bottom: 3px;
+      text-align: center;
+      padding: 1px;
+      opacity: 0.8;
+    }
+    
+    .racking-grid {
+      display: grid;
+      grid-template-columns: repeat(17, 80px);
+      gap: 3px;
+      margin-bottom: 3px;
+      width: max-content;
+      justify-self: center;
+      justify-content: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .racking-header {
+      background: #48deea;
+      color: #000;
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: 1px solid #4a5568;
+      height: 28px;
+      width: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 4px;
+    }
+    
+    .slot {
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      color: #a0aec0;
+      padding: 4px 2px;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 500;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      height: 50px;
+      width: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      word-break: break-all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+      hyphens: auto;
+    }
+    
+    .slot:hover {
+      transform: translateY(-2px);
+      border-color: #63b3ed;
+      box-shadow: 0 4px 12px rgba(99, 179, 237, 0.2);
+    }
+    
+    .status-terisi { 
+      background: #404f66;
+      border-color: #344154;
+      color: #fff;
+    }
+    
+    .status-kosong { 
+      background: #1d1d34;
+      border-color: #4a5568;
+      color: #1d1d34;
+    }
+    
+    .status-kosong-sheet { 
+      background: #d23e39;
+      border-color: #e53e3e;
+      color: #000;
+    }
+    
+    .detail-panel {
+      background: #1a1a2e;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    
+    .detail-panel h3 {
+      color: #f7fafc;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #2d3748;
+      padding-bottom: 8px;
+    }
+    
+    .detail-info p {
+      margin: 10px 0;
+      padding: 6px 0;
+      border-bottom: 1px solid #2d3748;
+      color: #e2e8f0;
+      font-size: 0.9rem;
+    }
+    
+    .detail-info p:last-child {
+      border-bottom: none;
+    }
+    
+    .detail-info strong {
+      color: #63b3ed;
+      margin-right: 8px;
+    }
+    
+    .status-legend {
+      display: flex;
+      justify-content: center;
+      gap: 26px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #2d3748;
+      border: 1px solid #4a5568;
+      font-size: 0.8rem;
+      color: #e2e8f0;
+    }
+    
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #4a5568;
+    }
+    
+    .legend-terisi { background: #404f66; }
+    .legend-kosong { background: #1d1d34; }
+    .legend-kosong-sheet { background: #742a2a; }
+    
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 1400px) {
+      .racking-grid { grid-template-columns: repeat(17, 60px); gap: 2px; }
+      .slot { height: 45px; width: 60px; font-size: 0.6rem; padding: 2px 1px; }
+      .racking-header { height: 26px; width: 60px; font-size: 0.65rem; padding: 3px 1px; }
+    }
+    
+    @media (max-width: 1100px) {
+      .racking-grid { grid-template-columns: repeat(17, 45px); gap: 2px; }
+      .slot { height: 40px; width: 45px; font-size: 0.55rem; padding: 1px; }
+      .racking-header { height: 24px; width: 45px; font-size: 0.6rem; padding: 2px 1px; }
+    }
+    
+    @media (max-width: 768px) {
+      .header { flex-direction: column; text-align: center; padding: 16px; }
+      .header-left { flex-direction: column; gap: 12px; text-align: center; }
+      .header h1 { font-size: 1.4rem; }
+      .logo { width: 90px; height: 32px; }
+      .header-controls { gap: 12px; flex-wrap: wrap; }
+      .refresh-btn, .print-btn { min-width: 120px; justify-content: center; }
+      .datetime-display { min-width: 160px; padding: 8px 12px; font-size: 0.8rem; }
+      .main-content { padding: 16px 10px; }
+      .warehouse-container { padding: 8px; border-radius: 8px; }
+      .nav-buttons { gap: 10px; }
+      .nav-btn { min-width: 140px; padding: 10px 16px; font-size: 0.85rem; }
+
+      .racking-grid { grid-template-columns: repeat(17, 32px); gap: 1px; }
+      .slot { height: 36px; width: 32px; font-size: 0.4rem; padding: 1px; border-radius: 3px; }
+      .racking-header { height: 22px; width: 32px; font-size: 0.5rem; padding: 1px; border-radius: 3px; }
+      .row-label { font-size: 0.6rem; margin-bottom: 2px; }
+      .status-legend { gap: 12px; margin-top: 16px; }
+      .legend-item { font-size: 0.75rem; padding: 5px 8px; }
+    }
+  
+    @media (min-width: 1600px) {
+      .main-content { padding: 24px 40px; max-width: 1920px; margin: 0 auto; }
+      .warehouse-container { padding: 20px; max-width: 1880px; margin: 0 auto; }
+      
+      .racking-grid { grid-template-columns: repeat(17, 90px); gap: 5px; }
+      
+      .slot { height: 55px; width: 90px; font-size: 0.7rem; padding: 5px 3px; line-height: 1.3; }
+      .racking-header { height: 32px; width: 90px; font-size: 0.8rem; padding: 5px 3px; }
+      .row-label { font-size: 0.75rem; margin-bottom: 4px; }
+    }
+
+    /* PRINT STYLES */
+    @media print {
+      body { background: white !important; color: black !important; }
+      .header, .nav-container { display: none !important; }
+      .main-content { padding: 5px !important; }
+      .warehouse-container { background: white !important; border: 1px solid #000 !important; border-radius: 0 !important; }
+      .row-label { color: black !important; font-weight: bold !important; }
+      .racking-header { background: #e0e0e0 !important; color: black !important; border: 1px solid #000 !important; }
+     
+      .status-kosong { background: white !important; color: black !important; }
+      .status-terisi { background: #d0d0d0 !important; color: black !important; }
+      .status-kosong-sheet { background: #ff4444 !important; color: white !important; font-weight: bold !important; }
+      .legend-item { background: white !important; color: black !important; border: 1px solid #000 !important; }
+      .legend-terisi { background: #d0d0d0 !important; }
+      .legend-kosong { background: white !important; border: 2px solid #000 !important; }
+      .legend-kosong-sheet { background: #ff4444 !important; }
+      .detail-panel { display: none !important; }
+      .slot { border: 1px solid #000 !important; font-size: 0.4rem !important; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Company Logo" class="logo">
+    <h1>Warehouse Mapping System</h1>
+  </div>
+  
+  <div class="header-controls">
+    <div class="datetime-display">
+      <div class="date" id="current-date"></div>
+      <div class="time" id="current-time"></div>
+    </div>
+    <button class="refresh-btn" onclick="refreshData()">
+      <span class="refresh-icon">🔄</span>
+      Refresh
+    </button>
+    <button class="print-btn" onclick="printPage()">
+      <span class="print-icon">🖨️</span>
+      Print
+    </button>
+  </div>
+</header>
+
+<!-- Navigation Container -->
+<div class="nav-container">
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="navigateToRack()">
+      <span>📦</span>
+      Mapping Rack
+    </button>
+    <button class="nav-btn active" onclick="navigateToFloor()">
+      <span>🏢</span>
+      Mapping Floor
+    </button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="warehouse-container">
+    <div id="warehouse"></div>
+    
+    <div class="status-legend">
+      <div class="legend-item">
+        <div class="legend-color legend-terisi"></div>
+        <span>Racking Terisi</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-kosong"></div>
+        <span>Tidak Ada Racking</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color legend-kosong-sheet"></div>
+        <span>Racking Kosong</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>Racking Information</h3>
+    <div class="detail-info" id="info">
+      <p>Click any slot to view detailed information</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// === CONFIGURATION ===
+const sheetID = "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw";
+const sheetName = "MAPPINGFLOOR";
+const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis";
+const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}!A1:K1000?key=${apiKey}`;
+
+// === DATA STORAGE ===
+let allSheetData = []; 
+
+// Navigation Functions
+function navigateToRack() {
+  // Navigate back to rack mapping page
+  window.location.href = 'https://riep31.github.io/UtilisasiWarehouse/Mapping.html';
+}
+
+function navigateToFloor() {
+  // This is the current page - just update UI
+  updateNavButtons('floor');
+  console.log('✅ Already on Mapping Floor page');
+}
+
+function updateNavButtons(activeButton) {
+  const buttons = document.querySelectorAll('.nav-btn');
+  buttons.forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  if (activeButton === 'rack') {
+    buttons[0].classList.add('active');
+  } else if (activeButton === 'floor') {
+    buttons[1].classList.add('active');
+  }
+}
+
+// Update date and time
+function updateDateTime() {
+  const now = new Date();
+  
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  const dayName = days[now.getDay()];
+  const day = now.getDate();
+  const month = months[now.getMonth()];
+  const year = now.getFullYear();
+  
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  
+  document.getElementById('current-date').textContent = `${dayName}, ${day} ${month} ${year}`;
+  document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds} WIB`;
+}
+
+// Convert slot to code
+function generateKode(racking, floor, raws) {
+  // Direct mapping: raws column value (1,2,3,4) becomes slot suffix
+  const rawsNumber = Number(raws) || 0;
+  const rakLabel = racking.replace("Racking ", "").trim();
+  return rakLabel + rawsNumber;
+}
+
+// Load data from Google Sheets API
+async function loadData() {
+  try {
+    console.log('📡 Loading data from Google Sheets...');
+    const res = await fetch(url);
+    const json = await res.json();
+
+    const rows = json.values;
+    if (!rows || rows.length < 2) {
+      throw new Error('No data found in sheet');
+    }
+    
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+
+    allSheetData = dataRows.map(r => {
+      const rowObj = {};
+      headers.forEach((h, i) => rowObj[h] = r[i] || "");
+      return {
+        warehouse: rowObj["Warehouse Location"] || "",
+        storage: rowObj["Storage Option"] || "",
+        zona: rowObj["Zona"] || "",
+        rackingCode: rowObj["Racking Code"] || "",
+        racking: rowObj["Racking"] || "",
+        floor: Number(rowObj["Floor"]) || 0,
+        raws: rowObj["Raws"] || "",
+        barang: (rowObj["Item Description"] || "").split("-").slice(0,2).join("-").trim(),
+        qty: rowObj["Qty"] || "",
+        expired: rowObj["Expired Date"] || "",
+        status: (rowObj["Status"] || "").toLowerCase()
+      };
+    });
+
+    // Render grid
+    renderGrid();
+    
+    console.log('📊 Data loaded successfully:', allSheetData.length, 'items');
+  } catch (error) {
+    console.error('❌ Error loading data:', error);
+    document.getElementById('info').innerHTML = 
+      '<p style="color: #e53e3e;">Failed to load data. Please check connection and try again.</p>';
+  }
+}
+
+// Refresh data with animation
+async function refreshData() {
+  const btn = document.querySelector('.refresh-btn');
+  btn.classList.add('loading');
+  
+  try {
+    await loadData();
+    setTimeout(() => {
+      btn.classList.remove('loading');
+    }, 500);
+  } catch (error) {
+    btn.classList.remove('loading');
+  }
+}
+
+// Render warehouse grid with AB-AA-Z-Y-X-W-V-U-T-S-R-Q-P-O-N-M-L layout (AB on left, L on right)
+function renderGrid() {
+  const warehouse = document.getElementById("warehouse");
+  warehouse.innerHTML = "";
+  
+  // Define racks from AB to L (reversed order - AB is now leftmost)
+  const displayRacks = ["AB", "AA", "Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N", "M", "L"];
+  
+  const gridSection = document.createElement("div");
+  gridSection.className = "grid-section";
+  
+  // Create header row
+  const headerGrid = document.createElement("div");
+  headerGrid.className = "racking-grid";
+  
+  displayRacks.forEach(rak => {
+    const headerDiv = document.createElement("div");
+    headerDiv.className = "racking-header";
+    headerDiv.textContent = rak;
+    headerGrid.appendChild(headerDiv);
+  });
+  gridSection.appendChild(headerGrid);
+
+  // Create 4 rows (4, 3, 2, 1) - baris 4 at top, baris 1 at bottom
+  for (let rowNum = 4; rowNum >= 1; rowNum--) {
+    // Add row label
+    const rowLabel = document.createElement("div");
+    rowLabel.className = "row-label";
+    rowLabel.textContent = `baris ${rowNum}`;
+    gridSection.appendChild(rowLabel);
+    
+    // Create slot row
+    const rowGrid = document.createElement("div");
+    rowGrid.className = "racking-grid";
+    
+    displayRacks.forEach(rak => {
+      const div = document.createElement("div");
+      div.className = "slot";
+      
+      const kode = rak + rowNum;
+      
+      // Find slot data
+      const slotData = allSheetData.find(d => generateKode(d.racking, d.floor, d.raws) === kode);
+
+      if (slotData && slotData.barang) {
+        div.textContent = slotData.barang;
+        
+        // Check status from column K (Status)
+        if (slotData.status && slotData.status.toLowerCase().trim() === "kosong") {
+          div.classList.add("status-kosong-sheet");
+        } else {
+          div.classList.add("status-terisi");
+        }
+        
+        div.title = `${kode} | ${slotData.barang} (Qty: ${slotData.qty})`;
+        div.onclick = () => showDetail(kode, slotData);
+      } else {
+        div.textContent = kode;
+        div.classList.add("status-kosong");
+        div.onclick = () => showDetail(kode, null);
+      }
+
+      rowGrid.appendChild(div);
+    });
+    
+    gridSection.appendChild(rowGrid);
+  }
+  
+  warehouse.appendChild(gridSection);
+  
+  console.log('📋 Grid rendered with AB-AA-Z-Y-X-W-V-U-T-S-R-Q-P-O-N-M-L layout (AB leftmost, L rightmost)');
+}
+
+// Show slot details
+function showDetail(kode, data) {
+  const info = document.getElementById("info");
+  if (data) {
+    let statusIcon = "✅";
+    let statusText = "TERISI";
+    
+    // Check if status from sheet is "KOSONG"
+    if (data.status && data.status.toLowerCase().trim() === "kosong") {
+      statusText = "KOSONG (SHEET)";
+      statusIcon = "🔴";
+    }
+    
+    info.innerHTML = `
+      <p><strong>Slot:</strong> ${kode}</p>
+      <p><strong>Warehouse:</strong> ${data.warehouse}</p>
+      <p><strong>Storage:</strong> ${data.storage}</p>
+      <p><strong>Zone:</strong> ${data.zona}</p>
+      <p><strong>Racking:</strong> ${data.racking}</p>
+      <p><strong>Floor:</strong> ${data.floor}</p>
+      <p><strong>Position:</strong> ${data.raws}</p>
+      <p><strong>Item:</strong> ${data.barang}</p>
+      <p><strong>Quantity:</strong> ${data.qty}</p>
+      <p><strong>Expired:</strong> ${data.expired}</p>
+      <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
+    `;
+  } else {
+    info.innerHTML = `
+      <p><strong>Slot:</strong> ${kode}</p>
+      <p><strong>Status:</strong> ⚪ KOSONG</p>
+    `;
+  }
+}
+
+// Print function
+function printPage() {
+  const btn = document.querySelector('.print-btn');
+  btn.classList.add('loading');
+  
+  try {
+    // Add print title to document
+    const originalTitle = document.title;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID');
+    const timeStr = now.toLocaleTimeString('id-ID');
+    
+    document.title = `Warehouse Mapping - ${dateStr} ${timeStr}`;
+    
+    // Trigger browser print dialog
+    window.print();
+    
+    // Restore original title
+    document.title = originalTitle;
+    
+    console.log('🖨️ Print dialog opened');
+    
+  } catch (error) {
+    console.error('❌ Error opening print dialog:', error);
+    alert('Failed to open print dialog. Please try again.');
+  } finally {
+    setTimeout(() => {
+      btn.classList.remove('loading');
+    }, 500);
+  }
+}
+
+// Initialize application
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Warehouse Mapping System initialized - AB to L layout (AB leftmost)');
+  
+  // Start datetime updates
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+  
+  // Load initial data
+  loadData();
+  
+  // Set initial navigation state
+  updateNavButtons('floor');
+});
+</script>
+
+</body>
+</html>
