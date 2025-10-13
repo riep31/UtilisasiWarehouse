@@ -5,65 +5,445 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapping Gudang</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0f0f23; color: #e2e8f0; min-height: 100vh; width: 100%; overflow-x: hidden; }
-    .header { background: linear-gradient(90deg, #fcfcfc 8%, #6f7aa8 51%, #181b29 100%); border-bottom: 1px solid #2d3748; padding: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; width: 100%; }
-    .header-left { display: flex; align-items: center; gap: 20px; }
-    .logo { width: 110px; height: 60px; object-fit: contain; border-radius: 8px; }
-    .header h1 { color: #0d0d15; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.025em; }
-    .header-controls { display: flex; align-items: center; gap: 20px; }
-    .datetime-display { background: #2d3748; color: #e2e8f0; padding: 10px 16px; border-radius: 10px; font-weight: 500; border: 1px solid #4a5568; min-width: 180px; text-align: center; }
-    .datetime-display .date { font-size: 0.9rem; margin-bottom: 2px; }
-    .datetime-display .time { font-size: 0.8rem; color: #a0aec0; }
-    .refresh-btn, .print-btn { color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
-    .refresh-btn { background: #2b6cb0; border: 1px solid #3182ce; }
-    .refresh-btn:hover { background: #3182ce; transform: translateY(-1px); }
-    .print-btn { background: #38a169; border: 1px solid #48bb78; }
-    .print-btn:hover { background: #48bb78; transform: translateY(-1px); }
-    .refresh-btn.loading .refresh-icon { animation: spin 1s linear infinite; }
-    .print-btn.loading .print-icon { animation: pulse 1s ease-in-out infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    .breadcrumb { margin:  8px 15px; padding: 14px 21px; background: #1a1a2e; border: 1px solid #2d3748; border-radius: 8px; font-size: 15px; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; position: relative; }
-    .breadcrumb-nav { display: flex; align-items: center; gap: 8px; z-index: 1; position: relative; }
-    .breadcrumb-nav .home-icon { font-size: 16px; margin-right: 5px; }
-    .breadcrumb a { color: #63b3ed; text-decoration: none; font-weight: 600; padding: 5px 10px; border-radius: 6px; transition: all 0.3s ease; background: rgba(99, 179, 237, 0.1); }
-    .breadcrumb a:hover { background: rgba(99, 179, 237, 0.2); transform: translateY(-1px); color: #90cdf4; }
-    .breadcrumb-separator { color: #a0aec0; margin: 0 5px; font-weight: bold; }
-    .breadcrumb-current { color: #f7fafc; font-weight: bold; }
-    .nav-container { background: #1a1a2e; border: 1px solid #2d3748; margin: 8px 15px; padding: 12px; border-radius: 8px; }
-    .nav-buttons { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
-    .nav-btn { background: #6b46c1; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; border: 2px solid #7c3aed; min-width: 160px; justify-content: center; }
-    .nav-btn:hover { background: #7c3aed; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
-    .nav-btn.active { background: #8b5cf6; border-color: #a78bfa; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
-    .nav-btn:active { transform: translateY(0); }
-    .filters-container { background: #1a1a2e; border: 1px solid #2d3748; margin: 8px 15px 0 15px; padding: 10px; width: auto; }
-    .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; max-width: 1000px; margin: 0 auto; }
-    .filter-group { display: flex; flex-direction: column; gap: 6px; }
-    .filter-label { color: #f7fafc; font-size: 0.85rem; font-weight: 600; }
-    .filter-select { background: #2d3748; border: 1px solid #4a5568; color: #e2e8f0; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; }
-    .filter-select:hover { border-color: #63b3ed; }
-    .filter-select:focus { outline: none; border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); }
-    .filter-actions { display: flex; gap: 10px; align-items: flex-end; }
-    .apply-filter-btn { background: #38a169; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
-    .apply-filter-btn:hover { background: #48bb78; transform: translateY(-1px); }
-    .clear-filter-btn { background: #e53e3e; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s ease; }
-    .clear-filter-btn:hover { background: #f56565; transform: translateY(-1px); }
-    .active-filters { margin-top: 16px; padding: 10px; background: #2d3748; border: 1px solid #4a5568; display: none; }
-    .active-filters.show { display: block; }
-    .active-filters h4 { color: #f7fafc; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
-    .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-    .filter-tag { background: #3182ce; color: white; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 500; }
-    .layout-info { background: linear-gradient(90deg, #cf77d9 0%, #442c5c 100%); border: 1px solid #4a5568; padding: 12px; margin-top: 5px; color: #e2e8f0; font-size: 0.85rem; text-align: center; display: none; }
-    .layout-info.show { display: block; }
-    .layout-info strong { color: #63b3ed; }
-    .main-content { padding: 18px 16px; width: 100%; max-width: 100vw; overflow-x: hidden; }
-    .warehouse-container { background: #1a1a2e; border: 1px solid #2d3748; padding: 5px; width: 100%; overflow-x: auto; overflow-y: visible; display: flex; flex-direction: column; align-items: center; }
-    .no-data-message { text-align: center; padding: 40px; color: #a0aec0; font-size: 1rem; }
-    .floor-section { margin-bottom: 10px; display: flex; flex-direction: column; align-items: center; width: 100%; }
-    .floor-section:last-child { margin-bottom: 0; }
-    .floor-title { color: #f7fafc; font-size: 1rem; font-weight: 700; margin-bottom: 5px; text-align: center; padding: 2px; }
-    .racking-grid { display: grid; gap: 5px; margin-bottom: 5px; width: max-content; justify-self: center; justify-content: center; margin-left: auto; margin-right: auto; direction: rtl; }
+    /* ==================== RESET & BASE STYLES ==================== */
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; 
+      background: #0f0f23; 
+      color: #e2e8f0; 
+      min-height: 100vh; 
+      width: 100%; 
+      overflow-x: hidden; 
+    }
+
+    /* ==================== HEADER STYLES ==================== */
+    .header { 
+      background: linear-gradient(90deg, #fcfcfc 8%, #6f7aa8 51%, #181b29 100%); 
+      border-bottom: 1px solid #2d3748; 
+      padding: 20px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      gap: 16px; 
+      width: 100%; 
+    }
+    
+    .header-left { 
+      display: flex; 
+      align-items: center; 
+      gap: 20px; 
+    }
+    
+    .logo { 
+      width: 110px; 
+      height: 60px; 
+      object-fit: contain; 
+      border-radius: 8px; 
+    }
+    
+    .header h1 { 
+      color: #0d0d15; 
+      font-size: 1.6rem; 
+      font-weight: 800; 
+      letter-spacing: -0.025em; 
+    }
+    
+    .header-controls { 
+      display: flex; 
+      align-items: center; 
+      gap: 20px; 
+    }
+
+    /* ==================== DATETIME DISPLAY ==================== */
+    .datetime-display { 
+      background: #2d3748; 
+      color: #e2e8f0; 
+      padding: 10px 16px; 
+      border-radius: 10px; 
+      font-weight: 500; 
+      border: 1px solid #4a5568; 
+      min-width: 180px; 
+      text-align: center; 
+    }
+    
+    .datetime-display .date { 
+      font-size: 0.9rem; 
+      margin-bottom: 2px; 
+    }
+    
+    .datetime-display .time { 
+      font-size: 0.8rem; 
+      color: #a0aec0; 
+    }
+
+    /* ==================== BUTTON STYLES ==================== */
+    .refresh-btn, .print-btn { 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      transition: all 0.2s ease; 
+    }
+    
+    .refresh-btn { 
+      background: #2b6cb0; 
+      border: 1px solid #3182ce; 
+    }
+    
+    .refresh-btn:hover { 
+      background: #3182ce; 
+      transform: translateY(-1px); 
+    }
+    
+    .print-btn { 
+      background: #38a169; 
+      border: 1px solid #48bb78; 
+    }
+    
+    .print-btn:hover { 
+      background: #48bb78; 
+      transform: translateY(-1px); 
+    }
+
+    /* ==================== LOADING ANIMATIONS ==================== */
+    .refresh-btn.loading .refresh-icon { 
+      animation: spin 1s linear infinite; 
+    }
+    
+    .print-btn.loading .print-icon { 
+      animation: pulse 1s ease-in-out infinite; 
+    }
+    
+    @keyframes spin { 
+      from { transform: rotate(0deg); } 
+      to { transform: rotate(360deg); } 
+    }
+    
+    @keyframes pulse { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0.5; } 
+    }
+
+    /* ==================== BREADCRUMB STYLES ==================== */
+    .breadcrumb { 
+      margin: 8px 15px; 
+      padding: 14px 21px; 
+      background: #1a1a2e; 
+      border: 1px solid #2d3748; 
+      border-radius: 8px; 
+      font-size: 15px; 
+      color: #e2e8f0; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      position: relative; 
+    }
+    
+    .breadcrumb-nav { 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      z-index: 1; 
+      position: relative; 
+    }
+    
+    .breadcrumb-nav .home-icon { 
+      font-size: 16px; 
+      margin-right: 5px; 
+    }
+    
+    .breadcrumb a { 
+      color: #63b3ed; 
+      text-decoration: none; 
+      font-weight: 600; 
+      padding: 5px 10px; 
+      border-radius: 6px; 
+      transition: all 0.3s ease; 
+      background: rgba(99, 179, 237, 0.1); 
+    }
+    
+    .breadcrumb a:hover { 
+      background: rgba(99, 179, 237, 0.2); 
+      transform: translateY(-1px); 
+      color: #90cdf4; 
+    }
+    
+    .breadcrumb-separator { 
+      color: #a0aec0; 
+      margin: 0 5px; 
+      font-weight: bold; 
+    }
+    
+    .breadcrumb-current { 
+      color: #f7fafc; 
+      font-weight: bold; 
+    }
+
+    /* ==================== NAVIGATION STYLES ==================== */
+    .nav-container { 
+      background: #1a1a2e; 
+      border: 1px solid #2d3748; 
+      margin: 8px 15px; 
+      padding: 12px; 
+      border-radius: 8px; 
+    }
+    
+    .nav-buttons { 
+      display: flex; 
+      justify-content: center; 
+      gap: 16px; 
+      flex-wrap: wrap; 
+    }
+    
+    .nav-btn { 
+      background: #6b46c1; 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-size: 0.9rem; 
+      font-weight: 600; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      transition: all 0.2s ease; 
+      border: 2px solid #7c3aed; 
+      min-width: 160px; 
+      justify-content: center; 
+    }
+    
+    .nav-btn:hover { 
+      background: #7c3aed; 
+      transform: translateY(-1px); 
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); 
+    }
+    
+    .nav-btn.active { 
+      background: #8b5cf6; 
+      border-color: #a78bfa; 
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); 
+    }
+
+    /* ==================== FILTER STYLES ==================== */
+    .filters-container { 
+      background: #1a1a2e; 
+      border: 1px solid #2d3748; 
+      margin: 8px 15px 0 15px; 
+      padding: 10px; 
+      width: auto; 
+    }
+    
+    .filters-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+      gap: 16px; 
+      max-width: 1000px; 
+      margin: 0 auto; 
+    }
+    
+    .filter-group { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+    }
+    
+    .filter-label { 
+      color: #f7fafc; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+    }
+    
+    .filter-select { 
+      background: #2d3748; 
+      border: 1px solid #4a5568; 
+      color: #e2e8f0; 
+      padding: 10px 14px; 
+      border-radius: 8px; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+    }
+    
+    .filter-select:hover { 
+      border-color: #63b3ed; 
+    }
+    
+    .filter-select:focus { 
+      outline: none; 
+      border-color: #3182ce; 
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1); 
+    }
+    
+    .filter-actions { 
+      display: flex; 
+      gap: 10px; 
+      align-items: flex-end; 
+    }
+    
+    .apply-filter-btn { 
+      background: #38a169; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      transition: all 0.2s ease; 
+    }
+    
+    .apply-filter-btn:hover { 
+      background: #48bb78; 
+      transform: translateY(-1px); 
+    }
+    
+    .clear-filter-btn { 
+      background: #e53e3e; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      transition: all 0.2s ease; 
+    }
+    
+    .clear-filter-btn:hover { 
+      background: #f56565; 
+      transform: translateY(-1px); 
+    }
+
+    /* ==================== ACTIVE FILTERS DISPLAY ==================== */
+    .active-filters { 
+      margin-top: 16px; 
+      padding: 10px; 
+      background: #2d3748; 
+      border: 1px solid #4a5568; 
+      display: none; 
+    }
+    
+    .active-filters.show { 
+      display: block; 
+    }
+    
+    .active-filters h4 { 
+      color: #f7fafc; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      margin-bottom: 8px; 
+    }
+    
+    .filter-tags { 
+      display: flex; 
+      gap: 8px; 
+      flex-wrap: wrap; 
+    }
+    
+    .filter-tag { 
+      background: #3182ce; 
+      color: white; 
+      padding: 4px 10px; 
+      border-radius: 16px; 
+      font-size: 0.75rem; 
+      font-weight: 500; 
+    }
+
+    /* ==================== LAYOUT INFO ==================== */
+    .layout-info { 
+      background: linear-gradient(90deg, #cf77d9 0%, #442c5c 100%); 
+      border: 1px solid #4a5568; 
+      padding: 12px; 
+      margin-top: 5px; 
+      color: #e2e8f0; 
+      font-size: 0.85rem; 
+      text-align: center; 
+      display: none; 
+    }
+    
+    .layout-info.show { 
+      display: block; 
+    }
+    
+    .layout-info strong { 
+      color: #63b3ed; 
+    }
+
+    /* ==================== MAIN CONTENT ==================== */
+    .main-content { 
+      padding: 18px 16px; 
+      width: 100%; 
+      max-width: 100vw; 
+      overflow-x: hidden; 
+    }
+    
+    .warehouse-container { 
+      background: #1a1a2e; 
+      border: 1px solid #2d3748; 
+      padding: 5px; 
+      width: 100%; 
+      overflow-x: auto; 
+      overflow-y: visible; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+    }
+    
+    .no-data-message { 
+      text-align: center; 
+      padding: 40px; 
+      color: #a0aec0; 
+      font-size: 1rem; 
+    }
+
+    /* ==================== FLOOR SECTION ==================== */
+    .floor-section { 
+      margin-bottom: 10px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      width: 100%; 
+    }
+    
+    .floor-section:last-child { 
+      margin-bottom: 0; 
+    }
+    
+    .floor-title { 
+      color: #f7fafc; 
+      font-size: 1rem; 
+      font-weight: 700; 
+      margin-bottom: 5px; 
+      text-align: center; 
+      padding: 2px; 
+    }
+
+    /* ==================== RACKING GRID ==================== */
+    .racking-grid { 
+      display: grid; 
+      gap: 5px; 
+      margin-bottom: 5px; 
+      width: max-content; 
+      justify-self: center; 
+      justify-content: center; 
+      margin-left: auto; 
+      margin-right: auto; 
+      direction: rtl; 
+    }
+    
     .racking-grid.cols-16 { grid-template-columns: repeat(16, 105px); }
     .racking-grid.cols-15 { grid-template-columns: repeat(15, 105px); }
     .racking-grid.cols-14 { grid-template-columns: repeat(14, 105px); }
@@ -71,23 +451,144 @@
     .racking-grid.cols-12 { grid-template-columns: repeat(12, 105px); }
     .racking-grid.cols-11 { grid-template-columns: repeat(11, 105px); }
     .racking-grid.cols-10 { grid-template-columns: repeat(10, 105px); }
-    .racking-header { background: #48deea; color: #000; padding: 5px 3px; text-align: center; font-size: 0.8rem; font-weight: 700; border: 1px solid #4a5568; height: 32px; width: 105px; display: flex; align-items: center; justify-content: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 4px; direction: ltr; }
-    .slot { background: #2d3748; border: 1px solid #4a5568; color: #a0aec0; padding: 5px 3px; text-align: center; font-size: 0.75rem; font-weight: 500; border-radius: 4px; cursor: pointer; transition: all 0.2s ease; height: 60px; width: 105px; display: flex; align-items: center; justify-content: center; word-break: break-all; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; hyphens: auto; direction: ltr; }
-    .slot:hover { transform: translateY(-2px); border-color: #63b3ed; box-shadow: 0 4px 12px rgba(99, 179, 237, 0.2); }
-    .status-terisi { background: #404f66; border-color: #344154; color: #fff; }
-    .status-kosong { background: #1d1d34; border-color: #4a5568; color: #1d1d34; }
-    .status-kosong-sheet { background: #d23e39; border-color: #e53e3e; color: #000; }
-    .detail-panel { background: #1a1a2e; border: 1px solid #2d3748; border-radius: 12px; padding: 20px; margin-top: 24px; }
-    .detail-panel h3 { color: #f7fafc; font-size: 1rem; font-weight: 600; margin-bottom: 14px; border-bottom: 1px solid #2d3748; padding-bottom: 8px; }
-    .detail-info p { margin: 10px 0; padding: 6px 0; border-bottom: 1px solid #2d3748; color: #e2e8f0; font-size: 0.9rem; }
-    .detail-info p:last-child { border-bottom: none; }
-    .detail-info strong { color: #63b3ed; margin-right: 8px; }
-    .status-legend { display: flex; justify-content: center; gap: 26px; margin-top: 5px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: #2d3748; border: 1px solid #4a5568; font-size: 0.8rem; color: #e2e8f0; }
-    .legend-color { width: 14px; height: 14px; border: 1px solid #4a5568; }
+
+    /* ==================== RACKING HEADER ==================== */
+    .racking-header { 
+      background: #48deea; 
+      color: #000; 
+      padding: 5px 3px; 
+      text-align: center; 
+      font-size: 0.8rem; 
+      font-weight: 700; 
+      border: 1px solid #4a5568; 
+      height: 32px; 
+      width: 105px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      white-space: nowrap; 
+      border-radius: 4px; 
+      direction: ltr; 
+    }
+
+    /* ==================== SLOT STYLES ==================== */
+    .slot { 
+      background: #2d3748; 
+      border: 1px solid #4a5568; 
+      color: #a0aec0; 
+      padding: 5px 3px; 
+      text-align: center; 
+      font-size: 0.75rem; 
+      font-weight: 500; 
+      border-radius: 4px; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      height: 60px; 
+      width: 105px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      word-break: break-all; 
+      overflow: hidden; 
+      text-overflow: ellipsis; 
+      line-height: 1.2; 
+      hyphens: auto; 
+      direction: ltr; 
+    }
+    
+    .slot:hover { 
+      transform: translateY(-2px); 
+      border-color: #63b3ed; 
+      box-shadow: 0 4px 12px rgba(99, 179, 237, 0.2); 
+    }
+
+    /* ==================== SLOT STATUS STYLES ==================== */
+    .status-terisi { 
+      background: #404f66; 
+      border-color: #344154; 
+      color: #fff; 
+    }
+    
+    .status-kosong { 
+      background: #1d1d34; 
+      border-color: #4a5568; 
+      color: #1d1d34; 
+    }
+    
+    .status-kosong-sheet { 
+      background: #d23e39; 
+      border-color: #e53e3e; 
+      color: #000; 
+    }
+
+    /* ==================== DETAIL PANEL ==================== */
+    .detail-panel { 
+      background: #1a1a2e; 
+      border: 1px solid #2d3748; 
+      border-radius: 12px; 
+      padding: 20px; 
+      margin-top: 24px; 
+    }
+    
+    .detail-panel h3 { 
+      color: #f7fafc; 
+      font-size: 1rem; 
+      font-weight: 600; 
+      margin-bottom: 14px; 
+      border-bottom: 1px solid #2d3748; 
+      padding-bottom: 8px; 
+    }
+    
+    .detail-info p { 
+      margin: 10px 0; 
+      padding: 6px 0; 
+      border-bottom: 1px solid #2d3748; 
+      color: #e2e8f0; 
+      font-size: 0.9rem; 
+    }
+    
+    .detail-info p:last-child { 
+      border-bottom: none; 
+    }
+    
+    .detail-info strong { 
+      color: #63b3ed; 
+      margin-right: 8px; 
+    }
+
+    /* ==================== STATUS LEGEND ==================== */
+    .status-legend { 
+      display: flex; 
+      justify-content: center; 
+      gap: 26px; 
+      margin-top: 5px; 
+      flex-wrap: wrap; 
+    }
+    
+    .legend-item { 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      padding: 6px 12px; 
+      background: #2d3748; 
+      border: 1px solid #4a5568; 
+      font-size: 0.8rem; 
+      color: #e2e8f0; 
+    }
+    
+    .legend-color { 
+      width: 14px; 
+      height: 14px; 
+      border: 1px solid #4a5568; 
+    }
+    
     .legend-terisi { background: #404f66; }
     .legend-kosong { background: #1d1d34; }
     .legend-kosong-sheet { background: #742a2a; }
+
+    /* ==================== RESPONSIVE STYLES - TABLET ==================== */
     @media (max-width: 1200px) {
       .racking-grid.cols-16 { grid-template-columns: repeat(16, 55px); gap: 5px; }
       .racking-grid.cols-15 { grid-template-columns: repeat(15, 55px); gap: 5px; }
@@ -99,6 +600,8 @@
       .slot { height: 45px; width: 55px; font-size: 0.6rem; padding: 2px 1px; }
       .racking-header { height: 28px; width: 55px; font-size: 0.65rem; padding: 3px 1px; }
     }
+
+    /* ==================== RESPONSIVE STYLES - MOBILE ==================== */
     @media (max-width: 768px) {
       .header { flex-direction: column; text-align: center; padding: 16px; }
       .header-left { flex-direction: column; gap: 12px; text-align: center; }
@@ -127,6 +630,8 @@
       .status-legend { gap: 12px; margin-top: 16px; }
       .legend-item { font-size: 0.75rem; padding: 5px 8px; }
     }
+
+    /* ==================== RESPONSIVE STYLES - LARGE SCREEN ==================== */
     @media (min-width: 1600px) {
       .main-content { padding: 24px 40px; max-width: 1920px; margin: 0 auto; }
       .warehouse-container { padding: 30px; max-width: 1880px; margin: 0 auto; }
@@ -141,6 +646,8 @@
       .racking-header { height: 35px; width: 105px; font-size: 0.85rem; padding: 6px 4px; }
       .floor-title { font-size: 1.1rem; margin-bottom: 16px; }
     }
+
+    /* ==================== PRINT STYLES ==================== */
     @media print {
       body { background: white !important; color: black !important; }
       .header, .filters-container, .nav-container, .breadcrumb { display: none !important; }
@@ -162,44 +669,881 @@
   </style>
 </head>
 <body>
-<header class="header">
-  <div class="header-left">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Company Logo" class="logo">
-    <h1>Warehouse Mapping System</h1>
-  </div>
-  <div class="header-controls">
-    <div class="datetime-display"><div class="date" id="current-date"></div><div class="time" id="current-time"></div></div>
-    <button class="refresh-btn" onclick="refreshData()"><span class="refresh-icon">🔄</span>Refresh</button>
-    <button class="print-btn" onclick="printPage()"><span class="print-icon">🖨️</span>Print</button>
-  </div>
-</header>
-<div class="breadcrumb"><div class="breadcrumb-nav"><span class="home-icon">🏠</span><a href="#" onclick="goBackToDashboard()">Dashboard Utama</a><span class="breadcrumb-separator">›</span><span class="breadcrumb-current">Mapping Rack</span></div></div>
-<div class="nav-container"><div class="nav-buttons"><button class="nav-btn active" onclick="navigateToRack()"><span>📦</span>Mapping Rack</button><button class="nav-btn" onclick="navigateToFloor()"><span>🏢</span>Mapping Floor</button></div></div>
-<div class="filters-container">
-  <div class="filters-grid">
-    <div class="filter-group"><label class="filter-label" for="warehouse-filter">Warehouse Location</label><select class="filter-select" id="warehouse-filter"><option value="">All Warehouses</option></select></div>
-    <div class="filter-group"><label class="filter-label" for="storage-filter">Storage Option</label><select class="filter-select" id="storage-filter"><option value="">All Storage Options</option></select></div>
-    <div class="filter-group"><label class="filter-label" for="zona-filter">Zona</label><select class="filter-select" id="zona-filter"><option value="">All Zones</option></select></div>
-    <div class="filter-actions"><button class="apply-filter-btn" onclick="applyFilters()">Apply Filters</button><button class="clear-filter-btn" onclick="clearFilters()">Clear All</button></div>
-  </div>
-  <div class="active-filters" id="active-filters"><h4>Active Filters:</h4><div class="filter-tags" id="filter-tags"></div></div>
-  <div class="layout-info" id="layout-info"><strong>Layout Information:</strong> <span id="layout-text"></span></div>
-</div>
-<div class="main-content">
-  <div class="warehouse-container">
-    <div id="warehouse"></div>
-    <div class="status-legend">
-      <div class="legend-item"><div class="legend-color legend-terisi"></div><span>Racking Terisi</span></div>
-      <div class="legend-item"><div class="legend-color legend-kosong"></div><span>tidak ada Racking</span></div>
-      <div class="legend-item"><div class="legend-color legend-kosong-sheet"></div><span>Racking Kosong</span></div>
+  <!-- ==================== HEADER SECTION ==================== -->
+  <header class="header">
+    <div class="header-left">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Company Logo" class="logo">
+      <h1>Warehouse Mapping System</h1>
+    </div>
+    <div class="header-controls">
+      <div class="datetime-display">
+        <div class="date" id="current-date"></div>
+        <div class="time" id="current-time"></div>
+      </div>
+      <button class="refresh-btn" onclick="refreshData()">
+        <span class="refresh-icon">🔄</span>Refresh
+      </button>
+      <button class="print-btn" onclick="printPage()">
+        <span class="print-icon">🖨️</span>Print
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== BREADCRUMB NAVIGATION ==================== -->
+  <div class="breadcrumb">
+    <div class="breadcrumb-nav">
+      <span class="home-icon">🏠</span>
+      <a href="#" onclick="goBackToDashboard()">Dashboard Utama</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Mapping Rack</span>
     </div>
   </div>
-  <div class="detail-panel"><h3>Racking Information</h3><div class="detail-info" id="info"><p>Click any slot to view detailed information</p></div></div>
-</div>
-<script>
-const sheetID="1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw",sheetName="MAPPING",mixedMaterialSheetName="MIXED MATERIAL",apiKey="AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis",url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${sheetName}!A1:K1000?key=${apiKey}`,mixedMaterialUrl=`https://sheets.googleapis.com/v4/spreadsheets/${sheetID}/values/${mixedMaterialSheetName}!A1:Z1000?key=${apiKey}`;let allSheetData=[],filteredData=[],mixedMaterialData=[],currentFilters={warehouse:"",storage:"",zona:""};function getDashboardUrl(){const e=new URLSearchParams(window.location.search).get("return");if(e)return decodeURIComponent(e);if(document.referrer&&document.referrer!==window.location.href)return document.referrer;return"https://riep31.github.io/UtilisasiWarehouse/dashboard.html"}function goBackToDashboard(){try{if(document.referrer&&document.referrer!==window.location.href&&document.referrer.includes("dashboard.html"))return void(window.location.href=document.referrer);if(window.history.length>1)return void window.history.back();const e=getDashboardUrl();e?window.location.href=e:confirm("Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?")&&(window.location.href="https://riep31.github.io/UtilisasiWarehouse/")}catch(e){confirm("Terjadi error saat navigasi. Apakah ingin ke halaman utama?")&&(window.location.href="https://riep31.github.io/UtilisasiWarehouse/")}}function updateNavigationContext(){const e=new URLSearchParams(window.location.search),t=e.get("return"),a=e.get("returnName")||"Dashboard Utama";if(t||document.referrer){const e=document.querySelector(".breadcrumb-nav");e&&(e.innerHTML=`<span class="home-icon">🏠</span><a href="#" onclick="goBackToDashboard()">${a}</a><span class="breadcrumb-separator">›</span><span class="breadcrumb-current">Mapping Rack</span>`)}}function navigateToRack(){updateNavButtons("rack")}function navigateToFloor(){window.location.href="https://riep31.github.io/UtilisasiWarehouse/floor.html"}function updateNavButtons(e){const t=document.querySelectorAll(".nav-btn");t.forEach(e=>{e.classList.remove("active")}),"rack"===e?t[0].classList.add("active"):"floor"===e&&t[1].classList.add("active")}function updateDateTime(){const e=new Date,t=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"][e.getDay()],a=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"][e.getMonth()],r=String(e.getHours()).padStart(2,"0")+":"+String(e.getMinutes()).padStart(2,"0")+":"+String(e.getSeconds()).padStart(2,"0");document.getElementById("current-date").textContent=`${t}, ${e.getDate()} ${a} ${e.getFullYear()}`,document.getElementById("current-time").textContent=`${r} WIB`}function generateKode(e,t,a){const r={BELAKANG:1,TENGAH:2,DEPAN:3},n=(3-t)*3+(r[(a||"").toUpperCase().trim()]||0);return e.replace("Racking ","").trim()+n}function getUniqueValues(e,t){return e.map(e=>e[t]).filter(e=>e&&""!==e.trim()).filter((e,t,a)=>a.indexOf(e)===t).sort()}function populateFilters(){const e=document.getElementById("warehouse-filter"),t=document.getElementById("storage-filter"),a=document.getElementById("zona-filter");e.innerHTML='<option value="">All Warehouses</option>',t.innerHTML='<option value="">All Storage Options</option>',a.innerHTML='<option value="">All Zones</option>';const r=getUniqueValues(allSheetData,"warehouse"),n=getUniqueValues(allSheetData,"storage"),o=getUniqueValues(allSheetData,"zona");r.forEach(t=>{const a=document.createElement("option");a.value=t,a.textContent=t,e.appendChild(a)}),n.forEach(e=>{const a=document.createElement("option");a.value=e,a.textContent=e,t.appendChild(a)}),o.forEach(e=>{const t=document.createElement("option");t.value=e,t.textContent=e,a.appendChild(t)})}function getDisplayRacks(){if(!hasActiveFilters())return"ABCDEFGHIJKLMNOP".split("");if(0===filteredData.length)return[];return[...new Set(filteredData.map(e=>e.racking.replace("Racking ","").trim()))].sort()}function updateLayoutInfo(){document.getElementById("layout-info").classList.remove("show")}
-  
-function applyFilters(){const e=document.getElementById("warehouse-filter").value,t=document.getElementById("storage-filter").value,a=document.getElementById("zona-filter").value;currentFilters={warehouse:e,storage:t,zona:a},filteredData=allSheetData.filter(r=>(!e||r.warehouse===e)&&(!t||r.storage===t)&&(!a||r.zona===a)),updateActiveFiltersDisplay(),updateLayoutInfo(),renderGrid()}function clearFilters(){document.getElementById("warehouse-filter").value="",document.getElementById("storage-filter").value="",document.getElementById("zona-filter").value="",currentFilters={warehouse:"",storage:"",zona:""},filteredData=[],updateActiveFiltersDisplay(),updateLayoutInfo(),renderGrid()}function updateActiveFiltersDisplay(){const e=document.getElementById("active-filters"),t=document.getElementById("filter-tags"),a=[];currentFilters.warehouse&&a.push(`Warehouse: ${currentFilters.warehouse}`),currentFilters.storage&&a.push(`Storage: ${currentFilters.storage}`),currentFilters.zona&&a.push(`Zone: ${currentFilters.zona}`),a.length>0?(e.classList.add("show"),t.innerHTML=a.map(e=>`<span class="filter-tag">${e}</span>`).join("")):e.classList.remove("show")}async function loadData(){try{const[e,t]=await Promise.all([fetch(url),fetch(mixedMaterialUrl).catch(()=>({values:[]}))]),a=await e.json(),r=await t.json(),n=a.values;if(!n||n.length<2)throw new Error("No data found in sheet");const o=n[0],s=n.slice(1);if(allSheetData=s.map(e=>{const t={};return o.forEach((a,r)=>t[a]=e[r]||""),{warehouse:t["Warehouse Location"]||"",storage:t["Storage Option"]||"",zona:t.Zona||"",rackingCode:t["Racking Code"]||"",racking:t.Racking||"",floor:Number(t.Floor)||0,raws:t.Raws||"",barang:(t["Item Description"]||"").split("-").slice(0,2).join("-").trim(),qty:t.Qty||"",expired:t["Expired Date"]||"",status:(t.Status||"").toLowerCase()}}),r.values&&r.values.length>1){const e=r.values[0],t=r.values.slice(1);mixedMaterialData=t.map(t=>{const a={};return e.forEach((e,r)=>a[e]=t[r]||""),a})}else mixedMaterialData=[];populateFilters(),renderGrid()}catch(e){document.getElementById("info").innerHTML='<p style="color: #e53e3e;">Failed to load data. Please check connection and try again.</p>'}}async function refreshData(){const e=document.querySelector(".refresh-btn");e.classList.add("loading");try{await loadData(),setTimeout(()=>{e.classList.remove("loading")},500)}catch(t){e.classList.remove("loading")}}function hasActiveFilters(){return currentFilters.warehouse||currentFilters.storage||currentFilters.zona}function renderGrid(){const e=document.getElementById("warehouse");if(e.innerHTML="",hasActiveFilters()&&0===getDisplayRacks().length)return void(e.innerHTML='<div class="no-data-message">No data found matching the current filters.</div>');const t=getDisplayRacks(),a=t.length,r=`cols-${Math.max(10,Math.min(16,a))}`;[{title:"Floor 3",rows:[1,2,3]},{title:"Floor 2",rows:[4,5,6]},{title:"Floor 1",rows:[7,8,9]}].forEach(n=>{const o=document.createElement("div");o.className="floor-section";const s=document.createElement("div");s.className="floor-title",s.textContent=n.title,o.appendChild(s);const l=document.createElement("div");l.className=`racking-grid ${r}`,t.forEach(e=>{const t=document.createElement("div");t.className="racking-header",t.textContent=`Rack ${e}`,l.appendChild(t)}),o.appendChild(l),n.rows.forEach(n=>{const s=document.createElement("div");s.className=`racking-grid ${r}`,t.forEach(t=>{const r=document.createElement("div");r.className="slot";const o=t+n;let l=null;if(hasActiveFilters()&&(l=filteredData.find(e=>generateKode(e.racking,e.floor,e.raws)===o)),l&&l.barang){r.textContent=l.barang,l.status&&"kosong"===l.status.toLowerCase().trim()?r.classList.add("status-kosong-sheet"):r.classList.add("status-terisi"),r.title=`${o} | ${l.barang} (Qty: ${l.qty})`,r.onclick=()=>showDetail(o,l)}else r.textContent=o,r.classList.add("status-kosong"),r.onclick=()=>showDetail(o,null);s.appendChild(r)}),o.appendChild(s)}),e.appendChild(o)})}function generateMixMaterialTable(e){const t=mixedMaterialData.filter(t=>t["Racking Code"]&&t["Racking Code"].toString().trim()===e.toString().trim());if(0===t.length)return'<div style="margin-top: 10px; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 0.8rem; color: #a0aec0;">No mixed material data found for this racking code.</div>';let a='<div style="margin-top: 12px;"><h4 style="color: #63b3ed; font-size: 0.9rem; margin-bottom: 8px; border-bottom: 1px solid #4a5568; padding-bottom: 4px;">📦 Mixed Material Details:</h4><div style="background: #2d3748; border-radius: 6px; overflow: hidden; border: 1px solid #4a5568;"><table style="width: 100%; font-size: 0.75rem; color: #e2e8f0;"><thead><tr style="background: #4a5568;"><th style="padding: 6px 8px; text-align: left; border-right: 1px solid #2d3748;">Item</th><th style="padding: 6px 8px; text-align: center; border-right: 1px solid #2d3748;">Qty</th><th style="padding: 6px 8px; text-align: center;">Expired</th></tr></thead><tbody>';return t.forEach((e,t)=>{const r=t%2==0?"#2d3748":"#1a202c",n=e["Item Description"]||"N/A",o=e.Qty||"N/A",s=e["Expired Date"]||"N/A";a+=`<tr style="background: ${r};"><td style="padding: 6px 8px; border-right: 1px solid #4a5568; word-break: break-word;">${n}</td><td style="padding: 6px 8px; text-align: center; border-right: 1px solid #4a5568;">${o}</td><td style="padding: 6px 8px; text-align: center;">${s}</td></tr>`}),a+="</tbody></table></div></div>"}function showDetail(e,t){const a=document.getElementById("info");if(t){let e="✅",r="TERISI";t.status&&"kosong"===t.status.toLowerCase().trim()&&(r="KOSONG (SHEET)",e="🔴");let n=`<p><strong>Warehouse:</strong> ${t.warehouse}</p><p><strong>Storage:</strong> ${t.storage}</p><p><strong>Zone:</strong> ${t.zona}</p><p><strong>Racking:</strong> ${t.racking}</p><p><strong>Racking Code:</strong> ${t.rackingCode}</p><p><strong>Floor:</strong> ${t.floor}</p><p><strong>Position:</strong> ${t.raws}</p><p><strong>Item:</strong> ${t.barang}</p><p><strong>Quantity:</strong> ${t.qty}</p><p><strong>Expired:</strong> ${t.expired}</p><p><strong>Status:</strong> ${e} ${r}</p>`;t.barang&&t.barang.toLowerCase().includes("mix material")&&t.rackingCode&&(n+=generateMixMaterialTable(t.rackingCode)),a.innerHTML=n}else a.innerHTML="<p><strong>Status:</strong> ⚪ KOSONG</p>"}function printPage(){const e=document.querySelector(".print-btn");e.classList.add("loading");try{const e=document.title,t=new Date,a=t.toLocaleDateString("id-ID"),r=t.toLocaleTimeString("id-ID");document.title=`Warehouse Mapping - ${a} ${r}`,window.print(),document.title=e}catch(e){alert("Failed to open print dialog. Please try again.")}finally{setTimeout(()=>{e.classList.remove("loading")},500)}}document.addEventListener("DOMContentLoaded",function(){updateDateTime(),setInterval(updateDateTime,1e3),updateNavigationContext(),loadData(),updateNavButtons("rack")});
-</script>
+
+  <!-- ==================== NAVIGATION TABS ==================== -->
+  <div class="nav-container">
+    <div class="nav-buttons">
+      <button class="nav-btn active" onclick="navigateToRack()">
+        <span>📦</span>Mapping Rack
+      </button>
+      <button class="nav-btn" onclick="navigateToFloor()">
+        <span>🏢</span>Mapping Floor
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== FILTERS SECTION ==================== -->
+  <div class="filters-container">
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label class="filter-label" for="warehouse-filter">Warehouse Location</label>
+        <select class="filter-select" id="warehouse-filter">
+          <option value="">All Warehouses</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label class="filter-label" for="storage-filter">Storage Option</label>
+        <select class="filter-select" id="storage-filter">
+          <option value="">All Storage Options</option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label class="filter-label" for="zona-filter">Zona</label>
+        <select class="filter-select" id="zona-filter">
+          <option value="">All Zones</option>
+        </select>
+      </div>
+      
+      <div class="filter-actions">
+        <button class="apply-filter-btn" onclick="applyFilters()">Apply Filters</button>
+        <button class="clear-filter-btn" onclick="clearFilters()">Clear All</button>
+      </div>
+    </div>
+    
+    <!-- Active Filters Display -->
+    <div class="active-filters" id="active-filters">
+      <h4>Active Filters:</h4>
+      <div class="filter-tags" id="filter-tags"></div>
+    </div>
+    
+    <!-- Layout Information -->
+    <div class="layout-info" id="layout-info">
+      <strong>Layout Information:</strong> <span id="layout-text"></span>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <div class="main-content">
+    <div class="warehouse-container">
+      <div id="warehouse"></div>
+      
+      <!-- Status Legend -->
+      <div class="status-legend">
+        <div class="legend-item">
+          <div class="legend-color legend-terisi"></div>
+          <span>Racking Terisi</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-kosong"></div>
+          <span>tidak ada Racking</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color legend-kosong-sheet"></div>
+          <span>Racking Kosong</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Detail Panel -->
+    <div class="detail-panel">
+      <h3>Racking Information</h3>
+      <div class="detail-info" id="info">
+        <p>Click any slot to view detailed information</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT ==================== -->
+  <script>
+    // ==================== KONFIGURASI API ====================
+    const CONFIG = {
+      sheetID: "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw",
+      sheetName: "MAPPING",
+      mixedMaterialSheetName: "MIXED MATERIAL",
+      apiKey: "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis"
+    };
+
+    // Buat URL untuk mengambil data dari Google Sheets (EXTENDED RANGE untuk memastikan semua kolom terambil)
+    const API_URLS = {
+      main: `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetID}/values/${CONFIG.sheetName}!A1:Z1000?key=${CONFIG.apiKey}`,
+      mixedMaterial: `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetID}/values/${CONFIG.mixedMaterialSheetName}!A1:Z1000?key=${CONFIG.apiKey}`
+    };
+
+    // ==================== GLOBAL STATE ====================
+    let allSheetData = [];           // Semua data dari sheet
+    let filteredData = [];           // Data setelah difilter
+    let mixedMaterialData = [];      // Data mixed material
+    let currentFilters = {           // Filter yang sedang aktif
+      warehouse: "",
+      storage: "",
+      zona: ""
+    };
+
+    // ==================== UTILITY FUNCTIONS ====================
+    
+    /**
+     * Mendapatkan URL dashboard untuk navigasi kembali
+     */
+    function getDashboardUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get("return");
+      
+      if (returnUrl) {
+        return decodeURIComponent(returnUrl);
+      }
+      
+      if (document.referrer && document.referrer !== window.location.href) {
+        return document.referrer;
+      }
+      
+      return "https://riep31.github.io/UtilisasiWarehouse/dashboard.html";
+    }
+
+    /**
+     * Navigasi kembali ke dashboard
+     */
+    function goBackToDashboard() {
+      try {
+        // Cek apakah ada referrer yang valid
+        if (document.referrer && 
+            document.referrer !== window.location.href && 
+            document.referrer.includes("dashboard.html")) {
+          window.location.href = document.referrer;
+          return;
+        }
+        
+        // Gunakan browser history jika tersedia
+        if (window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+        
+        // Fallback ke URL default
+        const dashboardUrl = getDashboardUrl();
+        if (dashboardUrl) {
+          window.location.href = dashboardUrl;
+        } else {
+          if (confirm("Tidak dapat menemukan dashboard. Apakah ingin ke halaman utama?")) {
+            window.location.href = "https://riep31.github.io/UtilisasiWarehouse/";
+          }
+        }
+      } catch (error) {
+        if (confirm("Terjadi error saat navigasi. Apakah ingin ke halaman utama?")) {
+          window.location.href = "https://riep31.github.io/UtilisasiWarehouse/";
+        }
+      }
+    }
+
+    /**
+     * Update konteks navigasi breadcrumb
+     */
+    function updateNavigationContext() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrl = urlParams.get("return");
+      const returnName = urlParams.get("returnName") || "Dashboard Utama";
+      
+      if (returnUrl || document.referrer) {
+        const breadcrumbNav = document.querySelector(".breadcrumb-nav");
+        if (breadcrumbNav) {
+          breadcrumbNav.innerHTML = `
+            <span class="home-icon">🏠</span>
+            <a href="#" onclick="goBackToDashboard()">${returnName}</a>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">Mapping Rack</span>
+          `;
+        }
+      }
+    }
+
+    /**
+     * Generate kode racking berdasarkan posisi
+     * @param {string} racking - Nama racking (contoh: "Racking A")
+     * @param {number} floor - Lantai (1-9)
+     * @param {string} raws - Posisi (DEPAN, TENGAH, BELAKANG)
+     * @returns {string} Kode racking (contoh: "A1")
+     */
+    function generateKode(racking, floor, raws) {
+      const rawsMap = {
+        'BELAKANG': 1,
+        'TENGAH': 2,
+        'DEPAN': 3
+      };
+      
+      const rawsValue = rawsMap[(raws || "").toUpperCase().trim()] || 0;
+      const floorNumber = (3 - floor) * 3 + rawsValue;
+      
+      return racking.replace("Racking ", "").trim() + floorNumber;
+    }
+
+    /**
+     * Extract first phrase (sebelum dash pertama) dari Item Description
+     * @param {string} itemDescription - Deskripsi item lengkap
+     * @returns {string} Phrase pertama
+     */
+    function extractFirstPhrase(itemDescription) {
+      if (!itemDescription || itemDescription.trim() === '') {
+        return '';
+      }
+      
+      // Split by dash and get first part (everything before first dash)
+      const parts = itemDescription.split('-');
+      const firstPhrase = parts[0].trim();
+      
+      return firstPhrase;
+    }
+
+    /**
+     * Mendapatkan nilai unik dari array data
+     * @param {Array} data - Array data
+     * @param {string} key - Key yang ingin diambil
+     * @returns {Array} Array nilai unik yang sudah diurutkan
+     */
+    function getUniqueValues(data, key) {
+      return data
+        .map(item => item[key])
+        .filter(value => value && value.trim() !== "")
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort();
+    }
+
+    /**
+     * Cek apakah ada filter yang aktif
+     * @returns {boolean}
+     */
+    function hasActiveFilters() {
+      return currentFilters.warehouse || 
+             currentFilters.storage || 
+             currentFilters.zona;
+    }
+
+    /**
+     * Mendapatkan list rack yang akan ditampilkan
+     * @returns {Array} Array huruf rack (A-P)
+     */
+    function getDisplayRacks() {
+      if (!hasActiveFilters()) {
+        return "ABCDEFGHIJKLMNOP".split("");
+      }
+      
+      if (filteredData.length === 0) {
+        return [];
+      }
+      
+      const uniqueRacks = [...new Set(
+        filteredData.map(item => item.racking.replace("Racking ", "").trim())
+      )];
+      
+      return uniqueRacks.sort();
+    }
+
+    // ==================== DATETIME FUNCTIONS ====================
+    
+    /**
+     * Update tampilan tanggal dan waktu
+     */
+    function updateDateTime() {
+      const now = new Date();
+      
+      // Nama hari dalam Bahasa Indonesia
+      const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const dayName = dayNames[now.getDay()];
+      
+      // Nama bulan dalam Bahasa Indonesia
+      const monthNames = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+      ];
+      const monthName = monthNames[now.getMonth()];
+      
+      // Format waktu
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const seconds = String(now.getSeconds()).padStart(2, "0");
+      const timeString = `${hours}:${minutes}:${seconds}`;
+      
+      // Update DOM
+      document.getElementById("current-date").textContent = 
+        `${dayName}, ${now.getDate()} ${monthName} ${now.getFullYear()}`;
+      document.getElementById("current-time").textContent = `${timeString} WIB`;
+    }
+
+    // ==================== NAVIGATION FUNCTIONS ====================
+    
+    /**
+     * Navigasi ke halaman Rack Mapping
+     */
+    function navigateToRack() {
+      updateNavButtons("rack");
+    }
+
+    /**
+     * Navigasi ke halaman Floor Mapping
+     */
+    function navigateToFloor() {
+      window.location.href = "https://riep31.github.io/UtilisasiWarehouse/floor.html";
+    }
+
+    /**
+     * Update tampilan tombol navigasi yang aktif
+     * @param {string} activeTab - Tab yang aktif ("rack" atau "floor")
+     */
+    function updateNavButtons(activeTab) {
+      const navButtons = document.querySelectorAll(".nav-btn");
+      
+      navButtons.forEach(button => {
+        button.classList.remove("active");
+      });
+      
+      if (activeTab === "rack") {
+        navButtons[0].classList.add("active");
+      } else if (activeTab === "floor") {
+        navButtons[1].classList.add("active");
+      }
+    }
+
+    // ==================== FILTER FUNCTIONS ====================
+    
+    /**
+     * Populate dropdown filter dengan data unik
+     */
+    function populateFilters() {
+      const warehouseFilter = document.getElementById("warehouse-filter");
+      const storageFilter = document.getElementById("storage-filter");
+      const zonaFilter = document.getElementById("zona-filter");
+      
+      // Reset semua filter
+      warehouseFilter.innerHTML = '<option value="">All Warehouses</option>';
+      storageFilter.innerHTML = '<option value="">All Storage Options</option>';
+      zonaFilter.innerHTML = '<option value="">All Zones</option>';
+      
+      // Ambil nilai unik untuk setiap filter
+      const warehouses = getUniqueValues(allSheetData, "warehouse");
+      const storages = getUniqueValues(allSheetData, "storage");
+      const zonas = getUniqueValues(allSheetData, "zona");
+      
+      // Populate warehouse filter
+      warehouses.forEach(warehouse => {
+        const option = document.createElement("option");
+        option.value = warehouse;
+        option.textContent = warehouse;
+        warehouseFilter.appendChild(option);
+      });
+      
+      // Populate storage filter
+      storages.forEach(storage => {
+        const option = document.createElement("option");
+        option.value = storage;
+        option.textContent = storage;
+        storageFilter.appendChild(option);
+      });
+      
+      // Populate zona filter
+      zonas.forEach(zona => {
+        const option = document.createElement("option");
+        option.value = zona;
+        option.textContent = zona;
+        zonaFilter.appendChild(option);
+      });
+    }
+
+    /**
+     * Apply filter yang dipilih user
+     */
+    function applyFilters() {
+      const warehouse = document.getElementById("warehouse-filter").value;
+      const storage = document.getElementById("storage-filter").value;
+      const zona = document.getElementById("zona-filter").value;
+      
+      // Update current filters
+      currentFilters = {
+        warehouse: warehouse,
+        storage: storage,
+        zona: zona
+      };
+      
+      // Filter data berdasarkan pilihan
+      filteredData = allSheetData.filter(item => {
+        const matchWarehouse = !warehouse || item.warehouse === warehouse;
+        const matchStorage = !storage || item.storage === storage;
+        const matchZona = !zona || item.zona === zona;
+        
+        return matchWarehouse && matchStorage && matchZona;
+      });
+      
+      // Update tampilan
+      updateActiveFiltersDisplay();
+      updateLayoutInfo();
+      renderGrid();
+    }
+
+    /**
+     * Clear semua filter
+     */
+    function clearFilters() {
+      document.getElementById("warehouse-filter").value = "";
+      document.getElementById("storage-filter").value = "";
+      document.getElementById("zona-filter").value = "";
+      
+      currentFilters = {
+        warehouse: "",
+        storage: "",
+        zona: ""
+      };
+      
+      filteredData = [];
+      
+      updateActiveFiltersDisplay();
+      updateLayoutInfo();
+      renderGrid();
+    }
+
+    /**
+     * Update tampilan filter yang sedang aktif
+     */
+    function updateActiveFiltersDisplay() {
+      const activeFiltersContainer = document.getElementById("active-filters");
+      const filterTagsContainer = document.getElementById("filter-tags");
+      
+      const activeTags = [];
+      
+      if (currentFilters.warehouse) {
+        activeTags.push(`Warehouse: ${currentFilters.warehouse}`);
+      }
+      if (currentFilters.storage) {
+        activeTags.push(`Storage: ${currentFilters.storage}`);
+      }
+      if (currentFilters.zona) {
+        activeTags.push(`Zone: ${currentFilters.zona}`);
+      }
+      
+      if (activeTags.length > 0) {
+        activeFiltersContainer.classList.add("show");
+        filterTagsContainer.innerHTML = activeTags
+          .map(tag => `<span class="filter-tag">${tag}</span>`)
+          .join("");
+      } else {
+        activeFiltersContainer.classList.remove("show");
+      }
+    }
+
+    /**
+     * Update informasi layout
+     */
+    function updateLayoutInfo() {
+      const layoutInfo = document.getElementById("layout-info");
+      layoutInfo.classList.remove("show");
+    }
+
+    // ==================== DATA LOADING FUNCTIONS ====================
+    
+    /**
+     * Load data dari Google Sheets API
+     */
+    async function loadData() {
+      try {
+        console.log('📡 Loading data from Google Sheets...');
+        
+        // Fetch data dari kedua sheet secara parallel
+        const [mainResponse, mixedResponse] = await Promise.all([
+          fetch(API_URLS.main),
+          fetch(API_URLS.mixedMaterial).catch(() => ({ values: [] }))
+        ]);
+        
+        const mainData = await mainResponse.json();
+        const mixedData = await mixedResponse.json();
+        
+        // Validasi data
+        const values = mainData.values;
+        if (!values || values.length < 2) {
+          throw new Error("No data found in sheet");
+        }
+        
+        // Parse main data
+        const headers = values[0];
+        const rows = values.slice(1);
+        
+        // Debug: Log headers untuk memastikan kolom yang ada
+        console.log('📋 Available columns:', headers);
+        
+        allSheetData = rows.map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = row[index] || "";
+          });
+          
+          // Debug: Log first row untuk cek data
+          if (rows.indexOf(row) === 0) {
+            console.log('🔍 Sample data object:', obj);
+          }
+          
+          return {
+            warehouse: obj["Warehouse Location"] || "",
+            storage: obj["Storage Option"] || "",
+            zona: obj["Zona"] || "",
+            rackingCode: obj["Racking Code"] || "",
+            racking: obj["Racking"] || "",
+            floor: Number(obj["Floor"]) || 0,
+            raws: obj["Raws"] || "",
+            itemDescription: obj["Item Description"] || "",
+            barang: (obj["Item Description"] || "").split("-").slice(0, 2).join("-").trim(),
+            qty: obj["Qty"] || "",
+            expired: obj["Expired Date"] || "",
+            status: (obj["Status"] || "").toLowerCase(),
+            noLot: obj["No. Lot"] || obj["No Lot"] || obj["No.Lot"] || obj["Lot"] || ""
+          };
+        });
+        
+        // Parse mixed material data
+        if (mixedData.values && mixedData.values.length > 1) {
+          const mixedHeaders = mixedData.values[0];
+          const mixedRows = mixedData.values.slice(1);
+          
+          mixedMaterialData = mixedRows.map(row => {
+            const obj = {};
+            mixedHeaders.forEach((header, index) => {
+              obj[header] = row[index] || "";
+            });
+            return obj;
+          });
+          
+          console.log('✅ Mixed material data loaded:', mixedMaterialData.length, 'items');
+        } else {
+          console.log('⚠️ No mixed material data found');
+          mixedMaterialData = [];
+        }
+        
+        // Update UI
+        populateFilters();
+        renderGrid();
+        
+        console.log('📊 Data loaded successfully:', allSheetData.length, 'items');
+        
+      } catch (error) {
+        console.error("❌ Error loading data:", error);
+        document.getElementById("info").innerHTML = 
+          '<p style="color: #e53e3e;">Failed to load data. Please check connection and try again.</p>';
+      }
+    }
+
+    /**
+     * Refresh data dari server
+     */
+    async function refreshData() {
+      const refreshBtn = document.querySelector(".refresh-btn");
+      refreshBtn.classList.add("loading");
+      
+      try {
+        await loadData();
+        setTimeout(() => {
+          refreshBtn.classList.remove("loading");
+        }, 500);
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        refreshBtn.classList.remove("loading");
+      }
+    }
+
+    // ==================== RENDERING FUNCTIONS ====================
+    
+    /**
+     * Render grid warehouse
+     */
+    function renderGrid() {
+      const warehouseContainer = document.getElementById("warehouse");
+      warehouseContainer.innerHTML = "";
+      
+      // Cek jika ada filter aktif tapi tidak ada data
+      if (hasActiveFilters() && getDisplayRacks().length === 0) {
+        warehouseContainer.innerHTML = 
+          '<div class="no-data-message">No data found matching the current filters.</div>';
+        return;
+      }
+      
+      const displayRacks = getDisplayRacks();
+      const rackCount = displayRacks.length;
+      const gridColsClass = `cols-${Math.max(10, Math.min(16, rackCount))}`;
+      
+      // Definisi floor dengan baris-barisnya
+      const floors = [
+        { title: "Floor 3", rows: [1, 2, 3] },
+        { title: "Floor 2", rows: [4, 5, 6] },
+        { title: "Floor 1", rows: [7, 8, 9] }
+      ];
+      
+      // Render setiap floor
+      floors.forEach(floor => {
+        const floorSection = document.createElement("div");
+        floorSection.className = "floor-section";
+        
+        // Floor title
+        const floorTitle = document.createElement("div");
+        floorTitle.className = "floor-title";
+        floorTitle.textContent = floor.title;
+        floorSection.appendChild(floorTitle);
+        
+        // Header row dengan nama rack
+        const headerGrid = document.createElement("div");
+        headerGrid.className = `racking-grid ${gridColsClass}`;
+        
+        displayRacks.forEach(rack => {
+          const header = document.createElement("div");
+          header.className = "racking-header";
+          header.textContent = `Rack ${rack}`;
+          headerGrid.appendChild(header);
+        });
+        
+        floorSection.appendChild(headerGrid);
+        
+        // Render setiap baris dalam floor
+        floor.rows.forEach(rowNumber => {
+          const rowGrid = document.createElement("div");
+          rowGrid.className = `racking-grid ${gridColsClass}`;
+          
+          displayRacks.forEach(rack => {
+            const slot = createSlot(rack, rowNumber);
+            rowGrid.appendChild(slot);
+          });
+          
+          floorSection.appendChild(rowGrid);
+        });
+        
+        warehouseContainer.appendChild(floorSection);
+      });
+    }
+
+    /**
+     * Buat elemen slot untuk grid
+     * @param {string} rack - Huruf rack (A-P)
+     * @param {number} rowNumber - Nomor baris (1-9)
+     * @returns {HTMLElement} Elemen slot
+     */
+    function createSlot(rack, rowNumber) {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      
+      const kode = rack + rowNumber;
+      let matchedData = null;
+      
+      // Cari data yang cocok dengan kode slot
+      if (hasActiveFilters()) {
+        matchedData = filteredData.find(item => 
+          generateKode(item.racking, item.floor, item.raws) === kode
+        );
+      }
+      
+      if (matchedData && matchedData.itemDescription) {
+        // MODIFIED: Extract first phrase (before dash) and combine with No. Lot
+        const firstPhrase = extractFirstPhrase(matchedData.itemDescription);
+        const noLot = matchedData.noLot || '';
+        const displayText = noLot ? `${firstPhrase} - ${noLot}` : firstPhrase;
+        
+        slot.textContent = displayText;
+        
+        if (matchedData.status && matchedData.status.toLowerCase().trim() === "kosong") {
+          slot.classList.add("status-kosong-sheet");
+        } else {
+          slot.classList.add("status-terisi");
+        }
+        
+        slot.title = `${kode} | ${matchedData.barang} | Lot: ${noLot}`;
+        slot.onclick = () => showDetail(kode, matchedData);
+      } else {
+        // Slot kosong
+        slot.textContent = kode;
+        slot.classList.add("status-kosong");
+        slot.onclick = () => showDetail(kode, null);
+      }
+      
+      return slot;
+    }
+
+    /**
+     * Generate tabel mixed material
+     * @param {string} rackingCode - Kode racking
+     * @returns {string} HTML string untuk tabel
+     */
+    function generateMixMaterialTable(rackingCode) {
+      const mixedItems = mixedMaterialData.filter(item => 
+        item["Racking Code"] && 
+        item["Racking Code"].toString().trim() === rackingCode.toString().trim()
+      );
+      
+      if (mixedItems.length === 0) {
+        return `<div style="margin-top: 10px; padding: 8px; background: #2d3748; border-radius: 6px; font-size: 0.8rem; color: #a0aec0;">
+          No mixed material data found for this racking code.
+        </div>`;
+      }
+      
+      let html = `
+        <div style="margin-top: 12px;">
+          <h4 style="color: #63b3ed; font-size: 0.9rem; margin-bottom: 8px; border-bottom: 1px solid #4a5568; padding-bottom: 4px;">
+            📦 Mixed Material Details:
+          </h4>
+          <div style="background: #2d3748; border-radius: 6px; overflow: hidden; border: 1px solid #4a5568;">
+            <table style="width: 100%; font-size: 0.75rem; color: #e2e8f0;">
+              <thead>
+                <tr style="background: #4a5568;">
+                  <th style="padding: 6px 8px; text-align: left; border-right: 1px solid #2d3748;">Item</th>
+                  <th style="padding: 6px 8px; text-align: center; border-right: 1px solid #2d3748;">Qty</th>
+                  <th style="padding: 6px 8px; text-align: center;">Expired</th>
+                </tr>
+              </thead>
+              <tbody>
+      `;
+      
+      mixedItems.forEach((item, index) => {
+        const bgColor = index % 2 === 0 ? "#2d3748" : "#1a202c";
+        const itemDesc = item["Item Description"] || "N/A";
+        const qty = item.Qty || "N/A";
+        const expired = item["Expired Date"] || "N/A";
+        
+        html += `
+          <tr style="background: ${bgColor};">
+            <td style="padding: 6px 8px; border-right: 1px solid #4a5568; word-break: break-word;">${itemDesc}</td>
+            <td style="padding: 6px 8px; text-align: center; border-right: 1px solid #4a5568;">${qty}</td>
+            <td style="padding: 6px 8px; text-align: center;">${expired}</td>
+          </tr>
+        `;
+      });
+      
+      html += `
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      
+      return html;
+    }
+
+    /**
+     * Tampilkan detail slot di panel
+     * @param {string} kode - Kode slot
+     * @param {Object|null} data - Data slot (null jika kosong)
+     */
+    function showDetail(kode, data) {
+      const infoPanel = document.getElementById("info");
+      
+      if (data) {
+        // Tentukan status
+        let statusIcon = "✅";
+        let statusText = "TERISI";
+        
+        if (data.status && data.status.toLowerCase().trim() === "kosong") {
+          statusText = "KOSONG (SHEET)";
+          statusIcon = "🔴";
+        }
+        
+        // Buat HTML detail dengan No. Lot
+        let detailHTML = `
+          <p><strong>Warehouse:</strong> ${data.warehouse}</p>
+          <p><strong>Storage:</strong> ${data.storage}</p>
+          <p><strong>Zone:</strong> ${data.zona}</p>
+          <p><strong>Racking:</strong> ${data.racking}</p>
+          <p><strong>Racking Code:</strong> ${data.rackingCode}</p>
+          <p><strong>No. Lot:</strong> ${data.noLot || 'N/A'}</p>
+          <p><strong>Floor:</strong> ${data.floor}</p>
+          <p><strong>Position:</strong> ${data.raws}</p>
+          <p><strong>Item:</strong> ${data.barang}</p>
+          <p><strong>Quantity:</strong> ${data.qty}</p>
+          <p><strong>Expired:</strong> ${data.expired}</p>
+          <p><strong>Status:</strong> ${statusIcon} ${statusText}</p>
+        `;
+        
+        // Tambahkan tabel mixed material jika ada
+        if (data.barang && 
+            data.barang.toLowerCase().includes("mix material") && 
+            data.rackingCode) {
+          detailHTML += generateMixMaterialTable(data.rackingCode);
+        }
+        
+        infoPanel.innerHTML = detailHTML;
+      } else {
+        // Slot kosong
+        infoPanel.innerHTML = "<p><strong>Status:</strong> ⚪ KOSONG</p>";
+      }
+    }
+
+    // ==================== PRINT FUNCTION ====================
+    
+    /**
+     * Print halaman
+     */
+    function printPage() {
+      const printBtn = document.querySelector(".print-btn");
+      printBtn.classList.add("loading");
+      
+      try {
+        const originalTitle = document.title;
+        const now = new Date();
+        const dateStr = now.toLocaleDateString("id-ID");
+        const timeStr = now.toLocaleTimeString("id-ID");
+        
+        document.title = `Warehouse Mapping - ${dateStr} ${timeStr}`;
+        window.print();
+        document.title = originalTitle;
+      } catch (error) {
+        console.error("Print error:", error);
+        alert("Failed to open print dialog. Please try again.");
+      } finally {
+        setTimeout(() => {
+          printBtn.classList.remove("loading");
+        }, 500);
+      }
+    }
+
+    // ==================== INITIALIZATION ====================
+    
+    /**
+     * Initialize aplikasi saat DOM loaded
+     */
+    document.addEventListener("DOMContentLoaded", function() {
+      console.log('🚀 Warehouse Mapping System initialized - Modified Display (First Phrase + No. Lot)');
+      
+      // Update datetime setiap detik
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+      
+      // Setup navigation context
+      updateNavigationContext();
+      
+      // Load data
+      loadData();
+      
+      // Set active nav button
+      updateNavButtons("rack");
+    });
+  </script>
 </body>
 </html>
