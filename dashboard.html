@@ -273,7 +273,6 @@
       align-items: center;
       justify-content: center;
       background: white;
-      
     }
 
     .brand-logo img {
@@ -873,9 +872,9 @@
           <span class="nav-text">Raw Material & Packaging</span>
         </a>
         <a href="rawmaterial.html" class="nav-item" data-tooltip="Raw Material 2" data-roles="administrator,manager,supervisor,operator,viewer">
-  <span class="nav-icon">📦</span>
-  <span class="nav-text">Raw Material by Racking</span>
-</a>
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Raw Material by Racking</span>
+        </a>
         <a href="finishgoods.html" class="nav-item" data-tooltip="Finish Goods" data-roles="administrator,manager,supervisor,operator,viewer">
           <span class="nav-icon">👨‍💼</span>
           <span class="nav-text">Finish Goods</span>
@@ -916,7 +915,7 @@
       <header class="top-header">
         <div class="header-brand">
           <div class="brand-logo">
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYyanHkNjy-MEGWx-yRWA8XiFF9HbWiLoGFY9HRkEpuBXKYGjxU_TMW2dK4ONcqKA4tg&usqp=CAU" alt="Logo">
+            <img src="https://cdn.jsdelivr.net/gh/riep31/assets@main/logos/logodagsap800x600.png" alt="Logo">
           </div>
           <div class="brand-info">
             <h1>PT. Dagsap Endura Eatore</h1>
@@ -938,13 +937,13 @@
               </div>
             </div>
             <div class="user-dropdown">
-  <a href="profil.html" class="dropdown-item">
-    <span>👤</span> Profil
-  </a>
-  <a href="#" class="dropdown-item logout" onclick="logout()">
-    <span>🚪</span> Logout
-  </a>
-      </div>
+              <a href="profil.html" class="dropdown-item">
+                <span>👤</span> Profil
+              </a>
+              <a href="#" class="dropdown-item logout" onclick="logout()">
+                <span>🚪</span> Logout
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -963,10 +962,10 @@
           </div>
           
           <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='rawmaterial.html'">
-  <div class="card-icon">📦</div>
-  <h3>Raw Material by Racking</h3>
-  <p>Monitoring bahan baku dan kemasan by "Racking Gudang"</p>
-</div>
+            <div class="card-icon">📦</div>
+            <h3>Raw Material by Racking</h3>
+            <p>Monitoring bahan baku dan kemasan by "Racking Gudang"</p>
+          </div>
 
           <div class="card" data-roles="administrator,manager,supervisor,operator,viewer" onclick="window.location.href='finishgoods.html'">
             <div class="card-icon">✅</div>
@@ -1010,7 +1009,7 @@
             <p>Kelola pengguna sistem, hak akses, dan role management untuk keamanan aplikasi.</p>
           </div>
 
-         <div class="card" data-roles="administrator" onclick="window.location.href='settings.html'">
+          <div class="card" data-roles="administrator" onclick="window.location.href='settings.html'">
             <div class="card-icon">⚙️</div>
             <h3>System Settings</h3>
             <p>Konfigurasi sistem, backup, dan pengaturan aplikasi untuk optimalisasi performa.</p>
@@ -1038,7 +1037,19 @@
   </div>
 
   <script>
-    // Role-based access control configuration
+    // ============================================
+    // AUTO LOGOUT CONFIGURATION
+    // ============================================
+    const AUTO_LOGOUT_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+    const WARNING_TIME = 60 * 1000; // Show warning 60 seconds before logout
+    let idleTimer = null;
+    let warningTimer = null;
+    let countdownTimer = null;
+    let countdownSeconds = 60;
+
+    // ============================================
+    // ROLE-BASED ACCESS CONTROL CONFIGURATION
+    // ============================================
     const ROLE_CONFIG = {
       administrator: {
         level: 5,
@@ -1072,7 +1083,241 @@
       }
     };
 
-    // Function to normalize role name - FIXED: Missing comma
+    // ============================================
+    // AUTO LOGOUT FUNCTIONS
+    // ============================================
+    
+    // Function to show logout warning
+    function showLogoutWarning() {
+      // Remove existing warning if any
+      hideLogoutWarning();
+      
+      const warningDiv = document.createElement('div');
+      warningDiv.id = 'logoutWarning';
+      warningDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 32px;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        z-index: 3000;
+        text-align: center;
+        min-width: 350px;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      warningDiv.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 16px;">⏰</div>
+        <h3 style="color: #1e293b; margin-bottom: 16px; font-size: 1.5rem;">Sesi Akan Berakhir</h3>
+        <p style="color: #64748b; margin-bottom: 24px; line-height: 1.6;">
+          Anda akan otomatis logout dalam <strong id="countdownDisplay" style="color: #ef4444; font-size: 1.2rem;">60</strong> detik karena tidak ada aktivitas.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button onclick="extendSession()" style="
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(79, 70, 229, 0.3)'" 
+             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+            Lanjutkan Sesi
+          </button>
+          <button onclick="logout()" style="
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+          " onmouseover="this.style.background='#e2e8f0'" 
+             onmouseout="this.style.background='#f1f5f9'">
+            Logout Sekarang
+          </button>
+        </div>
+      `;
+      
+      // Add overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'logoutWarningOverlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2999;
+        animation: fadeIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(overlay);
+      document.body.appendChild(warningDiv);
+      
+      // Start countdown
+      countdownSeconds = 60;
+      countdownTimer = setInterval(() => {
+        countdownSeconds--;
+        const display = document.getElementById('countdownDisplay');
+        if (display) {
+          display.textContent = countdownSeconds;
+          // Change color when time is running out
+          if (countdownSeconds <= 10) {
+            display.style.color = '#dc2626';
+            display.style.fontSize = '1.4rem';
+          }
+        }
+        
+        if (countdownSeconds <= 0) {
+          clearInterval(countdownTimer);
+          autoLogout();
+        }
+      }, 1000);
+      
+      console.log('Logout warning displayed');
+    }
+
+    // Function to hide logout warning
+    function hideLogoutWarning() {
+      const warning = document.getElementById('logoutWarning');
+      const overlay = document.getElementById('logoutWarningOverlay');
+      
+      if (warning) warning.remove();
+      if (overlay) overlay.remove();
+      
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+      }
+    }
+
+    // Function to extend session
+    function extendSession() {
+      console.log('Session extended by user');
+      hideLogoutWarning();
+      resetIdleTimer();
+    }
+
+    // Function to auto logout
+    function autoLogout() {
+      console.log('Auto logout triggered due to inactivity');
+      hideLogoutWarning();
+      
+      // Clear all timers
+      if (idleTimer) clearTimeout(idleTimer);
+      if (warningTimer) clearTimeout(warningTimer);
+      if (countdownTimer) clearInterval(countdownTimer);
+      
+      try {
+        // Clear user data from storage
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('user');
+          localStorage.removeItem('lastActivity');
+        }
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('lastActivity');
+        }
+      } catch (e) {
+        console.warn('Error clearing storage:', e);
+      }
+      
+      // Redirect to login page with timeout parameter using replace
+      window.location.replace('https://riep31.github.io/UtilisasiWarehouse/index.html?timeout=true');
+    }
+
+    // Function to reset idle timer
+    function resetIdleTimer() {
+      // Clear existing timers
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+      }
+      if (warningTimer) {
+        clearTimeout(warningTimer);
+      }
+      
+      // Hide warning if it's showing
+      hideLogoutWarning();
+      
+      // Set new idle timer (15 minutes minus warning time)
+      idleTimer = setTimeout(() => {
+        showLogoutWarning();
+      }, AUTO_LOGOUT_TIME - WARNING_TIME);
+      
+      // Update last activity time in storage
+      try {
+        setStorageItem('lastActivity', Date.now().toString());
+      } catch (e) {
+        console.warn('Could not save last activity:', e);
+      }
+    }
+
+    // Function to check if session has expired
+    function checkSessionExpiry() {
+      try {
+        const lastActivity = getStorageItem('lastActivity');
+        if (lastActivity) {
+          const timeSinceLastActivity = Date.now() - parseInt(lastActivity);
+          // Check if more than 15 minutes + 1 minute grace period
+          if (timeSinceLastActivity > (AUTO_LOGOUT_TIME + 60000)) {
+            console.log('Session expired on page load');
+            autoLogout();
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn('Error checking session expiry:', e);
+      }
+      return false;
+    }
+
+    // Initialize auto logout tracking
+    function initializeAutoLogout() {
+      // Check if session has already expired
+      if (checkSessionExpiry()) {
+        return;
+      }
+      
+      // List of events that indicate user activity
+      const activityEvents = [
+        'mousedown',
+        'mousemove',
+        'keypress',
+        'scroll',
+        'touchstart',
+        'click',
+        'keydown'
+      ];
+      
+      // Reset timer on any activity
+      activityEvents.forEach(event => {
+        document.addEventListener(event, resetIdleTimer, true);
+      });
+      
+      // Start the initial timer
+      resetIdleTimer();
+      
+      // Check session expiry every minute
+      setInterval(checkSessionExpiry, 60000);
+      
+      console.log('Auto logout initialized (15 minute timeout with 60 second warning)');
+    }
+
+    // ============================================
+    // ROLE AND ACCESS CONTROL FUNCTIONS
+    // ============================================
+    
+    // Function to normalize role name
     function normalizeRole(role) {
       if (!role) return 'guest';
       
@@ -1172,6 +1417,10 @@
       };
     }
 
+    // ============================================
+    // UI HELPER FUNCTIONS
+    // ============================================
+    
     // Function to get greeting based on current time
     function getGreeting() {
       const now = new Date();
@@ -1191,8 +1440,10 @@
     // Function to update greeting
     function updateGreeting() {
       const greeting = getGreeting();
-      document.getElementById('greetingText').textContent = greeting.text;
-      document.getElementById('greetingIcon').textContent = greeting.icon;
+      const greetingText = document.getElementById('greetingText');
+      const greetingIcon = document.getElementById('greetingIcon');
+      if (greetingText) greetingText.textContent = greeting.text;
+      if (greetingIcon) greetingIcon.textContent = greeting.icon;
     }
 
     // Function to get user initials from name
@@ -1204,6 +1455,10 @@
                  .substring(0, 2);
     }
 
+    // ============================================
+    // STORAGE FUNCTIONS
+    // ============================================
+    
     // Enhanced storage access with better error handling
     function getStorageItem(key) {
       try {
@@ -1250,51 +1505,10 @@
       return false;
     }
 
-    // Enhanced user data loading with better validation
-    function loadUserData() {
-      console.log('Loading user data...');
-      
-      try {
-        // Get user data from storage
-        const userDataString = getStorageItem('user');
-        let userData = null;
-
-        if (userDataString) {
-          try {
-            userData = JSON.parse(userDataString);
-            console.log('User data found in storage:', userData);
-          } catch (parseError) {
-            console.error('Error parsing user data:', parseError);
-            userData = null;
-          }
-        }
-
-        // If no valid user data found, show login prompt
-        if (!userData || !isValidUserData(userData)) {
-          console.log('No valid user data found, showing login prompt');
-          showLoginPrompt();
-          return null;
-        }
-
-        // Update UI with user data
-        updateUserInterface(userData);
-        
-        // Apply role-based access control
-        applyRoleBasedAccess(userData.role || userData.level);
-        
-        // Ensure login prompt is hidden
-        hideLoginPrompt();
-
-        console.log('User data loaded successfully:', userData);
-        return userData;
-
-      } catch (error) {
-        console.error('Critical error in loadUserData:', error);
-        showLoginPrompt();
-        return null;
-      }
-    }
-
+    // ============================================
+    // USER DATA FUNCTIONS
+    // ============================================
+    
     // Enhanced validation for user data
     function isValidUserData(userData) {
       if (!userData || typeof userData !== 'object') {
@@ -1386,6 +1600,55 @@
       }
     }
 
+    // Enhanced user data loading with better validation
+    function loadUserData() {
+      console.log('Loading user data...');
+      
+      try {
+        // Get user data from storage
+        const userDataString = getStorageItem('user');
+        let userData = null;
+
+        if (userDataString) {
+          try {
+            userData = JSON.parse(userDataString);
+            console.log('User data found in storage:', userData);
+          } catch (parseError) {
+            console.error('Error parsing user data:', parseError);
+            userData = null;
+          }
+        }
+
+        // If no valid user data found, show login prompt
+        if (!userData || !isValidUserData(userData)) {
+          console.log('No valid user data found, showing login prompt');
+          showLoginPrompt();
+          return null;
+        }
+
+        // Update UI with user data
+        updateUserInterface(userData);
+        
+        // Apply role-based access control
+        applyRoleBasedAccess(userData.role || userData.level);
+        
+        // Ensure login prompt is hidden
+        hideLoginPrompt();
+
+        console.log('User data loaded successfully:', userData);
+        return userData;
+
+      } catch (error) {
+        console.error('Critical error in loadUserData:', error);
+        showLoginPrompt();
+        return null;
+      }
+    }
+
+    // ============================================
+    // LOGIN/LOGOUT FUNCTIONS
+    // ============================================
+    
     // Function to show login prompt
     function showLoginPrompt() {
       const loginPrompt = document.getElementById('loginPrompt');
@@ -1404,30 +1667,45 @@
 
     // Function to redirect to login page
     function redirectToLogin() {
-      window.location.href = 'index.html';
+      window.location.replace('https://riep31.github.io/UtilisasiWarehouse/index.html');
     }
 
-    // Logout function - clear data and redirect to login
+    // Logout function - clear data and redirect to login using replace
     function logout() {
       if (confirm('Apakah Anda yakin ingin logout?')) {
+        // Clear any active timers
+        if (idleTimer) clearTimeout(idleTimer);
+        if (warningTimer) clearTimeout(warningTimer);
+        if (countdownTimer) clearInterval(countdownTimer);
+        
+        // Hide any warnings
+        hideLogoutWarning();
+        
         try {
           // Clear user data from storage
           if (typeof localStorage !== 'undefined') {
             localStorage.removeItem('user');
+            localStorage.removeItem('lastActivity');
+            localStorage.removeItem('sidebarCollapsed');
           }
           if (typeof sessionStorage !== 'undefined') {
             sessionStorage.removeItem('user');
+            sessionStorage.removeItem('lastActivity');
           }
           console.log('User data cleared from storage');
         } catch (e) {
           console.warn('Error clearing storage:', e);
         }
         
-        // Redirect to login page
-        window.location.href = 'index.html';
+        // Redirect to login page using replace (prevents back button)
+        window.location.replace('https://riep31.github.io/UtilisasiWarehouse/index.html');
       }
     }
 
+    // ============================================
+    // SIDEBAR FUNCTIONS
+    // ============================================
+    
     // Toggle sidebar collapse
     function toggleCollapse() {
       const sidebar = document.getElementById('sidebar');
@@ -1459,6 +1737,10 @@
       if (overlay) overlay.classList.toggle('active');
     }
 
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
     // Initialize dashboard with better error handling
     function initializeDashboard() {
       console.log('Dashboard initializing...');
@@ -1477,6 +1759,9 @@
         
         // Update greeting every minute
         setInterval(updateGreeting, 60000);
+        
+        // Initialize auto logout system
+        initializeAutoLogout();
         
         // Load sidebar collapse state
         try {
@@ -1519,7 +1804,11 @@
       }
     }
 
-    // Event listeners with better error handling
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    
+    // Initialize on page load
     window.addEventListener('load', function() {
       try {
         initializeDashboard();
@@ -1587,6 +1876,56 @@
         console.error('Error handling window resize:', error);
       }
     });
+
+    // Handle page visibility change (detect when user switches tabs)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        // Page is hidden, user switched to another tab
+        console.log('User switched away from page');
+      } else {
+        // Page is visible again, check if session expired
+        console.log('User returned to page, checking session');
+        checkSessionExpiry();
+      }
+    });
+
+    // Prevent back button after logout
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {
+        // Page was loaded from cache (back button)
+        console.log('Page loaded from cache, checking user data');
+        const userData = getStorageItem('user');
+        if (!userData) {
+          // No user data, redirect to login
+          window.location.replace('https://riep31.github.io/UtilisasiWarehouse/index.html');
+        }
+      }
+    });
+
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -60%);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+      }
+      
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
