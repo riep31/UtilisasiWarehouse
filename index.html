@@ -2,9 +2,15 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Login</title>
-  
+
+  <!-- 🌐 Manifest untuk PWA -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- 🌈 Tema -->
   <link rel="stylesheet" href="https://riep31.github.io/repo-theme/theme.css">
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -66,19 +72,35 @@
   </div>
 
   <script>
-    const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis"; // ganti dengan API Key Google Sheets kamu
+    // 🚀 Daftarkan Service Worker global
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log('✅ Service Worker terdaftar'))
+        .catch(err => console.error('❌ Service Worker error:', err));
+    }
+
+    // 🔔 Notifikasi koneksi internet
+    function updateConnectionStatus() {
+      if (!navigator.onLine) {
+        alert('⚠️ Koneksi internet terputus. Anda sedang offline.');
+      }
+    }
+    window.addEventListener('offline', updateConnectionStatus);
+    window.addEventListener('online', () => {
+      alert('✅ Koneksi internet kembali normal.');
+    });
+
+    // 🔐 Login system
+    const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis"; // Ganti dengan API Key kamu
     const sheetId = "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw";
     const sheetName = "LOGIN";
     let users = [];
 
-    // Ambil data user dari GSheet
     async function loadUsers() {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
       const res = await fetch(url);
       const data = await res.json();
       const rows = data.values;
-
-      // buang header
       users = rows.slice(1).map(r => ({
         username: r[0],
         password: r[1],
@@ -87,16 +109,13 @@
         divisi: r[4]
       }));
     }
-
     loadUsers();
 
     async function login() {
       const u = document.getElementById("username").value.trim();
       const p = document.getElementById("password").value.trim();
-
       const user = users.find(x => x.username === u && x.password === p);
       if (user) {
-        // simpan data user ke localStorage
         localStorage.setItem("user", JSON.stringify(user));
         window.location.href = "dashboard.html";
       } else {
