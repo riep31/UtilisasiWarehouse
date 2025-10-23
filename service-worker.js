@@ -2,12 +2,12 @@ const CACHE_NAME = 'site-cache-v1';
 const OFFLINE_PAGE = '/offline.html';
 const ASSETS = [
   '/',
-  '/dashboard.html',
-  '/styles.css',
-  '/app.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  'dashboard.html',
+  'styles.css',
+  'app.js',
+  'manifest.json',
+  'icons/icon-192.png',
+  'icons/icon-512.png'
 ];
 
 // Install - cache shell assets
