@@ -6,7 +6,8 @@
   <title>Login</title>
 
   <!-- 🌐 Manifest untuk PWA -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4facfe">
 
   <!-- 🌈 Tema -->
   <link rel="stylesheet" href="https://riep31.github.io/repo-theme/theme.css">
@@ -74,7 +75,7 @@
   <script>
     // 🚀 Daftarkan Service Worker global
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js')
+      navigator.serviceWorker.register('service-worker.js')
         .then(() => console.log('✅ Service Worker terdaftar'))
         .catch(err => console.error('❌ Service Worker error:', err));
     }
@@ -91,7 +92,7 @@
     });
 
     // 🔐 Login system
-    const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis"; // Ganti dengan API Key kamu
+    const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis";
     const sheetId = "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw";
     const sheetName = "LOGIN";
     let users = [];
