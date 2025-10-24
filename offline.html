@@ -1,17 +1,334 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <title>Offline</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4facfe">
+  <title>Offline - Utilisasi Warehouse</title>
+  
   <style>
-    body { font-family: Arial, sans-serif; text-align:center; padding:2rem; }
-    img{max-width:150px}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: white;
+    }
+    
+    .offline-container {
+      text-align: center;
+      max-width: 500px;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    
+    .offline-icon {
+      font-size: 120px;
+      margin-bottom: 30px;
+      animation: pulse 2s infinite ease-in-out;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    }
+    
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      font-weight: 700;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 15px 35px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    button:active {
+      transform: translateY(-1px);
+    }
+    
+    .secondary-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      backdrop-filter: blur(10px);
+    }
+    
+    .connection-info {
+      margin-top: 40px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      font-size: 14px;
+    }
+    
+    .connection-info p {
+      margin-bottom: 10px;
+      font-size: 1em;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #e74c3c;
+      margin-right: 8px;
+      animation: blink 1.5s infinite;
+    }
+    
+    .status-indicator.online {
+      background: #27ae60;
+      animation: none;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+    
+    @keyframes blink {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.3;
+      }
+    }
+    
+    .tips {
+      margin-top: 30px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    
+    .tips h3 {
+      margin-bottom: 15px;
+      font-size: 1.2em;
+    }
+    
+    .tips ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .tips li {
+      margin-bottom: 10px;
+      padding-left: 25px;
+      position: relative;
+      font-size: 0.95em;
+    }
+    
+    .tips li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2em;
+      }
+      
+      .offline-icon {
+        font-size: 80px;
+      }
+      
+      p {
+        font-size: 1em;
+      }
+      
+      button {
+        padding: 12px 25px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
-  <img src="/icons/icon-192.png" alt="App">
-  <h1>Kamu sedang offline</h1>
-  <p>Beberapa fitur mungkin tidak tersedia. Periksa koneksi internetmu.</p>
+  <div class="offline-container">
+    <div class="offline-icon">📡</div>
+    
+    <h1>Tidak Ada Koneksi</h1>
+    
+    <p>
+      Maaf, aplikasi memerlukan koneksi internet untuk berfungsi dengan baik.
+      Periksa koneksi Anda dan coba lagi.
+    </p>
+    
+    <div class="button-group">
+      <button onclick="tryAgain()">
+        🔄 Coba Lagi
+      </button>
+      <button class="secondary-btn" onclick="goHome()">
+        🏠 Kembali ke Beranda
+      </button>
+    </div>
+    
+    <div class="connection-info">
+      <p>
+        <span class="status-indicator" id="statusDot"></span>
+        <strong>Status:</strong> <span id="connectionStatus">Offline</span>
+      </p>
+      <p id="lastChecked">Terakhir dicek: Baru saja</p>
+    </div>
+    
+    <div class="tips">
+      <h3>💡 Saran untuk Mengatasi Masalah:</h3>
+      <ul>
+        <li>Periksa apakah WiFi atau data seluler Anda aktif</li>
+        <li>Coba aktifkan mode pesawat, tunggu 10 detik, lalu matikan</li>
+        <li>Restart router WiFi Anda jika menggunakan WiFi</li>
+        <li>Periksa apakah ada gangguan pada provider internet Anda</li>
+        <li>Coba pindah ke lokasi dengan sinyal yang lebih baik</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // ========================================
+    // CONNECTION MONITORING
+    // ========================================
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('connectionStatus');
+    const lastCheckedText = document.getElementById('lastChecked');
+    
+    function updateConnectionStatus() {
+      if (navigator.onLine) {
+        statusDot.classList.add('online');
+        statusText.textContent = 'Online - Koneksi tersedia';
+        statusText.style.color = '#27ae60';
+        
+        // Auto reload when online
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        statusDot.classList.remove('online');
+        statusText.textContent = 'Offline - Tidak ada koneksi';
+        statusText.style.color = '#e74c3c';
+      }
+      
+      const now = new Date();
+      lastCheckedText.textContent = `Terakhir dicek: ${now.toLocaleTimeString('id-ID')}`;
+    }
+    
+    // Monitor connection changes
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+    
+    // Check connection every 5 seconds
+    setInterval(updateConnectionStatus, 5000);
+    
+    // Initial check
+    updateConnectionStatus();
+    
+    // ========================================
+    // BUTTON ACTIONS
+    // ========================================
+    function tryAgain() {
+      if (navigator.onLine) {
+        window.location.reload();
+      } else {
+        // Visual feedback
+        const button = event.target;
+        button.textContent = '⏳ Menunggu koneksi...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+          button.textContent = '🔄 Coba Lagi';
+          button.disabled = false;
+          alert('⚠️ Koneksi masih belum tersedia. Periksa pengaturan jaringan Anda.');
+        }, 2000);
+      }
+    }
+    
+    function goHome() {
+      // Try to go back or to index
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = './index.html';
+      }
+    }
+    
+    // ========================================
+    // KEYBOARD SHORTCUTS
+    // ========================================
+    document.addEventListener('keydown', (e) => {
+      // Press R to reload
+      if (e.key === 'r' || e.key === 'R') {
+        tryAgain();
+      }
+      // Press H to go home
+      if (e.key === 'h' || e.key === 'H') {
+        goHome();
+      }
+    });
+    
+    // ========================================
+    // SERVICE WORKER CHECK
+    // ========================================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        console.log('✅ Service Worker is active');
+      });
+    }
+  </script>
 </body>
 </html>
