@@ -1,23 +1,76 @@
 {
-  "name": "Utilisasi Warehouse",
-  "short_name": "Utilisasi",
-  "description": "PWA Utilisasi Gudang Yogyakarta",
-  "start_url": "dashboard.html",
-  "display": "browser",
+  "name": "Utilisasi Warehouse - PT Dagsap Endura Eatore",
+  "short_name": "Utilisasi WH",
+  "description": "Progressive Web App untuk Sistem Manajemen Utilisasi Gudang Yogyakarta - PT Dagsap Endura Eatore",
+  "start_url": "./",
   "scope": "./",
-  "background_color": "#ffffff",
-  "theme_color": "#0d6efd",
+  "display": "minimal-ui",
   "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#4facfe",
+  "lang": "id-ID",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "logistics"],
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard Utilisasi Warehouse"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Buka halaman dashboard utama",
+      "url": "./dashboard.html",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Login",
+      "short_name": "Login",
+      "description": "Halaman login sistem",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "iarc_rating_id": "",
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }
