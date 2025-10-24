@@ -3,126 +3,385 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Login</title>
+  <title>Login - Utilisasi Warehouse</title>
 
-  <!-- 🌐 Manifest untuk PWA -->
-  <link rel="manifest" href="manifest.json">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#4facfe">
+  
+  <!-- Apple PWA Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Utilisasi">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
 
-  <!-- 🌈 Tema -->
+  <!-- External Theme -->
   <link rel="stylesheet" href="https://riep31.github.io/repo-theme/theme.css">
 
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #2c3e50;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
+      padding: 20px;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
     .login-box {
-      width: 320px;
+      width: 100%;
+      max-width: 380px;
       background: #fff;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
       text-align: center;
-      animation: fadeIn 0.8s ease-in-out;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+    .logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
     }
     .login-box h2 {
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       color: #333;
+      font-size: 24px;
     }
-    .login-box input {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+    .login-box p {
+      color: #666;
+      margin-bottom: 25px;
+      font-size: 14px;
+    }
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 14px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: all 0.3s;
+      outline: none;
+    }
+    .input-group input:focus {
+      border-color: #4facfe;
+      box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
     }
     .login-box button {
-      width: 95%;
-      padding: 10px;
-      margin-top: 12px;
-      background: #4facfe;
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 16px;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
     }
     .login-box button:hover {
-      background: #00c6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
     }
-    #msg { color: red; margin-top: 10px; font-size: 14px; }
+    .login-box button:active {
+      transform: translateY(0);
+    }
+    .login-box button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #msg {
+      color: #e74c3c;
+      margin-top: 15px;
+      font-size: 14px;
+      min-height: 20px;
+      font-weight: 500;
+    }
+    .success-msg {
+      color: #27ae60 !important;
+    }
+    .connection-status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      display: none;
+      animation: slideIn 0.3s ease;
+      z-index: 1000;
+    }
+    .connection-status.offline {
+      background: #e74c3c;
+      color: white;
+      display: block;
+    }
+    .connection-status.online {
+      background: #27ae60;
+      color: white;
+      display: block;
+    }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
+      from { opacity: 0; transform: translateY(-30px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
+  <div class="connection-status" id="connectionStatus"></div>
+
   <div class="login-box">
-    <h2>Silahkan Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Masuk</button>
+    <div class="logo">🏭</div>
+    <h2>Utilisasi Warehouse</h2>
+    <p>Silakan login untuk melanjutkan</p>
+    
+    <div class="input-group">
+      <input type="text" id="username" placeholder="Username" autocomplete="username">
+    </div>
+    
+    <div class="input-group">
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    
+    <button onclick="login()" id="loginBtn">Masuk</button>
     <p id="msg"></p>
   </div>
 
   <script>
-    // 🚀 Daftarkan Service Worker global
+    // ========================================
+    // SERVICE WORKER REGISTRATION
+    // ========================================
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('✅ Service Worker terdaftar'))
-        .catch(err => console.error('❌ Service Worker error:', err));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js', {
+          scope: './'
+        })
+        .then(registration => {
+          console.log('✅ Service Worker registered successfully:', registration.scope);
+          
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            console.log('🔄 Service Worker update found');
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('✨ New Service Worker available. Refresh to update.');
+              }
+            });
+          });
+        })
+        .catch(error => {
+          console.error('❌ Service Worker registration failed:', error);
+        });
+      });
+    } else {
+      console.warn('⚠️ Service Worker not supported in this browser');
     }
 
-    // 🔔 Notifikasi koneksi internet
+    // ========================================
+    // CONNECTION STATUS MONITORING
+    // ========================================
+    const statusDiv = document.getElementById('connectionStatus');
+    
     function updateConnectionStatus() {
       if (!navigator.onLine) {
-        alert('⚠️ Koneksi internet terputus. Anda sedang offline.');
+        statusDiv.className = 'connection-status offline';
+        statusDiv.innerHTML = '⚠️ Tidak ada koneksi internet';
       }
     }
-    window.addEventListener('offline', updateConnectionStatus);
-    window.addEventListener('online', () => {
-      alert('✅ Koneksi internet kembali normal.');
+    
+    window.addEventListener('offline', () => {
+      statusDiv.className = 'connection-status offline';
+      statusDiv.innerHTML = '⚠️ Koneksi terputus';
+      setTimeout(() => statusDiv.style.display = 'none', 3000);
     });
+    
+    window.addEventListener('online', () => {
+      statusDiv.className = 'connection-status online';
+      statusDiv.innerHTML = '✅ Koneksi kembali normal';
+      setTimeout(() => statusDiv.style.display = 'none', 3000);
+    });
+    
+    // Check initial connection
+    updateConnectionStatus();
 
-    // 🔐 Login system
+    // ========================================
+    // LOGIN SYSTEM WITH GOOGLE SHEETS
+    // ========================================
     const apiKey = "AIzaSyD3nhZyvd7npQw6n9mPXxOA6svJdo_JQis";
     const sheetId = "1ngP7PTE4mNKtkcTQU5sRYswdYmdC401M4ioxxkt-Hxw";
     const sheetName = "LOGIN";
     let users = [];
+    let isLoading = false;
 
+    // Load users from Google Sheets
     async function loadUsers() {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      const rows = data.values;
-      users = rows.slice(1).map(r => ({
-        username: r[0],
-        password: r[1],
-        nama: r[2],
-        level: r[3],
-        divisi: r[4]
-      }));
-    }
-    loadUsers();
-
-    async function login() {
-      const u = document.getElementById("username").value.trim();
-      const p = document.getElementById("password").value.trim();
-      const user = users.find(x => x.username === u && x.password === p);
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-        window.location.href = "dashboard.html";
-      } else {
-        document.getElementById("msg").innerText = "❌ Username atau Password salah!";
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 1) {
+          const rows = data.values;
+          users = rows.slice(1).map(row => ({
+            username: row[0]?.trim() || '',
+            password: row[1]?.trim() || '',
+            nama: row[2]?.trim() || '',
+            level: row[3]?.trim() || '',
+            divisi: row[4]?.trim() || ''
+          }));
+          console.log(`✅ Loaded ${users.length} users from Google Sheets`);
+        }
+      } catch (error) {
+        console.error('❌ Error loading users:', error);
+        showMessage('Gagal memuat data user. Periksa koneksi internet.', false);
       }
     }
+
+    // Load users on page load
+    loadUsers();
+
+    // Login function
+    async function login() {
+      if (isLoading) return;
+      
+      const usernameInput = document.getElementById("username");
+      const passwordInput = document.getElementById("password");
+      const loginBtn = document.getElementById("loginBtn");
+      const msgDiv = document.getElementById("msg");
+      
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      
+      // Validation
+      if (!username || !password) {
+        showMessage('Username dan password harus diisi!', false);
+        return;
+      }
+      
+      // Check if users data is loaded
+      if (users.length === 0) {
+        showMessage('Data user belum dimuat. Tunggu sebentar...', false);
+        await loadUsers();
+        if (users.length === 0) {
+          showMessage('Gagal memuat data. Periksa koneksi internet.', false);
+          return;
+        }
+      }
+      
+      // Set loading state
+      isLoading = true;
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<span class="spinner"></span>Memproses...';
+      msgDiv.innerText = '';
+      
+      // Simulate network delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Find user
+      const user = users.find(u => 
+        u.username.toLowerCase() === username.toLowerCase() && 
+        u.password === password
+      );
+      
+      if (user) {
+        // Store user session
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("loginTime", new Date().toISOString());
+        
+        showMessage('✅ Login berhasil! Mengarahkan...', true);
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          window.location.href = "./dashboard.html";
+        }, 1000);
+      } else {
+        showMessage('❌ Username atau password salah!', false);
+        isLoading = false;
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'Masuk';
+        
+        // Shake animation on error
+        usernameInput.style.animation = 'shake 0.5s';
+        passwordInput.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          usernameInput.style.animation = '';
+          passwordInput.style.animation = '';
+        }, 500);
+      }
+    }
+
+    // Show message helper
+    function showMessage(message, isSuccess) {
+      const msgDiv = document.getElementById("msg");
+      msgDiv.innerText = message;
+      msgDiv.className = isSuccess ? 'success-msg' : '';
+    }
+
+    // Allow Enter key to submit
+    document.getElementById("password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        login();
+      }
+    });
+    
+    document.getElementById("username").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("password").focus();
+      }
+    });
+
+    // Add shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
