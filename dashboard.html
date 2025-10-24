@@ -4,6 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
+  <!-- ========================================
+       PWA MANIFEST & META TAGS
+       ======================================== -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#4facfe">
+  <meta name="description" content="Dashboard Utilisasi Gudang Yogyakarta">
+  
+  <!-- Apple PWA Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Utilisasi">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  
+  <!-- MS Tile -->
+  <meta name="msapplication-TileImage" content="./icons/icon-512.png">
+  <meta name="msapplication-TileColor" content="#4facfe">
   <style>
     * {
       margin: 0;
@@ -272,7 +288,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: white;
+      
     }
 
     .brand-logo img {
@@ -1901,6 +1917,15 @@
         }
       }
     });
+
+    // Service Worker Check (pastikan tetap aktif)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistration('./').then(reg => {
+      if (reg) {
+        console.log('✅ Service Worker active');
+      }
+    });
+  }
 
     // Add CSS animations
     const style = document.createElement('style');
