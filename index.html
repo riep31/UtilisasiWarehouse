@@ -26,14 +26,12 @@
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #2c3e50;
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 20px;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
     .login-box {
       width: 100%;
@@ -179,7 +177,7 @@
     </div>
     
     <div class="input-group">
-      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+      <input type="password" id="password" placeholder="Password" autocomplete="new-password" data-form-type="other">
     </div>
     
     <button onclick="login()" id="loginBtn">Masuk</button>
