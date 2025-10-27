@@ -1,9 +1,10 @@
 // ========================================
-// PWA SERVICE WORKER
+// PWA SERVICE WORKER - CLEAN VERSION
 // Utilisasi Warehouse System
+// HANYA: Cache static files + NO CACHE Google Sheets API
 // ========================================
 
-const CACHE_NAME = 'utilisasi-warehouse-v1.0.0';
+const CACHE_NAME = 'utilisasi-warehouse-v1.0.1';
 const OFFLINE_PAGE = './offline.html';
 
 // Assets yang akan di-cache saat install
@@ -31,7 +32,7 @@ self.addEventListener('install', event => {
       })
       .then(() => {
         console.log('[SW] All assets cached successfully');
-        return self.skipWaiting(); // Activate immediately
+        return self.skipWaiting();
       })
       .catch(error => {
         console.error('[SW] Cache installation failed:', error);
@@ -48,7 +49,6 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(cacheNames => {
-        // Delete old caches
         return Promise.all(
           cacheNames.map(cacheName => {
             if (cacheName !== CACHE_NAME) {
@@ -60,7 +60,7 @@ self.addEventListener('activate', event => {
       })
       .then(() => {
         console.log('[SW] Service Worker activated');
-        return self.clients.claim(); // Take control immediately
+        return self.clients.claim();
       })
   );
 });
@@ -72,12 +72,40 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-HTTP(S) requests (e.g., chrome-extension://)
+  // Skip non-HTTP(S) requests
   if (!request.url.startsWith('http')) {
     return;
   }
 
-  // Skip cross-origin requests except for known CDNs
+  // ========================================
+  // CRITICAL: NEVER CACHE GOOGLE SHEETS API
+  // Selalu ambil data terbaru dari network
+  // ========================================
+  if (url.hostname === 'sheets.googleapis.com') {
+    console.log('[SW] Google Sheets API - Network Only (no cache)');
+    event.respondWith(
+      fetch(request, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
+      .catch(error => {
+        console.error('[SW] Google Sheets fetch failed:', error);
+        return new Response(
+          JSON.stringify({ error: 'Tidak ada koneksi internet' }), 
+          { 
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      })
+    );
+    return;
+  }
+
+  // Skip cross-origin requests except trusted CDNs
   if (url.origin !== location.origin && !isTrustedOrigin(url.origin)) {
     return;
   }
@@ -89,7 +117,6 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Clone and cache the response
           if (response.status === 200) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then(cache => {
@@ -99,13 +126,11 @@ self.addEventListener('fetch', event => {
           return response;
         })
         .catch(() => {
-          // Network failed, try cache
           return caches.match(request)
             .then(cachedResponse => {
               if (cachedResponse) {
                 return cachedResponse;
               }
-              // Show offline page
               return caches.match(OFFLINE_PAGE);
             });
         })
@@ -114,25 +139,21 @@ self.addEventListener('fetch', event => {
   }
 
   // ========================================
-  // STRATEGY 2: Cache First (for assets)
+  // STRATEGY 2: Cache First (for static assets)
   // ========================================
   event.respondWith(
     caches.match(request)
       .then(cachedResponse => {
         if (cachedResponse) {
-          // Return cached version
           return cachedResponse;
         }
 
-        // Not in cache, fetch from network
         return fetch(request)
           .then(response => {
-            // Don't cache invalid responses
             if (!response || response.status !== 200 || response.type === 'error') {
               return response;
             }
 
-            // Clone and cache for future use
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(request, responseClone);
@@ -143,12 +164,10 @@ self.addEventListener('fetch', event => {
           .catch(error => {
             console.error('[SW] Fetch failed:', error);
             
-            // Return placeholder for images
             if (request.destination === 'image') {
               return caches.match('./icons/icon-192.png');
             }
             
-            // Return offline page for other requests
             return caches.match(OFFLINE_PAGE);
           });
       })
@@ -158,20 +177,18 @@ self.addEventListener('fetch', event => {
 // ========================================
 // HELPER FUNCTIONS
 // ========================================
-
-// Check if origin is trusted
 function isTrustedOrigin(origin) {
   const trustedOrigins = [
     'https://riep31.github.io',
     'https://cdn.jsdelivr.net',
-    'https://cdnjs.cloudflare.com',
-    'https://sheets.googleapis.com'
+    'https://cdnjs.cloudflare.com'
   ];
   return trustedOrigins.some(trusted => origin.startsWith(trusted));
 }
 
 // ========================================
-// MESSAGE EVENT (for communication with pages)
+// MESSAGE EVENT
+// Untuk komunikasi dengan halaman (clear cache, dll)
 // ========================================
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -191,40 +208,4 @@ self.addEventListener('message', event => {
   }
 });
 
-// ========================================
-// BACKGROUND SYNC (optional - for future use)
-// ========================================
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-data') {
-    console.log('[SW] Background sync triggered');
-    // Add background sync logic here
-  }
-});
-
-// ========================================
-// PUSH NOTIFICATION (optional - for future use)
-// ========================================
-self.addEventListener('push', event => {
-  if (!event.data) return;
-  
-  const data = event.data.json();
-  const options = {
-    body: data.body || 'Notifikasi baru',
-    icon: './icons/icon-192.png',
-    badge: './icons/icon-192.png',
-    vibrate: [200, 100, 200]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Utilisasi Warehouse', options)
-  );
-});
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow('./')
-  );
-});
-
-console.log('[SW] Service Worker script loaded');
+console.log('[SW] Service Worker loaded - Clean version (no auto refresh)');
