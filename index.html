@@ -81,6 +81,29 @@
       border-color: #4facfe;
       box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
     }
+    
+    /* Remember Me Checkbox Styling */
+    .remember-me {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .remember-me input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      cursor: pointer;
+      accent-color: #4facfe;
+    }
+    .remember-me label {
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+      user-select: none;
+    }
+    
     .login-box button {
       width: 100%;
       padding: 14px;
@@ -148,6 +171,11 @@
       from { transform: translateX(100%); }
       to { transform: translateX(0); }
     }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
     .spinner {
       display: inline-block;
       width: 16px;
@@ -177,7 +205,12 @@
     </div>
     
     <div class="input-group">
-      <input type="password" id="password" placeholder="Password" autocomplete="new-password" data-form-type="other">
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+    </div>
+    
+    <div class="remember-me">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">Ingat saya</label>
     </div>
     
     <button onclick="login()" id="loginBtn">Masuk</button>
@@ -196,7 +229,6 @@
         .then(registration => {
           console.log('✅ Service Worker registered successfully:', registration.scope);
           
-          // Check for updates
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             console.log('🔄 Service Worker update found');
@@ -212,8 +244,6 @@
           console.error('❌ Service Worker registration failed:', error);
         });
       });
-    } else {
-      console.warn('⚠️ Service Worker not supported in this browser');
     }
 
     // ========================================
@@ -240,8 +270,54 @@
       setTimeout(() => statusDiv.style.display = 'none', 3000);
     });
     
-    // Check initial connection
     updateConnectionStatus();
+
+    // ========================================
+    // REMEMBER ME FUNCTIONALITY
+    // ========================================
+    
+    // Simple encryption for basic security (Base64)
+    function encryptData(data) {
+      return btoa(JSON.stringify(data));
+    }
+    
+    function decryptData(encrypted) {
+      try {
+        return JSON.parse(atob(encrypted));
+      } catch (e) {
+        return null;
+      }
+    }
+    
+    // Load saved credentials on page load
+    function loadSavedCredentials() {
+      const saved = localStorage.getItem('rememberedUser');
+      if (saved) {
+        const credentials = decryptData(saved);
+        if (credentials) {
+          document.getElementById('username').value = credentials.username || '';
+          document.getElementById('password').value = credentials.password || '';
+          document.getElementById('rememberMe').checked = true;
+        }
+      }
+    }
+    
+    // Save credentials if "Remember Me" is checked
+    function saveCredentials(username, password) {
+      const rememberMe = document.getElementById('rememberMe').checked;
+      
+      if (rememberMe) {
+        const encrypted = encryptData({ username, password });
+        localStorage.setItem('rememberedUser', encrypted);
+      } else {
+        localStorage.removeItem('rememberedUser');
+      }
+    }
+    
+    // Load saved credentials when page loads
+    window.addEventListener('load', () => {
+      loadSavedCredentials();
+    });
 
     // ========================================
     // LOGIN SYSTEM WITH GOOGLE SHEETS
@@ -324,6 +400,9 @@
       );
       
       if (user) {
+        // Save credentials if remember me is checked
+        saveCredentials(username, password);
+        
         // Store user session
         localStorage.setItem("user", JSON.stringify(user));
         localStorage.setItem("loginTime", new Date().toISOString());
@@ -369,17 +448,6 @@
         document.getElementById("password").focus();
       }
     });
-
-    // Add shake animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-10px); }
-        75% { transform: translateX(10px); }
-      }
-    `;
-    document.head.appendChild(style);
   </script>
 </body>
 </html>
